@@ -16,8 +16,8 @@ public class User extends BaseEntity {
     @Column(name="user_id", updatable = false, nullable = false, unique = true)
     private Long userId;
 
-    @Column(name="user_name")
-    private String userName;
+    @Column(name="nickname_id")
+    private String nicknameId;
 
     @Column(name="email")
     private String email;
@@ -38,17 +38,14 @@ public class User extends BaseEntity {
 
 
     @Builder
-    public User(String userName, String email, String password, String nickname, Provider provider, String providerId) {
-        this.userName = userName;
+    public User(String nicknameId, String email, String password, String nickname, Provider provider, String providerId, Role role) {
+        this.nicknameId = nicknameId;
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.provider = provider;
         this.providerId = providerId;
-        this.role = Role.USER;
+        this.role = role;
     }
 
-    public void updateName(String name) {
-        this.userName = name;
-    }
 }
