@@ -2,11 +2,10 @@ package com.nookbook.global.payload;
 
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
-
-@Data
+@Getter
+@Setter
 public class ApiResponse {
 
     @Schema( type = "boolean", example = "true", description="올바르게 로직을 처리했으면 True, 아니면 False를 반환합니다.")
