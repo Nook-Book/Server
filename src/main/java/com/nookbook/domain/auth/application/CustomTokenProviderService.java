@@ -6,6 +6,7 @@ import com.nookbook.global.config.security.token.UserPrincipal;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,14 +18,12 @@ import java.security.Key;
 import java.util.Date;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class CustomTokenProviderService {
 
-    @Autowired
-    private OAuth2Config oAuth2Config;
-
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private final OAuth2Config oAuth2Config;
+    private final CustomUserDetailsService customUserDetailsService;
 
     public TokenMapping refreshToken(Authentication authentication, String refreshToken) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
