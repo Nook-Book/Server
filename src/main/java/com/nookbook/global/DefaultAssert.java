@@ -22,17 +22,6 @@ public class DefaultAssert extends Assert {
         }
     }
 
-    // public static void isValidParameter(Errors errors){
-    //     if(errors.hasErrors()){
-    //         throw new InvalidParameterException(errors);
-    //     }
-    // }
-
-    // public static void isObjectNull(Object object){
-    //     if(object == null){
-    //         throw new DefaultNullPointerException(ErrorCode.INVALID_CHECK);
-    //     }
-    // }
 
     public static void isListNull(List<Object> values){
         if(values.isEmpty()){
