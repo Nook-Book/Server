@@ -1,6 +1,7 @@
 package com.nookbook.domain.auth.application;
 
 import com.nookbook.domain.user.domain.Provider;
+import com.nookbook.domain.user.domain.Role;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.global.DefaultAssert;
@@ -46,7 +47,6 @@ public class CustomDefaultOAuth2UserService extends DefaultOAuth2UserService {
         if(userOptional.isPresent()) {
             user = userOptional.get();
             DefaultAssert.isAuthentication(user.getProvider().equals(Provider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId())));
-            user = updateExistingUser(user, oAuth2UserInfo);
         } else {
             user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo);
         }
@@ -59,15 +59,10 @@ public class CustomDefaultOAuth2UserService extends DefaultOAuth2UserService {
                 .provider(Provider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId()))
                 .providerId(oAuth2UserInfo.getId())
                 .email(oAuth2UserInfo.getEmail())
-                .userName(oAuth2UserInfo.getName())
                 .password(encodePassword(oAuth2UserInfo.getId()))
+                .role(Role.USER)
                 .build();
 
-        return userRepository.save(user);
-    }
-
-    private User updateExistingUser(User user, OAuth2UserInfo oAuth2UserInfo) {
-        user.updateName(oAuth2UserInfo.getName());
         return userRepository.save(user);
     }
 

@@ -42,24 +42,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Optional;
-
+@RequiredArgsConstructor
 @Component
 public class CustomSimpleUrlAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    @Autowired
-    private CustomTokenProviderService customTokenProviderService;
-
-    @Autowired
-    private OAuth2Config oAuth2Config;
-
-    @Autowired
-    private TokenRepository tokenRepository;
-
-    @Autowired
-    private CustomAuthorizationRequestRepository customAuthorizationRequestRepository;
-
-    @Autowired
-    private UserService userService; // 사용자 서비스 추가
+    private final CustomTokenProviderService customTokenProviderService;
+    private final OAuth2Config oAuth2Config;
+    private final TokenRepository tokenRepository;
+    private final CustomAuthorizationRequestRepository customAuthorizationRequestRepository;
+    private final UserService userService; // 사용자 서비스 추가
 
     @Override
     @Transactional
@@ -73,22 +64,19 @@ public class CustomSimpleUrlAuthenticationSuccessHandler extends SimpleUrlAuthen
         // 사용자 정보 저장
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
-        String userName = oAuth2User.getAttribute("name");
         String providerId = oAuth2User.getAttribute("sub");
 
         Optional<User> existingUser = userService.findByEmail(email);
         if (existingUser.isEmpty()) {
             User user = User.builder()
-                    .userName(userName)
                     .email(email)
                     .provider(Provider.google)
                     .providerId(providerId)
                     .build();
             userService.saveUser(user);
         } else {
-            // 사용자 정보 업데이트 로직 추가 가능
+            // 사용자 정보 업데이트 로직(Optional)
         }
-
         TokenMapping token = customTokenProviderService.createToken(authentication);
         CustomCookie.addCookie(response, "Authorization", "Bearer_" + token.getAccessToken(), (int) oAuth2Config.getAuth().getAccessTokenExpirationMsec());
         CustomCookie.addCookie(response, "Refresh_Token", "Bearer_" + token.getRefreshToken(), (int) oAuth2Config.getAuth().getRefreshTokenExpirationMsec());
