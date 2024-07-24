@@ -8,6 +8,7 @@ import com.nookbook.global.DefaultAssert;
 import com.nookbook.global.config.security.auth.OAuth2UserInfo;
 import com.nookbook.global.config.security.auth.OAuth2UserInfoFactory;
 import com.nookbook.global.config.security.token.UserPrincipal;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class CustomDefaultOAuth2UserService extends DefaultOAuth2UserService {
@@ -33,6 +34,7 @@ public class CustomDefaultOAuth2UserService extends DefaultOAuth2UserService {
         try {
             return processOAuth2User(oAuth2UserRequest, oAuth2User);
         } catch (Exception e) {
+            log.error("Error processing OAuth2 user: {}", e.getMessage(), e);  // 추가된 로깅
             DefaultAssert.isAuthentication(e.getMessage());
         }
         return null;
@@ -51,6 +53,7 @@ public class CustomDefaultOAuth2UserService extends DefaultOAuth2UserService {
             user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo);
         }
 
+        log.debug("OAuth2 user processed: {}", user);  // 추가된 로깅
         return UserPrincipal.create(user, oAuth2User.getAttributes());
     }
 
@@ -63,7 +66,9 @@ public class CustomDefaultOAuth2UserService extends DefaultOAuth2UserService {
                 .role(Role.USER)
                 .build();
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        log.debug("New user registered: {}", savedUser);  // 추가된 로깅
+        return savedUser;
     }
 
     private String encodePassword(String password) {

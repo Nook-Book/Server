@@ -1,6 +1,5 @@
 package com.nookbook.domain.auth.application;
 
-
 import com.nookbook.domain.auth.domain.Token;
 import com.nookbook.domain.auth.domain.repository.TokenRepository;
 import com.nookbook.domain.auth.dto.request.RefreshTokenReq;
@@ -44,6 +43,52 @@ public class AuthService {
     private final UserRepository userRepository;
 
     @Transactional
+    public ResponseEntity<?> signIn(SignInReq signInReq) {
+        logger.debug("Sign in request received: {}", signInReq);
+
+        Optional<User> optionalUser = userRepository.findByEmail(signInReq.getEmail());
+        if (!optionalUser.isPresent()) {
+            logger.error("유저 정보를 찾을 수 없습니다: {}", signInReq.getEmail());
+            throw new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다.");
+        }
+
+        User user = optionalUser.get();
+        logger.debug("Found user: {}", user);
+
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            user.getEmail(),
+                            signInReq.getProviderId()  // providerId 사용
+                    )
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            TokenMapping tokenMapping = customTokenProviderService.createToken(authentication);
+            Token token = Token.builder()
+                    .refreshToken(tokenMapping.getRefreshToken())
+                    .email(tokenMapping.getEmail())
+                    .build();
+            tokenRepository.save(token);
+
+            AuthRes authResponse = AuthRes.builder()
+                    .accessToken(tokenMapping.getAccessToken())
+                    .refreshToken(token.getRefreshToken())
+                    .build();
+
+            ApiResponse apiResponse = ApiResponse.builder()
+                    .check(true)
+                    .information(authResponse).build();
+
+            logger.debug("Sign in response: {}", apiResponse);
+            return ResponseEntity.ok(apiResponse);
+        } catch (Exception e) {
+            logger.error("Authentication failed: {}", e.getMessage(), e);
+            throw new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다.");
+        }
+    }
+
+    @Transactional
     public ResponseEntity<?> refresh(RefreshTokenReq tokenRefreshRequest) {
         logger.debug("Refresh token request received: {}", tokenRefreshRequest);
 
@@ -52,7 +97,7 @@ public class AuthService {
 
         Token token = tokenRepository.findByRefreshToken(tokenRefreshRequest.getRefreshToken())
                 .orElseThrow(InvalidTokenException::new);
-        Authentication authentication = customTokenProviderService.getAuthenticationByEmail(token.getUserEmail());
+        Authentication authentication = customTokenProviderService.getAuthenticationByEmail(token.getEmail());
 
         TokenMapping tokenMapping;
         Long expirationTime = customTokenProviderService.getExpiration(tokenRefreshRequest.getRefreshToken());
@@ -78,24 +123,6 @@ public class AuthService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @Transactional
-    public ResponseEntity<?> signOut(UserPrincipal userPrincipal) {
-        logger.debug("Sign out request received for user: {}", userPrincipal.getEmail());
-
-        Token token = tokenRepository.findByUserEmail(userPrincipal.getEmail())
-                .orElseThrow(InvalidTokenException::new);
-
-        tokenRepository.delete(token);
-
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information(Message.builder().message("유저가 로그아웃 되었습니다.").build())
-                .build();
-
-        logger.debug("Sign out response: {}", apiResponse);
-        return ResponseEntity.ok(apiResponse);
-    }
-
     private boolean valid(String refreshToken) {
         boolean validateCheck = customTokenProviderService.validateToken(refreshToken);
         DefaultAssert.isTrue(validateCheck, "Token 검증에 실패하였습니다.");
@@ -103,44 +130,10 @@ public class AuthService {
         Optional<Token> token = tokenRepository.findByRefreshToken(refreshToken);
         DefaultAssert.isTrue(token.isPresent(), "탈퇴 처리된 회원입니다.");
 
-        Authentication authentication = customTokenProviderService.getAuthenticationByEmail(token.get().getUserEmail());
-        DefaultAssert.isTrue(token.get().getUserEmail().equals(authentication.getName()), "사용자 인증에 실패하였습니다.");
+        Authentication authentication = customTokenProviderService.getAuthenticationByEmail(refreshToken);
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        DefaultAssert.isTrue(token.get().getEmail().equals(userPrincipal.getEmail()), "사용자 인증에 실패하였습니다.");
 
         return true;
-    }
-
-    @Transactional
-    public ResponseEntity<?> signIn(SignInReq signInReq) {
-        logger.debug("Sign in request received: {}", signInReq);
-
-        User user = userRepository.findByEmail(signInReq.getEmail())
-                .orElseThrow(() -> new DefaultException(ErrorCode.INVALID_CHECK, "유저 정보가 유효하지 않습니다."));
-
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        signInReq.getEmail(),
-                        signInReq.getProviderId()
-                )
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        TokenMapping tokenMapping = customTokenProviderService.createToken(authentication);
-        Token token = Token.builder()
-                .refreshToken(tokenMapping.getRefreshToken())
-                .userEmail(tokenMapping.getUserEmail())
-                .build();
-        tokenRepository.save(token);
-
-        AuthRes authResponse = AuthRes.builder()
-                .accessToken(tokenMapping.getAccessToken())
-                .refreshToken(token.getRefreshToken())
-                .build();
-
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information(authResponse).build();
-
-        logger.debug("Sign in response: {}", apiResponse);
-        return ResponseEntity.ok(apiResponse);
     }
 }

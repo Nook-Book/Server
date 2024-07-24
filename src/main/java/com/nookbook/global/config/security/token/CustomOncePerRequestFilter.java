@@ -20,6 +20,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class CustomOncePerRequestFilter extends OncePerRequestFilter {
 
+    @Autowired
     private CustomTokenProviderService customTokenProviderService;
 
     @Override
@@ -27,19 +28,18 @@ public class CustomOncePerRequestFilter extends OncePerRequestFilter {
         String jwt = getJwtFromRequest(request);
 
         if (StringUtils.hasText(jwt) && customTokenProviderService.validateToken(jwt)) {
-            UsernamePasswordAuthenticationToken authentication = customTokenProviderService.getAuthenticationById(jwt);
+            UsernamePasswordAuthenticationToken authentication = customTokenProviderService.getAuthenticationByEmail(jwt);
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
-
         filterChain.doFilter(request, response);
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
-            log.info("bearerToken = {}", bearerToken.substring(7, bearerToken.length()));
-            return bearerToken.substring(7, bearerToken.length());
+            log.info("bearerToken = {}", bearerToken.substring(7));
+            return bearerToken.substring(7);
         }
         return null;
     }

@@ -96,7 +96,7 @@ public class CustomSimpleUrlAuthenticationSuccessHandler extends SimpleUrlAuthen
 
         TokenMapping tokenMapping = customTokenProviderService.createToken(authentication);
         Token token = Token.builder()
-                .userEmail(tokenMapping.getUserEmail())
+                .email(tokenMapping.getEmail())
                 .refreshToken(tokenMapping.getRefreshToken())
                 .build();
         tokenRepository.save(token);

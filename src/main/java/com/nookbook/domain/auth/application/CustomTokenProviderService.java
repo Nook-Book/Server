@@ -8,7 +8,6 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -36,14 +35,14 @@ public class CustomTokenProviderService {
         Key key = Keys.hmacShaKeyFor(keyBytes);
 
         String accessToken = Jwts.builder()
-                .setSubject(Long.toString(userPrincipal.getId()))
+                .setSubject(userPrincipal.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(accessTokenExpiresIn)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 
         return TokenMapping.builder()
-                .userEmail(userPrincipal.getEmail())
+                .email(userPrincipal.getEmail())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -58,12 +57,11 @@ public class CustomTokenProviderService {
         Date refreshTokenExpiresIn = new Date(now.getTime() + oAuth2Config.getAuth().getRefreshTokenExpirationMsec());
 
         String secretKey = oAuth2Config.getAuth().getTokenSecret();
-
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         Key key = Keys.hmacShaKeyFor(keyBytes);
 
         String accessToken = Jwts.builder()
-                .setSubject(Long.toString(userPrincipal.getId()))
+                .setSubject(userPrincipal.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(accessTokenExpiresIn)
                 .signWith(key, SignatureAlgorithm.HS512)
@@ -75,29 +73,27 @@ public class CustomTokenProviderService {
                 .compact();
 
         return TokenMapping.builder()
-                .userEmail(userPrincipal.getEmail())
+                .email(userPrincipal.getEmail())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
     }
 
-    public Long getUserIdFromToken(String token) {
+    public String getEmailFromToken(String token) {
+        log.debug("Extracting email from token: {}", token);  // 추가된 로깅
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(oAuth2Config.getAuth().getTokenSecret())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
 
-        return Long.parseLong(claims.getSubject());
+        String email = claims.getSubject();
+        log.debug("Email extracted: {}", email);  // 추가된 로깅
+        return email;
     }
 
-    public UsernamePasswordAuthenticationToken getAuthenticationById(String token) {
-        Long userId = getUserIdFromToken(token);
-        UserDetails userDetails = customUserDetailsService.loadUserById(userId);
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-    }
-
-    public UsernamePasswordAuthenticationToken getAuthenticationByEmail(String email) {
+    public UsernamePasswordAuthenticationToken getAuthenticationByEmail(String token) {
+        String email = getEmailFromToken(token);
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
@@ -118,12 +114,9 @@ public class CustomTokenProviderService {
 
     public boolean validateToken(String token) {
         try {
-            //log.info("bearerToken = {} \n oAuth2Config.getAuth()={}", token, oAuth2Config.getAuth().getTokenSecret());
             Jwts.parserBuilder().setSigningKey(oAuth2Config.getAuth().getTokenSecret()).build().parseClaimsJws(token);
             return true;
-        } catch (io.jsonwebtoken.security.SecurityException ex) {
-            log.error("잘못된 JWT 서명입니다.");
-        } catch (MalformedJwtException ex) {
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException ex) {
             log.error("잘못된 JWT 서명입니다.");
         } catch (ExpiredJwtException ex) {
             log.error("만료된 JWT 토큰입니다.");
