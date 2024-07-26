@@ -1,9 +1,11 @@
 package com.nookbook.domain.user.presentation;
 
 import com.nookbook.domain.user.application.UserService;
-import com.nookbook.domain.user.dto.request.NicknameIdReq;
-import com.nookbook.domain.user.dto.request.NicknameReq;
+import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
+import com.nookbook.domain.user.dto.request.NicknameCheckReq;
 import com.nookbook.domain.user.dto.request.UserInfoReq;
+import com.nookbook.domain.user.dto.response.NicknameCheckRes;
+import com.nookbook.domain.user.dto.response.NicknameIdCheckRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;
@@ -43,29 +45,29 @@ public class UserController {
 
     @Operation(summary = "사용자 아이디 중복 확인", description = "사용자가 입력한 아이디가 중복인지 확인합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용 가능한 아이다", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "200", description = "사용 가능한 아이디", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = NicknameIdCheckRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "사용 불가한 아이디", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @PostMapping("/nickname-id")
     public ResponseEntity<?> checkNicknameId(
             @CurrentUser UserPrincipal userPrincipal,
-            @RequestBody NicknameIdReq nicknameIdReq
+            @RequestBody NicknameIdCheckReq nicknameIdCheckReq
     ) {
-        return userService.checkNicknameId(userPrincipal, nicknameIdReq);
+        return userService.checkNicknameId(userPrincipal, nicknameIdCheckReq);
     }
 
 
     @Operation(summary = "사용자 닉네임 중복 확인", description = "사용자가 입력한 닉네임이 중복인지 확인합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = NicknameCheckRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "사용 불가한 닉네임", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @PostMapping("/nickname")
     public ResponseEntity<?> checkNickname(
             @CurrentUser UserPrincipal userPrincipal,
-            @RequestBody NicknameReq nicknameReq
+            @RequestBody NicknameCheckReq nicknameCheckReq
     ) {
-        return userService.checkNickname(userPrincipal, nicknameReq);
+        return userService.checkNickname(userPrincipal, nicknameCheckReq);
     }
 
 }

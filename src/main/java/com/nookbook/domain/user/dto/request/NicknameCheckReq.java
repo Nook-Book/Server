@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class NicknameIdReq {
-    private String nicknameId;
-}
+public class NicknameCheckReq {
 
+    private String nickname;
+
+}
