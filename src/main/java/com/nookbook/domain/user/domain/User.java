@@ -33,6 +33,12 @@ public class User extends BaseEntity {
 
     private String providerId;
 
+    // 이미지는 기본 고정 필요
+    private String imageUrl = "https://";
+
+    private String imageName = "default.png";
+
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -52,4 +58,7 @@ public class User extends BaseEntity {
         this.nicknameId = nicknameId;
         this.nickname = nickname;
     }
+
+    public void updateNicknameId(String nicknameId) { this.nicknameId = nicknameId; }
+
 }
