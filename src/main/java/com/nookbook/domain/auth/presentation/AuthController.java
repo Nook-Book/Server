@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 @Tag(name = "Authorization", description = "Authorization API")
 @RequiredArgsConstructor
 @RestController
@@ -38,11 +37,17 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "로그인 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = AuthRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "로그인 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PostMapping(value="/sign-in")
+    @PostMapping(value = "/sign-in")
     public ResponseEntity<?> signIn(
-            @Parameter(description = "SignInReq Schema를 확인해주세요.", required = true) @RequestBody SignInReq signInReq
+            @Parameter(description = "SignInReq Schema를 확인해주세요.", required = true) @Valid @RequestBody SignInReq signInReq
     ) {
         logger.debug("SignIn endpoint hit with data: {}", signInReq);
+        if (signInReq == null) {
+            logger.error("signInReq is null");
+        } else {
+            logger.debug("Email: {}", signInReq.getEmail());
+            logger.debug("ProviderId: {}", signInReq.getProviderId());
+        }
         return authService.signIn(signInReq);
     }
 
@@ -53,7 +58,7 @@ public class AuthController {
     })
     @PostMapping(value = "/refresh")
     public ResponseEntity<?> refresh(
-            @Parameter(description = "Schemas의 RefreshTokenRequest를 참고해주세요.", required = true) @Valid @RequestBody RefreshTokenReq tokenRefreshRequest
+            @Parameter(description = "Schemas의 RefreshTokenRequest를 참고해주세요.", required = true) @RequestBody @Valid RefreshTokenReq tokenRefreshRequest
     ) {
         logger.debug("Refresh endpoint hit with data: {}", tokenRefreshRequest);
         return authService.refresh(tokenRefreshRequest);
