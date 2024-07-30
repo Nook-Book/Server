@@ -11,6 +11,7 @@ import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;
 import com.nookbook.global.payload.Message;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -39,6 +40,7 @@ public class UserController {
     @PostMapping("/info")
     public ResponseEntity<?> saveUserInfo(
             @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "유저 닉네임/아이디", required = true)
             @RequestBody UserInfoReq userInfoReq
     ) {
         return userService.saveUserInfo(userPrincipal, userInfoReq);
@@ -53,6 +55,7 @@ public class UserController {
     @PostMapping("/nickname-id")
     public ResponseEntity<?> checkNicknameId(
             @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "중복 여부를 확인할 아이디 입력값", required = true)
             @RequestBody NicknameIdCheckReq nicknameIdCheckReq
     ) {
         return userService.checkNicknameId(userPrincipal, nicknameIdCheckReq);
@@ -67,6 +70,7 @@ public class UserController {
     @PostMapping("/nickname")
     public ResponseEntity<?> checkNickname(
             @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "중복 여부를 확인할 닉네임 입력값", required = true)
             @RequestBody NicknameCheckReq nicknameCheckReq
     ) {
         return userService.checkNickname(userPrincipal, nicknameCheckReq);
