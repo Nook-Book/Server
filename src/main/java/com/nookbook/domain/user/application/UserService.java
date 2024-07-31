@@ -116,7 +116,7 @@ public class UserService {
 
         DefaultAssert.isTrue(isAvailable, "이미 사용중인 닉네임입니다.");
 
-        user.updateNicknameId(nickname);
+        user.updateNickname(nickname);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
