@@ -21,6 +21,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Optional;
 
 @Tag(name = "User", description = "User API")
 @RestController
@@ -102,6 +105,21 @@ public class UserController {
             @Parameter(description = "변경할 닉네임 입력값", required = true) @Valid @RequestBody NicknameCheckReq nicknameCheckReq
     ) {
         return userService.updateNickname(userPrincipal, userId, nicknameCheckReq);
+    }
+
+    @Operation(summary = "[마이페이지] 사용자 프로필 이미지 변경", description = "사용자의 프로필 이미지를 변경합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PutMapping("/{userId}/image")
+    public ResponseEntity<?> updateImage(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "user의 고유한 userId", required = true) @PathVariable Long userId,
+            @Parameter(description = "기본 이미지 사용 여부", required = true) @RequestPart Boolean isDefaultImage,
+            @Parameter(description = "변경할 프로필 이미지 파일") @RequestPart Optional<MultipartFile> image
+            ) {
+        return userService.updateImage(userPrincipal, userId, isDefaultImage, image);
     }
 
 }

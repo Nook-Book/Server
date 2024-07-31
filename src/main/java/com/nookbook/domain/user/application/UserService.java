@@ -1,5 +1,6 @@
 package com.nookbook.domain.user.application;
 
+import com.nookbook.domain.s3.application.S3Uploader;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
@@ -16,7 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -24,7 +27,8 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class UserService {
 
-    final UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final S3Uploader s3Uploader;
 
     @Transactional
     public void saveUser(User user) {
@@ -134,9 +138,34 @@ public class UserService {
     }
 
     // 내 정보 조회
-
+    // 닉네임 아이디 친구 수
 
     // 프로필 사진 등록
+    @Transactional
+    public ResponseEntity<?> updateImage(@CurrentUser UserPrincipal userPrincipal, Long userId, Boolean isDefaultImage, Optional<MultipartFile> image) {
+        User user = validUserByUserId(userPrincipal.getId());
+        if (!Objects.equals(user.getImageName(), "default.png")) {
+            s3Uploader.deleteFile(user.getImageName());
+        }
+
+        String imageName;
+        String imageUrl;
+        if (isDefaultImage && image.isEmpty()) {
+            imageName = "default.png";
+            imageUrl = "https://";   // 추후 수정
+        } else {
+            imageName = s3Uploader.uploadImage(image.get());
+            imageUrl = s3Uploader.getFullPath(imageName);
+        }
+        user.updateImage(imageName, imageUrl);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder().message("프로필 이미지가 변경되었습니다.").build())
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
     // 기록 전체 보기
     // 독서 리포트 조회
 
