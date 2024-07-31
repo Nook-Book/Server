@@ -39,6 +39,5 @@ out/
 ### YML ###
 /src/main/resources/database/
 /src/main/resources/oauth2/
-/src/main/resources/swagger/
 /src/main/resources/webclient/
 
