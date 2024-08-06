@@ -32,7 +32,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AladinService {
+public class BookService {
 
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
