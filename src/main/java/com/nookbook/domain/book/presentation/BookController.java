@@ -38,7 +38,7 @@ public class BookController {
             @Parameter(description = "검색어를 입력해주세요.", required = true) @RequestParam String keyword,
             @Parameter(description = "검색된 도서 목록을 페이지별로 조회합니다. **Page는 1부터 시작합니다!**", required = true) @RequestParam(defaultValue = "1") int page
             ) {
-        return aladinService.searchBooks(keyword, page);
+        return aladinService.searchBooks(userPrincipal, keyword, page);
     }
 
 }

@@ -2,6 +2,10 @@ package com.nookbook.domain.book.applicaiton;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nookbook.domain.book.dto.response.SearchRes;
+import com.nookbook.domain.keyword.application.KeywordService;
+import com.nookbook.domain.user.domain.User;
+import com.nookbook.domain.user.domain.repository.UserRepository;
+import com.nookbook.global.DefaultAssert;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,11 +17,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AladinService {
+
+    private final UserRepository userRepository;
+    private final KeywordService keywordService;
 
     // ttb 키 value로
     @Value("${aladin.ttb.key}")
@@ -27,7 +35,12 @@ public class AladinService {
     private String SEARCH_URL;
 
     // 검색
-    public ResponseEntity<?> searchBooks(String keyword, int page) {
+    @Transactional
+    public ResponseEntity<?> searchBooks(UserPrincipal userPrincipal, String keyword, int page) {
+        User user = validUserById(userPrincipal.getId());
+        // 검색 키워드 저장
+        keywordService.saveKeyword(user, keyword);
+
         RestTemplate restTemplate = new RestTemplate();
         // 기본 헤더 설정 (필요에 따라)
         HttpHeaders headers = new HttpHeaders();
@@ -67,6 +80,12 @@ public class AladinService {
             e.printStackTrace();
             return new SearchRes(); // 오류 발생 시 빈 객체 반환
         }
+    }
+
+    private User validUserById(Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
+        return userOptional.get();
     }
 
 
