@@ -1,6 +1,7 @@
 package com.nookbook.domain.book.presentation;
 
 import com.nookbook.domain.book.applicaiton.AladinService;
+import com.nookbook.domain.book.dto.response.BestSellerRes;
 import com.nookbook.domain.book.dto.response.KeywordRes;
 import com.nookbook.domain.book.dto.response.SearchRes;
 import com.nookbook.domain.keyword.application.KeywordService;
@@ -42,6 +43,19 @@ public class BookController {
             @Parameter(description = "검색된 도서 목록을 페이지별로 조회합니다. **Page는 1부터 시작합니다!**", required = true) @RequestParam(defaultValue = "1") int page
             ) {
         return aladinService.searchBooks(userPrincipal, keyword, page);
+    }
+
+    @Operation(summary = "베스트셀러 조회", description = "베스트셀러를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "검색 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = BestSellerRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "검색 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @GetMapping("/best-seller")
+    public ResponseEntity<?> findBestSellers(
+            //@Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "베스트셀러를 페이지별로 조회합니다. **Page는 1부터 시작합니다!**", required = true) @RequestParam(defaultValue = "1") int page
+    ) {
+        return aladinService.getBestSeller(page);
     }
 
     @Operation(summary = "검색어 조회", description = "사용자의 검색어를 최대 5개 조회합니다.")

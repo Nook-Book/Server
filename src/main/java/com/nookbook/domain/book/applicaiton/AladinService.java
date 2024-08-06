@@ -1,6 +1,7 @@
 package com.nookbook.domain.book.applicaiton;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nookbook.domain.book.dto.response.BestSellerRes;
 import com.nookbook.domain.book.dto.response.SearchRes;
 import com.nookbook.domain.keyword.application.KeywordService;
 import com.nookbook.domain.user.domain.User;
@@ -34,6 +35,12 @@ public class AladinService {
     @Value("${aladin.search-url}")
     private String SEARCH_URL;
 
+    @Value("${aladin.list-url}")
+    private String LIST_URL;
+
+    @Value("${aladin.find-url}")
+    private String FIND_URL;
+
     // 검색
     @Transactional
     public ResponseEntity<?> searchBooks(UserPrincipal userPrincipal, String keyword, int page) {
@@ -48,7 +55,7 @@ public class AladinService {
         HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
         // 요청 URL 구성
-        URI searchUrl = UriComponentsBuilder
+        URI requestUrl = UriComponentsBuilder
                 .fromUriString(SEARCH_URL)
                 .queryParam("ttbkey", KEY)
                 .queryParam("Query", keyword)
@@ -62,7 +69,7 @@ public class AladinService {
                 .encode(StandardCharsets.UTF_8)
                 .toUri();
         // API 호출 및 응답 처리
-        ResponseEntity<String> responseEntity = restTemplate.exchange(searchUrl, HttpMethod.GET, httpEntity, String.class);
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestUrl, HttpMethod.GET, httpEntity, String.class);
         String responseBody = responseEntity.getBody();
 
         // JSON 파싱 및 DTO 변환
@@ -90,5 +97,47 @@ public class AladinService {
 
 
     // 카테고리별
+
     // 베스트셀러
+    public ResponseEntity<?> getBestSeller(int page) {
+        RestTemplate restTemplate = new RestTemplate();
+        // 기본 헤더 설정 (필요에 따라)
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+        HttpEntity<String> httpEntity = new HttpEntity<>(headers);
+
+        // 요청 URL 구성
+        URI requestUrl = UriComponentsBuilder
+                .fromUriString(LIST_URL)
+                .queryParam("ttbkey", KEY)
+                .queryParam("QueryType", "Bestseller")
+                .queryParam("SearchTarget", "Book")
+                .queryParam("start", page)
+                .queryParam("MaxResults", 12)
+                .queryParam("output", "JS")
+                .queryParam("Version", 20131101)
+                .build()
+                .encode(StandardCharsets.UTF_8)
+                .toUri();
+        // API 호출 및 응답 처리
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestUrl, HttpMethod.GET, httpEntity, String.class);
+        String responseBody = responseEntity.getBody();
+
+        // JSON 파싱 및 DTO 변환
+        BestSellerRes bestSellerRes = convertToBestSellerRes(responseBody);
+
+        return ResponseEntity.ok(bestSellerRes);
+    }
+
+    private BestSellerRes convertToBestSellerRes(String json) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            // JSON 문자열을 BestSellerRes 객체로 변환
+            return objectMapper.readValue(json, BestSellerRes.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new BestSellerRes(); // 오류 발생 시 빈 객체 반환
+        }
+    }
+
 }
