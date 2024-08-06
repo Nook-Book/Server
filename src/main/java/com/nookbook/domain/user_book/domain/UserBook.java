@@ -30,9 +30,10 @@ public class UserBook {
     private BookStatus bookStatus = BookStatus.BEFORE_READING;
 
     @Builder
-    public UserBook(User user, Book book) {
+    public UserBook(User user, Book book, BookStatus bookStatus) {
         this.user = user;
         this.book = book;
+        this.bookStatus = bookStatus;
     }
 
     public void updateBookStatus(BookStatus bookStatus) { this.bookStatus = bookStatus; }

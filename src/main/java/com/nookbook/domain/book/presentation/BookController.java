@@ -56,6 +56,19 @@ public class BookController {
         return bookService.getBookDetail(userPrincipal, isbn);
     }
 
+    @Operation(summary = "도서 상태 변경", description = "도서의 읽음 상태를 변경합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @PatchMapping
+    public ResponseEntity<?> updateBookStatus(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "상태를 변경하려는 도서의 isbn을 입력해주세요.", required = true) @RequestParam String isbn
+    ) {
+        return bookService.updateBookStatus(userPrincipal, isbn);
+    }
+
     @Operation(summary = "베스트셀러 조회", description = "베스트셀러를 카테고리별로 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "검색 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = BestSellerRes.class) ) } ),

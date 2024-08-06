@@ -54,11 +54,25 @@ public class BookDetailRes {
     @Schema(type = "String", example = "http://www.aladin.co.kr/shop/wproduct.aspx?ItemId=1020939&amp;partner=openAPI&amp;start=api", description = "'자세히 보기' 클릭 시 연결되는 알라딘 도서 페이지 링크")
     private String link;
 
+    @JsonProperty("categoryName")
+    @Schema(type = "String", example = "소설/시/희곡", description = "도서의 카테고리입니다.")
+    private String category;
+
+
     public void setToc(String toc) {
         this.toc = toc;
     }
 
     public void setPage(int page) {
         this.page = page;
+    }
+
+    public void formatCategoryName(String categoryName) {
+        String[] parts = categoryName.split(">");
+        if (parts.length > 1) {
+            this.category = parts[1];
+        } else {
+            this.category = "기타";
+        }
     }
 }

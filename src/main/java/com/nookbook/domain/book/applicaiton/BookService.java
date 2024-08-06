@@ -27,6 +27,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -90,23 +91,6 @@ public class BookService {
         return ResponseEntity.ok(searchRes);
     }
 
-    private SearchRes convertToSearchRes(String json) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            // JSON 문자열을 SearchRes 객체로 변환
-            return objectMapper.readValue(json, SearchRes.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new SearchRes(); // 오류 발생 시 빈 객체 반환
-        }
-    }
-
-    private User validUserById(Long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
-        return userOptional.get();
-    }
-
     // 베스트셀러 + 카테고리
     // 종합(0), 소설(1), 경제/경영(170), 자기계발(336), 시(50940), 에세이(55889), 인문/교양(656), 취미/실용(55890), 매거진(2913)
     public ResponseEntity<?> getBestSellerByCategory(int page, int category, int size) {
@@ -138,17 +122,6 @@ public class BookService {
         BestSellerRes bestSellerRes = convertToBestSellerRes(responseBody);
 
         return ResponseEntity.ok(bestSellerRes);
-    }
-
-    private BestSellerRes convertToBestSellerRes(String json) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            // JSON 문자열을 BestSellerRes 객체로 변환
-            return objectMapper.readValue(json, BestSellerRes.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new BestSellerRes(); // 오류 발생 시 빈 객체 반환
-        }
     }
 
     // 상세 조회
@@ -229,6 +202,30 @@ public class BookService {
         return convertToBookRes(responseBody);
     }
 
+    private SearchRes convertToSearchRes(String json) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            // JSON 문자열을 SearchRes 객체로 변환
+            return objectMapper.readValue(json, SearchRes.class);
+        } catch (Exception e) {
+            System.err.println("Error converting JSON to SearchRes: " + e.getMessage());
+            e.printStackTrace();
+            return new SearchRes(); // 오류 발생 시 빈 객체 반환
+        }
+    }
+
+    private BestSellerRes convertToBestSellerRes(String json) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            // JSON 문자열을 BestSellerRes 객체로 변환
+            return objectMapper.readValue(json, BestSellerRes.class);
+        } catch (Exception e) {
+            System.err.println("Error converting JSON to BestSellerRes: " + e.getMessage());
+            e.printStackTrace();
+            return new BestSellerRes(); // 오류 발생 시 빈 객체 반환
+        }
+    }
+
     private BookRes convertToBookRes(String json) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -252,6 +249,7 @@ public class BookService {
                     bookDetailRes.setPage(itemPage);
                     bookDetailRes.setToc(toc);
                 }
+                bookDetailRes.formatCategoryName(bookDetailRes.getCategory());
             }
             // BookRes 객체 생성
             return BookRes.builder()
@@ -259,11 +257,64 @@ public class BookService {
                     .build();
 
         } catch (Exception e) {
+            System.err.println("Error converting JSON to BookRes: " + e.getMessage());
             e.printStackTrace();
             return new BookRes(); // 오류 발생 시 빈 객체 반환
         }
     }
 
+    // 독서 상태 변경
+    @Transactional
+    public ResponseEntity<?> updateBookStatus(UserPrincipal userPrincipal, String isbn13) {
+        User user = validUserById(userPrincipal.getId());
+        // 상태를 변경하려는 책의 DB 저장 여부 확인
+        if (!bookRepository.existsByIsbn(isbn13)) {
+            // 해당 책이 저장되어있지 않다면 DB에 저장
+            BookRes bookRes = getBookInfoByISBN(isbn13);
+            Book book = Book.builder()
+                    .title(bookRes.getItem().getTitle())
+                    .author(bookRes.getItem().getAuthor())
+                    .image(bookRes.getItem().getCover())
+                    .page(bookRes.getItem().getPage())
+                    .isbn(bookRes.getItem().getIsbn13())
+                    .publishedDate(LocalDate.parse(bookRes.getItem().getPubDate()))
+                    .info(bookRes.getItem().getDescription())
+                    .idx(bookRes.getItem().getToc())
+                    .link(bookRes.getItem().getLink())
+                    .category(bookRes.getItem().getCategory()).build();
+            bookRepository.save(book);
+        }
+        Book book = bookRepository.findByIsbn(isbn13);
 
+        UserBook userBook;
+        Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
+        // user_book 저장 여부 확인(이전에 읽은 적이 있는지 확인)
+        if (userBookOptional.isPresent()) {
+            userBook = userBookOptional.get();
+            BookStatus bookStatus = userBook.getBookStatus() == BookStatus.READING ? BookStatus.BEFORE_READING : BookStatus.READING;
+            // BookStatus만 변경
+            userBook.updateBookStatus(bookStatus);
+        } else {
+            // 읽은 적이 없다면 user_book 저장
+            userBook = UserBook.builder()
+                    .user(user)
+                    .book(book)
+                    .bookStatus(BookStatus.READING)
+                    .build();
+            userBookRepository.save(userBook);
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(userBook.getBookStatus())
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    private User validUserById(Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
+        return userOptional.get();
+    }
 
 }
