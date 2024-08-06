@@ -1,7 +1,9 @@
 package com.nookbook.domain.book.presentation;
 
 import com.nookbook.domain.book.applicaiton.AladinService;
+import com.nookbook.domain.book.dto.response.KeywordRes;
 import com.nookbook.domain.book.dto.response.SearchRes;
+import com.nookbook.domain.keyword.application.KeywordService;
 import com.nookbook.domain.user.dto.request.UserInfoReq;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class BookController {
 
     private final AladinService aladinService;
+    private final KeywordService keywordService;
 
     @Operation(summary = "도서 검색", description = "도서를 제목, 저자, 출판사로 검색합니다.")
     @ApiResponses(value = {
@@ -39,6 +42,31 @@ public class BookController {
             @Parameter(description = "검색된 도서 목록을 페이지별로 조회합니다. **Page는 1부터 시작합니다!**", required = true) @RequestParam(defaultValue = "1") int page
             ) {
         return aladinService.searchBooks(userPrincipal, keyword, page);
+    }
+
+    @Operation(summary = "검색어 조회", description = "사용자의 검색어를 최대 5개 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = KeywordRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @GetMapping("/keyword")
+    public ResponseEntity<?> findKeywords(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return keywordService.getKeywords(userPrincipal);
+    }
+
+    @Operation(summary = "검색어 삭제", description = "사용자의 검색어를 삭제합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "검색 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = SearchRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "검색 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @DeleteMapping("/keyword/{keywordId}")
+    public ResponseEntity<?> deleteKeyword(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "검색어의 id를 입력해주세요.", required = true) @PathVariable Long keywordId
+    ) {
+        return keywordService.deleteKeyword(userPrincipal, keywordId);
     }
 
 }

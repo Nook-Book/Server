@@ -15,4 +15,6 @@ public interface KeywordRepository extends JpaRepository<Keyword, Long> {
     Keyword findFirstByUserOrderByCreatedAtAsc(User user);
 
     Keyword findByUserAndContent(User user, String keyword);
+
+    Keyword findByUserAndKeywordId(User user, Long keywordId);
 }
