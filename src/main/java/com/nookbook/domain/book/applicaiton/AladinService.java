@@ -95,11 +95,9 @@ public class AladinService {
         return userOptional.get();
     }
 
-
-    // 카테고리별
-
-    // 베스트셀러
-    public ResponseEntity<?> getBestSeller(int page) {
+    // 베스트셀러 + 카테고리
+    // 종합(0), 소설(1), 경제/경영(170), 자기계발(336), 시(50940), 에세이(55889), 인문/교양(656), 취미/실용(55890), 매거진(2913)
+    public ResponseEntity<?> getBestSellerByCategory(int page, int category, int size) {
         RestTemplate restTemplate = new RestTemplate();
         // 기본 헤더 설정 (필요에 따라)
         HttpHeaders headers = new HttpHeaders();
@@ -113,7 +111,8 @@ public class AladinService {
                 .queryParam("QueryType", "Bestseller")
                 .queryParam("SearchTarget", "Book")
                 .queryParam("start", page)
-                .queryParam("MaxResults", 12)
+                .queryParam("MaxResults", size)
+                .queryParam("CategoryId", category)
                 .queryParam("output", "JS")
                 .queryParam("Version", 20131101)
                 .build()
