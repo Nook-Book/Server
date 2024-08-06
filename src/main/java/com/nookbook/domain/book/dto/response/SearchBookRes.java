@@ -20,10 +20,6 @@ public class SearchBookRes {
     @Schema(type = "String", example = "세이노의 가르침 (100만 부 한정판)", description = "도서의 제목")
     private String title;
 
-    @JsonProperty("link")
-    @Schema(type = "String", example = "http://www.aladin.co.kr/shop/wproduct.aspx?ItemId=343662988&amp;partner=openAPI&amp;start=api", description = "해당 도서의 알라딘 페이지와 연결되는 주소")
-    private String link;
-
     @JsonProperty("author")
     @Schema(type = "String", example = "세이노(SayNo) (지은이)", description = "도서의 저자")
     private String author;
