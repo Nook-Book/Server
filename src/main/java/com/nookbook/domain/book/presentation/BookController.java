@@ -2,6 +2,7 @@ package com.nookbook.domain.book.presentation;
 
 import com.nookbook.domain.book.applicaiton.AladinService;
 import com.nookbook.domain.book.dto.response.BestSellerRes;
+import com.nookbook.domain.book.dto.response.BookDetailRes;
 import com.nookbook.domain.book.dto.response.KeywordRes;
 import com.nookbook.domain.book.dto.response.SearchRes;
 import com.nookbook.domain.keyword.application.KeywordService;
@@ -45,6 +46,19 @@ public class BookController {
         return aladinService.searchBooks(userPrincipal, keyword, page);
     }
 
+    @Operation(summary = "도서 상세 조회", description = "도서를 상세 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = BookDetailRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @GetMapping
+    public ResponseEntity<?> findBookDetail(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "조회하려는 도서의 isbn을 입력해주세요.", required = true) @RequestParam String isbn
+    ) {
+        return aladinService.getBookDetail(userPrincipal, isbn);
+    }
+
     @Operation(summary = "베스트셀러 조회", description = "베스트셀러를 카테고리별로 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "검색 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = BestSellerRes.class) ) } ),
@@ -60,6 +74,8 @@ public class BookController {
         return aladinService.getBestSellerByCategory(page, category, size);
     }
 
+
+    // 검색어 관련
     @Operation(summary = "검색어 조회", description = "사용자의 검색어를 최대 5개 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = KeywordRes.class) ) } ),

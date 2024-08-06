@@ -1,0 +1,39 @@
+package com.nookbook.domain.user_book.domain;
+
+import com.nookbook.domain.book.domain.Book;
+import com.nookbook.domain.user.domain.User;
+import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name="User_Book")
+@NoArgsConstructor
+@Getter
+public class UserBook {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="user_book_id", updatable = false, nullable = false, unique = true)
+    private Long userBookId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "book_id")
+    private Book book;
+
+    @Enumerated(EnumType.STRING)
+    private BookStatus bookStatus = BookStatus.BEFORE_READING;
+
+    @Builder
+    public UserBook(User user, Book book) {
+        this.user = user;
+        this.book = book;
+    }
+
+    public void updateBookStatus(BookStatus bookStatus) { this.bookStatus = bookStatus; }
+}
