@@ -1,59 +1,69 @@
 package com.nookbook.domain.book.domain;
 
-import com.nookbook.domain.collection.domain.Collection;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.time.LocalDate;
 
 @Entity
 @Table(name="Book")
-@NoArgsConstructor
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "book_id", nullable = false)
+    @Column(name="book_id", updatable = false, nullable = false, unique = true)
     private Long bookId;
 
-    // 책 제목
-    String title;
-    // 책 저자
-    String author;
-    // 페이지 수
-    int page;
-    // ISBN
-    String isbn;
-    // 출판일
-    String publicatedDate;
-    // 책 정보
-    String info;
-    // 목차
-    String index;
-    // 카테고리
-    String category;
-    // 책 표지
-    String image;
-    // 출판사
-    String publisher;
+    @Column(name="title")
+    private String title;
 
-    @OneToMany(mappedBy = "book")
-    private List<Collection> collections;
+    @Column(name="author")
+    private String author;
+
+    @Column(name="page")
+    private int page;
+
+    @Column(name="isbn", updatable = false, nullable = false, unique = true)
+    private String isbn;
+
+    @Column(name="publishedDate")
+    private LocalDate publishedDate;
+
+    @Lob
+    @Column(name="info")
+    private String info;
+
+    @Lob
+    @Column(name="idx")
+    private String idx;
+
+    @Column(name="category")
+    private String category;
+
+    @Column(name="image")
+    private String image;
+
+    @Column(name="link")
+    private String link;
 
     @Builder
-    public Book(String title, String author, int page, String isbn, String publicatedDate, String info, String index, String category, String image, String publisher) {
+    public Book(String title, String author, int page, String isbn, LocalDate publishedDate, String info, String idx, String category, String image, String link) {
         this.title = title;
         this.author = author;
         this.page = page;
         this.isbn = isbn;
-        this.publicatedDate = publicatedDate;
+        this.publishedDate = publishedDate;
         this.info = info;
-        this.index = index;
+        this.idx = idx;
         this.category = category;
         this.image = image;
-        this.publisher = publisher;
+        this.link = link;
     }
+
+
 }
