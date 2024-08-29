@@ -26,18 +26,9 @@ public class Collection extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="book_id")
-    private Book book;
-
     @Builder
-    public Collection(String title, User user, Book book) {
+    public Collection(String title, User user) {
         this.title = title;
         this.user = user;
-        this.book = book;
     }
-
-
-
-
 }
