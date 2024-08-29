@@ -12,10 +12,12 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class CollectionListRes {
-    @Schema(type = "Long", example = "17", description = "총 컬렉션 수")
-    private Long totalCollections;
+public class CollectionBooksListRes {
 
-    @Schema(type = "List", description = "컬렉션 리스트")
-    private List<CollectionListDetailRes> collectionListDetailRes;
+    @Schema(type = "Long", example = "15", description = "총 도서 수")
+    private Long totalBooks;
+
+    @Schema(type = "List", description = "컬렉션 도서 리스트")
+    private List< CollectionBooksListDetailRes > collectionBooksListDetailRes;
+
 }

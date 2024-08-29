@@ -4,6 +4,7 @@ package com.nookbook.domain.collection.presentation;
 import com.nookbook.domain.collection.application.CollectionService;
 import com.nookbook.domain.collection.dto.request.CollectionCreateReq;
 import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
+import com.nookbook.domain.collection.dto.response.CollectionBooksListRes;
 import com.nookbook.domain.collection.dto.response.CollectionListRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
@@ -66,5 +67,19 @@ public class CollectionController {
     ) {
         return collectionService.updateCollectionTitle(userPrincipal, collectionId, updateCollectionTitleReq);
     }
+
+    @Operation(summary = "컬렉션 등록 도서 목록 조회 API", description = "컬렉션에 등록된 도서 목록을 조회하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "컬렉션 등록 도서 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CollectionBooksListRes.class))}),
+            @ApiResponse(responseCode = "400", description = "컬렉션 등록 도서 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @GetMapping("/{collectionId}/books")
+    public ResponseEntity<?> getCollectionBooks(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @PathVariable Long collectionId
+    ) {
+        return collectionService.getCollectionBooks(userPrincipal, collectionId);
+    }
+
 
 }
