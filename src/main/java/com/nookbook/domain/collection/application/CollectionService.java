@@ -4,6 +4,7 @@ import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.collection.domain.Collection;
 import com.nookbook.domain.collection.domain.repository.CollectionRepository;
 import com.nookbook.domain.collection.dto.request.CollectionCreateReq;
+import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
 import com.nookbook.domain.collection.dto.response.CollectionListDetailRes;
 import com.nookbook.domain.collection.dto.response.CollectionListRes;
 import com.nookbook.domain.user.application.UserService;
@@ -82,5 +83,37 @@ public class CollectionService {
 
     public List<String> getTop4BookImagesByCollectionId(Long collectionId) {
         return collectionRepository.findTop4BookImagesByCollectionId(collectionId);
+    }
+
+    @Transactional
+    public ResponseEntity<?> updateCollectionTitle(UserPrincipal userPrincipal, Long collectionId, UpdateCollectionTitleReq updateCollectionTitleReq) {
+
+        // 사용자 검증
+        User user = userService.findByEmail(userPrincipal.getEmail())
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+        Collection collection = collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("컬렉션 정보를 찾을 수 없습니다."));
+
+
+        // 사용자가 소유한 컬렉션인지 확인
+        if (!collection.getUser().equals(user)) {
+            ApiResponse response = ApiResponse.builder()
+                    .check(false)
+                    .information("해당 컬렉션에 대한 권한이 없습니다.")
+                    .build();
+            return ResponseEntity.badRequest().body(response);
+        }
+        else{
+            // 컬렉션 제목 수정
+            collection.updateTitle(updateCollectionTitleReq.getTitle());
+
+            ApiResponse response = ApiResponse.builder()
+                    .check(true)
+                    .information("컬렉션 제목 수정 완료")
+                    .build();
+
+            return ResponseEntity.ok(response);
+        }
     }
 }

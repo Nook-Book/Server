@@ -3,6 +3,7 @@ package com.nookbook.domain.collection.presentation;
 
 import com.nookbook.domain.collection.application.CollectionService;
 import com.nookbook.domain.collection.dto.request.CollectionCreateReq;
+import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
 import com.nookbook.domain.collection.dto.response.CollectionListRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
@@ -52,5 +53,18 @@ public class CollectionController {
         return collectionService.getCollectionList(userPrincipal);
     }
 
+    @Operation(summary = "컬렉션 제목 수정 API", description = "유저의 컬렉션 제목을 수정하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "컬렉션 제목 수정 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "컬렉션 제목 수정 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PatchMapping("/{collectionId}")
+    public ResponseEntity<?> updateCollectionTitle(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @PathVariable Long collectionId,
+            @RequestBody UpdateCollectionTitleReq updateCollectionTitleReq
+    ) {
+        return collectionService.updateCollectionTitle(userPrincipal, collectionId, updateCollectionTitleReq);
+    }
 
 }

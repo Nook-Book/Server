@@ -31,4 +31,8 @@ public class Collection extends BaseEntity {
         this.title = title;
         this.user = user;
     }
+
+    public void updateTitle(String title) {
+        this.title = title;
+    }
 }
