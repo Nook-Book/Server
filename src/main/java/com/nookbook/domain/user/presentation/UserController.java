@@ -33,7 +33,7 @@ public class UserController {
 
     private final UserService userService;
 
-    // 회원가입 과정
+    // 회원가입 과정 (초기에만 이루어지므로, 기본 컬렉션 로직 포함)
     @Operation(summary = "사용자 정보 등록", description = "사용자가 설정한 정보를 등록합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "사용자 정보 등록 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
