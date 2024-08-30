@@ -128,7 +128,7 @@ public class BookService {
     @Transactional
     public ResponseEntity<?> getBookDetail(UserPrincipal userPrincipal, String isbn13) {
         User user = validUserById(userPrincipal.getId());
-        BookStatus bookStatus = BookStatus.BEFORE_READING;
+        BookStatus bookStatus = BookStatus.BEFORE_READ;
         boolean isStoredCollection = false;
 
         BookDetailRes bookDetailRes;
@@ -291,7 +291,7 @@ public class BookService {
         // user_book 저장 여부 확인(이전에 읽은 적이 있는지 확인)
         if (userBookOptional.isPresent()) {
             userBook = userBookOptional.get();
-            BookStatus bookStatus = userBook.getBookStatus() == BookStatus.READING ? BookStatus.BEFORE_READING : BookStatus.READING;
+            BookStatus bookStatus = userBook.getBookStatus() == BookStatus.READ ? BookStatus.BEFORE_READ : BookStatus.READ;
             // BookStatus만 변경
             userBook.updateBookStatus(bookStatus);
         } else {
@@ -299,7 +299,7 @@ public class BookService {
             userBook = UserBook.builder()
                     .user(user)
                     .book(book)
-                    .bookStatus(BookStatus.READING)
+                    .bookStatus(BookStatus.READ)
                     .build();
             userBookRepository.save(userBook);
         }
