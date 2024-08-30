@@ -114,6 +114,7 @@ public class NoteService {
         NoteDetailRes noteDetailRes = NoteDetailRes.builder()
                 .title(note.getTitle())
                 .content(note.getContent())
+                .createdDate(note.getCreatedAt().toLocalDate().toString())
                 .build();
 
         ApiResponse apiResponse = ApiResponse.builder()
