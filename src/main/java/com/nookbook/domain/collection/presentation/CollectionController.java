@@ -81,5 +81,29 @@ public class CollectionController {
         return collectionService.getCollectionBooks(userPrincipal, collectionId);
     }
 
+//    @Operation(summary = "컬렉션 순서 변경 API", description = "컬렉션의 순서를 변경하는 API입니다.")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "컬렉션 등록 도서 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CollectionBooksListRes.class))}),
+//            @ApiResponse(responseCode = "400", description = "컬렉션 등록 도서 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+//    })
+
+
+    @Operation(summary = "컬렉션 도서 추가 API", description = "컬렉션에 도서를 추가하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "컬렉션 도서 추가 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "컬렉션 도서 추가 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PostMapping("{collectionId}/{bookId}")
+    public ResponseEntity<?> addBookToCollection(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @PathVariable Long collectionId,
+            @PathVariable Long bookId
+    ) {
+        return collectionService.addBookToCollection(userPrincipal, collectionId, bookId);
+    }
+
+
+
+
 
 }
