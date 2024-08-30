@@ -1,11 +1,9 @@
 package com.nookbook.domain.book.presentation;
 
 import com.nookbook.domain.book.applicaiton.BookService;
-import com.nookbook.domain.book.dto.response.BestSellerRes;
-import com.nookbook.domain.book.dto.response.BookDetailRes;
-import com.nookbook.domain.book.dto.response.KeywordRes;
-import com.nookbook.domain.book.dto.response.SearchRes;
+import com.nookbook.domain.book.dto.response.*;
 import com.nookbook.domain.keyword.application.KeywordService;
+import com.nookbook.domain.user_book.domain.BookStatus;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;
@@ -45,7 +43,7 @@ public class BookController {
 
     @Operation(summary = "도서 상세 조회", description = "도서를 상세 조회합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = BookDetailRes.class) ) } ),
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = BookRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
     @GetMapping
@@ -58,15 +56,15 @@ public class BookController {
 
     @Operation(summary = "도서 상태 변경", description = "도서의 읽음 상태를 변경합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class) ) } ),
+            @ApiResponse(responseCode = "200", description = "변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = BookStatus.class) ) } ),
             @ApiResponse(responseCode = "400", description = "변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
-    @PatchMapping
+    @PatchMapping("/{bookId}")
     public ResponseEntity<?> updateBookStatus(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "상태를 변경하려는 도서의 isbn을 입력해주세요.", required = true) @RequestParam String isbn
+            @Parameter(description = "상태를 변경하려는 도서의 id를 입력해주세요.", required = true) @PathVariable Long bookId
     ) {
-        return bookService.updateBookStatus(userPrincipal, isbn);
+        return bookService.updateBookStatus(userPrincipal, bookId);
     }
 
     @Operation(summary = "베스트셀러 조회", description = "베스트셀러를 카테고리별로 조회합니다.")

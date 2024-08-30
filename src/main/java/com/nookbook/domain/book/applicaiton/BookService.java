@@ -125,26 +125,31 @@ public class BookService {
     }
 
     // 상세 조회
+    @Transactional
     public ResponseEntity<?> getBookDetail(UserPrincipal userPrincipal, String isbn13) {
         User user = validUserById(userPrincipal.getId());
         BookStatus bookStatus = BookStatus.BEFORE_READING;
         boolean isStoredCollection = false;
 
-        BookRes bookRes;
-        if (bookRepository.existsByIsbn(isbn13)) {
-            Book book = bookRepository.findByIsbn(isbn13);
-
+        BookDetailRes bookDetailRes;
+        Book book;
+        if (!bookRepository.existsByIsbn(isbn13)) {
+            bookDetailRes = getBookInfoByISBN(isbn13);
+            book = saveBookInfo(bookDetailRes);
+        } else {
+            book = validBookByIsbn13(isbn13);
             Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
             if (userBookOptional.isPresent()) {
                 bookStatus = userBookOptional.get().getBookStatus();
-            }
-            // 컬렉션 저장 여부 확인
-            // Optional<Collection> collectionOptional = collectionRepository.findByUserAndIsbn(user, isbn13);
-            // if (collectionOptional.isPresent()) {
-            //     isStoredCollection = true; // 컬렉션에 저장된 상태
-            // }
 
-            BookDetailRes bookDetailRes = BookDetailRes.builder()
+                // 컬렉션 저장 여부 확인
+                // Optional<Collection> collectionOptional = collectionRepository.findByUserAndIsbn(user, isbn13);
+                // if (collectionOptional.isPresent()) {
+                //     isStoredCollection = true; // 컬렉션에 저장된 상태
+                // }
+            }
+
+            bookDetailRes = BookDetailRes.builder()
                     .title(book.getTitle())
                     .author(book.getAuthor())
                     .cover(book.getImage())
@@ -155,18 +160,14 @@ public class BookService {
                     .toc(book.getIdx())
                     .link(book.getLink())
                     .build();
-
-            bookRes = BookRes.builder()
-                    .bookStatus(bookStatus)
-                    .storedCollection(isStoredCollection)
-                    .item(bookDetailRes)
-                    .build();
-        } else {
-            bookRes = getBookInfoByISBN(isbn13);
-            // 추가로 bookStatus, storedCollection 설정
-            bookRes.setBookStatus(bookStatus);
-            bookRes.setStoredCollection(isStoredCollection);
         }
+
+        BookRes bookRes = BookRes.builder()
+                .bookId(book.getBookId())
+                .bookStatus(bookStatus)
+                .storedCollection(isStoredCollection)
+                .item(bookDetailRes)
+                .build();
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -175,7 +176,23 @@ public class BookService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    private BookRes getBookInfoByISBN(String isbn13) {
+    private Book saveBookInfo(BookDetailRes bookDetailRes) {
+        Book book = Book.builder()
+                .title(bookDetailRes.getTitle())
+                .author(bookDetailRes.getAuthor())
+                .image(bookDetailRes.getCover())
+                .page(bookDetailRes.getPage())
+                .isbn(bookDetailRes.getIsbn13())
+                .publishedDate(LocalDate.parse(bookDetailRes.getPubDate()))
+                .info(bookDetailRes.getDescription())
+                .idx(bookDetailRes.getToc())
+                .link(bookDetailRes.getLink())
+                .category(bookDetailRes.getCategory()).build();
+        bookRepository.save(book);
+        return book;
+    }
+
+    private BookDetailRes getBookInfoByISBN(String isbn13) {
         RestTemplate restTemplate = new RestTemplate();
         // 기본 헤더 설정 (필요에 따라)
         HttpHeaders headers = new HttpHeaders();
@@ -199,7 +216,7 @@ public class BookService {
         String responseBody = responseEntity.getBody();
 
         // JSON 파싱 및 DTO 변환
-        return convertToBookRes(responseBody);
+        return convertToBookDetailRes(responseBody);
     }
 
     private SearchRes convertToSearchRes(String json) {
@@ -226,7 +243,7 @@ public class BookService {
         }
     }
 
-    private BookRes convertToBookRes(String json) {
+    private BookDetailRes convertToBookDetailRes(String json) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             // JSON 문자열을 Map 형태로 변환
@@ -251,40 +268,23 @@ public class BookService {
                 }
                 bookDetailRes.formatCategoryName(bookDetailRes.getCategory());
             }
-            // BookRes 객체 생성
-            return BookRes.builder()
-                    .item(bookDetailRes)
-                    .build();
+            // BookDetailRes 객체 반환
+            return bookDetailRes;
 
         } catch (Exception e) {
             System.err.println("Error converting JSON to BookRes: " + e.getMessage());
             e.printStackTrace();
-            return new BookRes(); // 오류 발생 시 빈 객체 반환
+            return new BookDetailRes();
         }
     }
 
     // 독서 상태 변경
     @Transactional
-    public ResponseEntity<?> updateBookStatus(UserPrincipal userPrincipal, String isbn13) {
+    public ResponseEntity<?> updateBookStatus(UserPrincipal userPrincipal, Long bookId) {
         User user = validUserById(userPrincipal.getId());
-        // 상태를 변경하려는 책의 DB 저장 여부 확인
-        if (!bookRepository.existsByIsbn(isbn13)) {
-            // 해당 책이 저장되어있지 않다면 DB에 저장
-            BookRes bookRes = getBookInfoByISBN(isbn13);
-            Book book = Book.builder()
-                    .title(bookRes.getItem().getTitle())
-                    .author(bookRes.getItem().getAuthor())
-                    .image(bookRes.getItem().getCover())
-                    .page(bookRes.getItem().getPage())
-                    .isbn(bookRes.getItem().getIsbn13())
-                    .publishedDate(LocalDate.parse(bookRes.getItem().getPubDate()))
-                    .info(bookRes.getItem().getDescription())
-                    .idx(bookRes.getItem().getToc())
-                    .link(bookRes.getItem().getLink())
-                    .category(bookRes.getItem().getCategory()).build();
-            bookRepository.save(book);
-        }
-        Book book = bookRepository.findByIsbn(isbn13);
+        Optional<Book> bookOptional = bookRepository.findById(bookId);
+        DefaultAssert.isTrue(bookOptional.isPresent(), "해당 도서가 존재하지 않습니다.");
+        Book book = bookOptional.get();
 
         UserBook userBook;
         Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
@@ -315,6 +315,12 @@ public class BookService {
         Optional<User> userOptional = userRepository.findById(userId);
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
         return userOptional.get();
+    }
+
+    private Book validBookByIsbn13(String isbn13) {
+        Optional<Book> bookOptional = bookRepository.findByIsbn(isbn13);
+        DefaultAssert.isTrue(bookOptional.isPresent(), "해당 도서가 존재하지 않습니다.");
+        return bookOptional.get();
     }
 
 }
