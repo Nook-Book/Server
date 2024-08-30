@@ -1,12 +1,12 @@
 package com.nookbook.domain.collection.domain;
 
-import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.common.BaseEntity;
 import com.nookbook.domain.user.domain.User;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 
 import java.util.List;
 
@@ -31,10 +31,15 @@ public class Collection extends BaseEntity {
     @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CollectionBook> collectionBooks;
 
+    @Column(name = "order_index")
+    private int orderIndex;
+
+
     @Builder
-    public Collection(String title, User user) {
+    public Collection(String title, User user, int orderIndex) {
         this.title = title;
         this.user = user;
+        this.orderIndex = orderIndex;
     }
 
     public void updateTitle(String title) {
