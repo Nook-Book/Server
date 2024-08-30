@@ -33,4 +33,9 @@ public class Note extends BaseEntity {
         this.title = title;
         this.content = content;
     }
+
+    public void updateNote(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
 }

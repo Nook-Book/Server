@@ -5,6 +5,7 @@ import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.note.domain.Note;
 import com.nookbook.domain.note.domain.repository.NoteRepository;
 import com.nookbook.domain.note.dto.request.CreateNoteReq;
+import com.nookbook.domain.note.dto.request.UpdateNoteReq;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user_book.domain.BookStatus;
@@ -33,9 +34,9 @@ public class NoteService {
 
     // 노트 저장
     @Transactional
-    public ResponseEntity<?> saveNewNote(UserPrincipal userPrincipal, Long bookId, CreateNoteReq createNoteReq) {
+    public ResponseEntity<?> saveNewNote(UserPrincipal userPrincipal, CreateNoteReq createNoteReq) {
         User user = validUserById(userPrincipal.getId());
-        Book book = validBookById(bookId);
+        Book book = validBookById(createNoteReq.getBookId());
 
         UserBook userBook;
         // user_book에 없으면 생성
@@ -65,6 +66,23 @@ public class NoteService {
     }
 
     // 노트 수정
+    @Transactional
+    public ResponseEntity<?> updateNote(UserPrincipal userPrincipal, Long noteId, UpdateNoteReq updateNoteReq) {
+        User user = validUserById(userPrincipal.getId());
+        Note note = validNoteById(noteId);
+        DefaultAssert.isTrue(note.getUserBook().getUser() == user, "유효한 접근이 아닙니다.");
+
+        note.updateNote(updateNoteReq.getTitle(), updateNoteReq.getContent());
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder()
+                        .message("기록이 수정되었습니다.")
+                        .build())
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
     // 노트 삭제
     @Transactional
     public ResponseEntity<?> deleteNote(UserPrincipal userPrincipal, Long noteId) {
