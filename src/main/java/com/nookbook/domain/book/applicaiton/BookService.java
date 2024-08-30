@@ -9,6 +9,7 @@ import com.nookbook.domain.book.dto.response.BookDetailRes;
 import com.nookbook.domain.book.dto.response.BookRes;
 import com.nookbook.domain.book.dto.response.SearchRes;
 import com.nookbook.domain.keyword.application.KeywordService;
+import com.nookbook.domain.note.domain.repository.NoteRepository;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user_book.domain.BookStatus;
@@ -37,6 +38,7 @@ public class BookService {
 
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
+    private final NoteRepository noteRepository;
     private final UserBookRepository userBookRepository;
 
     private final KeywordService keywordService;
@@ -130,6 +132,7 @@ public class BookService {
         User user = validUserById(userPrincipal.getId());
         BookStatus bookStatus = BookStatus.BEFORE_READ;
         boolean isStoredCollection = false;
+        boolean hasNote = false;
 
         BookDetailRes bookDetailRes;
         Book book;
@@ -140,6 +143,9 @@ public class BookService {
             book = validBookByIsbn13(isbn13);
             Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
             if (userBookOptional.isPresent()) {
+                UserBook userBook = userBookOptional.get();
+
+                // 독서 상태 확인
                 bookStatus = userBookOptional.get().getBookStatus();
 
                 // 컬렉션 저장 여부 확인
@@ -147,6 +153,9 @@ public class BookService {
                 // if (collectionOptional.isPresent()) {
                 //     isStoredCollection = true; // 컬렉션에 저장된 상태
                 // }
+
+                // 노트 존재 여부 확인
+                hasNote = noteRepository.existsByUserBook(userBook);
             }
 
             bookDetailRes = BookDetailRes.builder()
@@ -166,6 +175,7 @@ public class BookService {
                 .bookId(book.getBookId())
                 .bookStatus(bookStatus)
                 .storedCollection(isStoredCollection)
+                .hasNote(hasNote)
                 .item(bookDetailRes)
                 .build();
 
