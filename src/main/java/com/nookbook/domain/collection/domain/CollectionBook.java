@@ -3,6 +3,7 @@ package com.nookbook.domain.collection.domain;
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.common.BaseEntity;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,5 +25,11 @@ public class CollectionBook extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="book_id")
     private Book book;
+
+    @Builder
+    public CollectionBook(Collection collection, Book book) {
+        this.collection = collection;
+        this.book = book;
+    }
 
 }
