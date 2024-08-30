@@ -7,6 +7,8 @@ import com.nookbook.domain.note.domain.repository.NoteRepository;
 import com.nookbook.domain.note.dto.request.CreateNoteReq;
 import com.nookbook.domain.note.dto.request.UpdateNoteReq;
 import com.nookbook.domain.note.dto.response.NoteDetailRes;
+import com.nookbook.domain.note.dto.response.NoteListRes;
+import com.nookbook.domain.note.dto.response.NoteRes;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user_book.domain.BookStatus;
@@ -21,7 +23,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -107,7 +111,38 @@ public class NoteService {
     }
 
     // 책 정보 조회(제목, 이미지) && 노트 목록 조회
-    // 기록이 처음이 아닐 경우에만 보여지므로, book 엔티티에서 조회
+    public ResponseEntity<?> getNoteList(UserPrincipal userPrincipal, Long bookId) {
+        User user = validUserById(userPrincipal.getId());
+        Book book = validBookById(bookId);
+
+        Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
+        DefaultAssert.isTrue(userBookOptional.isPresent(), "기록이 존재하지 않습니다.");
+        UserBook userBook = userBookOptional.get();
+
+        int count = noteRepository.countByUserBook(userBook);
+
+        List<Note> notes = noteRepository.findByUserBookOrderByCreatedAtDesc(userBook);
+        List<NoteListRes> noteListRes = notes.stream()
+                .map(note -> NoteListRes.builder()
+                        .noteId(note.getNoteId())
+                        .title(note.getTitle())
+                        .createdDate(note.getCreatedAt().toLocalDate().toString())
+                        .build())
+                .toList();
+
+        NoteRes noteRes = NoteRes.builder()
+                .bookTitle(book.getTitle())
+                .bookImage(book.getImage())
+                .noteCount(count)
+                .noteListRes(noteListRes)
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(noteRes)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
 
     // 노트 상세 조회
     public ResponseEntity<?> getNoteDetail(UserPrincipal userPrincipal, Long noteId) {
