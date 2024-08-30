@@ -49,7 +49,11 @@ public class NoteService {
                     .bookStatus(BookStatus.BEFORE_READ)  // 상태 변경은 수동으로
                     .build();
             userBookRepository.save(userBook);
-        } else userBook = userBookOptional.get();
+        } else {
+            userBook = userBookOptional.get();
+            int noteLimit = noteRepository.countByUserBook(userBook);
+            DefaultAssert.isTrue(noteLimit < 10, "한 책당 생성할 수 있는 노트의 최대 개수는 10개입니다.");
+        }
 
         Note note = Note.builder()
                 .title(createNoteReq.getTitle())
