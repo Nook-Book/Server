@@ -6,6 +6,7 @@ import com.nookbook.domain.note.domain.Note;
 import com.nookbook.domain.note.domain.repository.NoteRepository;
 import com.nookbook.domain.note.dto.request.CreateNoteReq;
 import com.nookbook.domain.note.dto.request.UpdateNoteReq;
+import com.nookbook.domain.note.dto.response.NoteDetailRes;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user_book.domain.BookStatus;
@@ -105,6 +106,22 @@ public class NoteService {
     // 기록이 처음이 아닐 경우에만 보여지므로, book 엔티티에서 조회
 
     // 노트 상세 조회
+    public ResponseEntity<?> getNoteDetail(UserPrincipal userPrincipal, Long noteId) {
+        User user = validUserById(userPrincipal.getId());
+        Note note = validNoteById(noteId);
+        DefaultAssert.isTrue(note.getUserBook().getUser() == user, "유효한 접근이 아닙니다.");
+
+        NoteDetailRes noteDetailRes = NoteDetailRes.builder()
+                .title(note.getTitle())
+                .content(note.getContent())
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(noteDetailRes)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
 
     private User validUserById(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);

@@ -3,6 +3,7 @@ package com.nookbook.domain.note.presentation;
 import com.nookbook.domain.note.application.NoteService;
 import com.nookbook.domain.note.dto.request.CreateNoteReq;
 import com.nookbook.domain.note.dto.request.UpdateNoteReq;
+import com.nookbook.domain.note.dto.response.NoteDetailRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;
@@ -64,5 +65,18 @@ public class NoteController {
             @Parameter(description = "노트의 id를 입력해주세요.", required = true) @PathVariable Long noteId
     ) {
         return noteService.deleteNote(userPrincipal, noteId);
+    }
+
+    @Operation(summary = "독서 노트 상세 조회", description = "독서 노트를 상세 조회(제목, 내용)합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = NoteDetailRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @GetMapping("/{noteId}")
+    public ResponseEntity<?> findNoteDetail(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "노트의 id를 입력해주세요.", required = true) @PathVariable Long noteId
+    ) {
+        return noteService.getNoteDetail(userPrincipal, noteId);
     }
 }
