@@ -38,4 +38,17 @@ public class NoteController {
             ) {
         return noteService.saveNewNote(userPrincipal, bookId, createNoteReq);
     }
+
+    @Operation(summary = "독서 노트 삭제", description = "독서 노트를 삭제합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "삭제 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "삭제 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @DeleteMapping("/{noteId}")
+    public ResponseEntity<?> deleteNote(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "노트의 id를 입력해주세요.", required = true) @PathVariable Long noteId
+    ) {
+        return noteService.deleteNote(userPrincipal, noteId);
+    }
 }

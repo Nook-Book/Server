@@ -66,9 +66,27 @@ public class NoteService {
 
     // 노트 수정
     // 노트 삭제
+    @Transactional
+    public ResponseEntity<?> deleteNote(UserPrincipal userPrincipal, Long noteId) {
+        User user = validUserById(userPrincipal.getId());
+        Note note = validNoteById(noteId);
+        DefaultAssert.isTrue(note.getUserBook().getUser() == user, "유효한 접근이 아닙니다.");
+
+        noteRepository.delete(note);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder()
+                        .message("기록이 삭제되었습니다.")
+                        .build())
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
 
     // 책 정보 조회(제목, 이미지) && 노트 목록 조회
-    // 처음 아닐 경우에만 보여지므로, book 엔티티에서 조회
+    // 기록이 처음이 아닐 경우에만 보여지므로, book 엔티티에서 조회
+
+    // 노트 상세 조회
 
     private User validUserById(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
@@ -80,5 +98,11 @@ public class NoteService {
         Optional<Book> bookOptional = bookRepository.findById(bookId);
         DefaultAssert.isTrue(bookOptional.isPresent(), "해당 도서가 존재하지 않습니다.");
         return bookOptional.get();
+    }
+
+    private Note validNoteById(Long noteId) {
+        Optional<Note> noteOptional = noteRepository.findById(noteId);
+        DefaultAssert.isTrue(noteOptional.isPresent(), "해당 기록이 존재하지 않습니다.");
+        return noteOptional.get();
     }
 }
