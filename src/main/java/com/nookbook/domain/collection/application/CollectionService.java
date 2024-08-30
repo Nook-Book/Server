@@ -4,6 +4,7 @@ import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.collection.domain.Collection;
 import com.nookbook.domain.collection.domain.CollectionBook;
+import com.nookbook.domain.collection.domain.repository.CollectionBookRepository;
 import com.nookbook.domain.collection.domain.repository.CollectionRepository;
 import com.nookbook.domain.collection.dto.request.CollectionCreateReq;
 import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
@@ -31,14 +32,20 @@ public class CollectionService {
     private final CollectionRepository collectionRepository;
     private final UserService userService;
     private final BookRepository bookRepository;
+    private final CollectionBookRepository collectionBookRepository;
 
     @Transactional
     public ResponseEntity<?> createCollection(UserPrincipal userPrincipal, CollectionCreateReq collectionCreateReq) {
         User user= userService.findByEmail(userPrincipal.getEmail())
                 .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
 
+        // 사용자의 마지막 컬렉션 순서를 가져와서 새로운 순서를 지정
+        int maxOrderIndex = collectionRepository.findMaxOrderIndexByUser(user).orElse(0);
+
+
         Collection collection = Collection.builder()
                 .title(collectionCreateReq.getTitle())
+                .orderIndex(maxOrderIndex + 1)
                 .user(user)
                 .build();
 
@@ -151,4 +158,35 @@ public class CollectionService {
         }
         return collection;
     }
+
+
+    @Transactional
+    public ResponseEntity<?> addBookToCollection(UserPrincipal userPrincipal, Long collectionId, Long bookId) {
+        Collection collection = findCollectionByUserAndCollectionId(userPrincipal, collectionId);
+
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("도서를 찾을 수 없습니다."));
+
+        CollectionBook collectionBook = CollectionBook.builder()
+                .collection(collection)
+                .book(book)
+                .build();
+
+        collectionBookRepository.save(collectionBook);
+
+        ApiResponse response = ApiResponse.builder()
+                .check(true)
+                .information("컬렉션에 도서 추가 완료")
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    // 컬렉션 순서 변경
+    // 컬렉션 목록의 순서를 모두 요청값으로 받아서 수정
+//    @Transactional
+//    public void updateCollectionOrder(UserPrincipal userPrincipal, CollectionOrder) {
+//
+//    }
 }
