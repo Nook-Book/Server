@@ -236,20 +236,22 @@ public class CollectionService {
 
         // 컬렉션 순서 변경
         // 1. 요청값의 collectionId를 통해 컬렉션 객체를 찾음
-        // 2. 컬렉션 객체의 orderIndex를 요청값의 order로 변경
+        // 2. 컬렉션 객체의 orderIndex를 요청값의 order로 변경 /
         // 3. 순서 top 4의 컬렉션은 MAIN으로 변경, 나머지는 NORMAL로 변경
 
         for(int i = 0 ; i < collectionOrderReqList.size() ; i++){
             CollectionOrderReq collectionOrderReq = collectionOrderReqList.get(i);
             Collection collection = collectionRepository.findById(collectionOrderReq.getCollectionId())
                     .orElseThrow(() -> new RuntimeException("컬렉션을 찾을 수 없습니다."));
+
             Long idx = collectionOrderReq.getOrder();
+            int statusNum = collectionOrderReq.getStatus(); // 1 : MAIN, 0 : NORMAL
 
             // 컬렉션 순서 변경
             collection.updateOrderIndex(idx);
 
             // 컬렉션 상태 변경
-            if(i < 4){
+            if(statusNum == 1){
                 collection.updateStatus(CollectionStatus.MAIN);
             }
             else{
