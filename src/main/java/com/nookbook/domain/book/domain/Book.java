@@ -34,12 +34,10 @@ public class Book {
     @Column(name="publishedDate")
     private LocalDate publishedDate;
 
-    @Lob
-    @Column(name="info")
+    @Column(name="info", columnDefinition = "TEXT")
     private String info;
 
-    @Lob
-    @Column(name="idx")
+    @Column(name="idx", columnDefinition = "TEXT")
     private String idx;
 
     @Column(name="category")
