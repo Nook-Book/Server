@@ -3,6 +3,8 @@ package com.nookbook.domain.collection.presentation;
 
 import com.nookbook.domain.collection.application.CollectionService;
 import com.nookbook.domain.collection.dto.request.CollectionCreateReq;
+import com.nookbook.domain.collection.dto.request.CollectionOrderReq;
+import com.nookbook.domain.collection.dto.request.DeleteBookReq;
 import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
 import com.nookbook.domain.collection.dto.response.CollectionBooksListRes;
 import com.nookbook.domain.collection.dto.response.CollectionListRes;
@@ -20,6 +22,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -81,11 +85,33 @@ public class CollectionController {
         return collectionService.getCollectionBooks(userPrincipal, collectionId);
     }
 
-//    @Operation(summary = "컬렉션 순서 변경 API", description = "컬렉션의 순서를 변경하는 API입니다.")
-//    @ApiResponses(value = {
-//            @ApiResponse(responseCode = "200", description = "컬렉션 등록 도서 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CollectionBooksListRes.class))}),
-//            @ApiResponse(responseCode = "400", description = "컬렉션 등록 도서 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
-//    })
+    @Operation(summary = "컬렉션 도서 삭제 API", description = "컬렉션에 등록된 도서를 삭제하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "컬렉션 도서 삭제 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "컬렉션 도서 삭제 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @DeleteMapping("/{collectionId}/books")
+    public ResponseEntity<?> deleteBookFromCollection(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @PathVariable Long collectionId,
+            @RequestBody DeleteBookReq deleteBookReq
+    ) {
+        return collectionService.deleteBookFromCollection(userPrincipal, collectionId, deleteBookReq);
+    }
+
+
+    @Operation(summary = "컬렉션 순서 편집 API", description = "컬렉션의 순서를 변경하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "컬렉션 등록 도서 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "컬렉션 등록 도서 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PostMapping("/{collectionId}/order")
+    public ResponseEntity<?> editCollectionOrder(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @RequestBody List<CollectionOrderReq> collectionOrderReqList
+    ) {
+        return collectionService.editCollectionOrder(userPrincipal, collectionOrderReqList);
+    }
 
 
     @Operation(summary = "컬렉션 도서 추가 API", description = "컬렉션에 도서를 추가하는 API입니다.")
@@ -101,8 +127,6 @@ public class CollectionController {
     ) {
         return collectionService.addBookToCollection(userPrincipal, collectionId, bookId);
     }
-
-
 
 
 

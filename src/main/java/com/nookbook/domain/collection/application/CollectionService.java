@@ -80,6 +80,7 @@ public class CollectionService {
                     // 컬렉션 각각의 정보
                     return CollectionListDetailRes.builder()
                             .order(collection.getOrderIndex())
+                            .collectionStatus(collection.getCollectionStatus())
                             .id(collection.getCollectionId())
                             .title(collection.getTitle())
                             .coverList(coverImages)
