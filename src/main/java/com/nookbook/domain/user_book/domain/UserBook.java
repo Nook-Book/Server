@@ -1,6 +1,7 @@
 package com.nookbook.domain.user_book.domain;
 
 import com.nookbook.domain.book.domain.Book;
+import com.nookbook.domain.common.BaseEntity;
 import com.nookbook.domain.user.domain.User;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Table(name="User_Book")
 @NoArgsConstructor
 @Getter
-public class UserBook {
+public class UserBook extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +28,7 @@ public class UserBook {
     private Book book;
 
     @Enumerated(EnumType.STRING)
-    private BookStatus bookStatus = BookStatus.BEFORE_READING;
+    private BookStatus bookStatus = BookStatus.BEFORE_READ;
 
     @Builder
     public UserBook(User user, Book book, BookStatus bookStatus) {
