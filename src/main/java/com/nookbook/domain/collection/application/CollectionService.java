@@ -39,6 +39,8 @@ public class CollectionService {
     private final BookRepository bookRepository;
     private final CollectionBookRepository collectionBookRepository;
 
+
+    // 컬렉션 생성
     @Transactional
     public ResponseEntity<?> createCollection(UserPrincipal userPrincipal, CollectionCreateReq collectionCreateReq) {
         User user= userService.findByEmail(userPrincipal.getEmail())
@@ -65,6 +67,7 @@ public class CollectionService {
         return ResponseEntity.ok(response);
     }
 
+    // 컬렉션 리스트 조회
     // CollectionListRes -> CollectionListDetailRes (컬렉션ID, 제목, 커버 리스트) -> CollectionCoverRes(커버 리스트)
     public ResponseEntity<?> getCollectionList(UserPrincipal userPrincipal) {
         User user = userService.findByEmail(userPrincipal.getEmail())
@@ -105,10 +108,12 @@ public class CollectionService {
     }
 
 
+    // 컬렉션의 최근 추가된 4권의 표지 이미지 리스트 조회
     public List<String> getTop4BookImagesByCollectionId(Long collectionId) {
         return collectionRepository.findTop4BookImagesByCollectionId(collectionId);
     }
 
+    // 컬렉션 제목 수정
     @Transactional
     public ResponseEntity<?> updateCollectionTitle(UserPrincipal userPrincipal, Long collectionId, UpdateCollectionTitleReq updateCollectionTitleReq) {
 
@@ -124,6 +129,8 @@ public class CollectionService {
         return ResponseEntity.ok(response);
     }
 
+
+    // 컬렉션 내의 도서 목록 조회
     public ResponseEntity<?> getCollectionBooks(UserPrincipal userPrincipal, Long collectionId) {
         Collection collection = findCollectionByUserAndCollectionId(userPrincipal, collectionId);
 
@@ -155,7 +162,7 @@ public class CollectionService {
     }
 
 
-
+    // 컬렉션 소유자 검증
     public Collection findCollectionByUserAndCollectionId(UserPrincipal userPrincipal, Long collectionId) {
         User user = userService.findByEmail(userPrincipal.getEmail())
                 .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
@@ -171,6 +178,7 @@ public class CollectionService {
     }
 
 
+    // 컬렉션에 도서 추가
     @Transactional
     public ResponseEntity<?> addBookToCollection(UserPrincipal userPrincipal, Long collectionId, Long bookId) {
         Collection collection = findCollectionByUserAndCollectionId(userPrincipal, collectionId);
@@ -204,6 +212,7 @@ public class CollectionService {
         }
     }
 
+    // 컬렉션에서 도서 삭제
     @Transactional
     public ResponseEntity<?> deleteBookFromCollection(UserPrincipal userPrincipal, Long collectionId, DeleteBookReq deleteBookReq) {
 
