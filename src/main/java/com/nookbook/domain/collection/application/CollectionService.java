@@ -4,9 +4,12 @@ import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.collection.domain.Collection;
 import com.nookbook.domain.collection.domain.CollectionBook;
+import com.nookbook.domain.collection.domain.CollectionStatus;
 import com.nookbook.domain.collection.domain.repository.CollectionBookRepository;
 import com.nookbook.domain.collection.domain.repository.CollectionRepository;
 import com.nookbook.domain.collection.dto.request.CollectionCreateReq;
+import com.nookbook.domain.collection.dto.request.CollectionOrderReq;
+import com.nookbook.domain.collection.dto.request.DeleteBookReq;
 import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
 import com.nookbook.domain.collection.dto.response.CollectionBooksListDetailRes;
 import com.nookbook.domain.collection.dto.response.CollectionBooksListRes;
@@ -17,11 +20,13 @@ import com.nookbook.domain.user.domain.User;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.annotations.CollectionId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,8 +50,9 @@ public class CollectionService {
 
         Collection collection = Collection.builder()
                 .title(collectionCreateReq.getTitle())
-                .orderIndex(maxOrderIndex + 1)
+                .orderIndex(maxOrderIndex + 1L)
                 .user(user)
+                .collectionStatus(CollectionStatus.NORMAL)
                 .build();
 
         collectionRepository.save(collection);
@@ -73,6 +79,7 @@ public class CollectionService {
 
                     // 컬렉션 각각의 정보
                     return CollectionListDetailRes.builder()
+                            .order(collection.getOrderIndex())
                             .id(collection.getCollectionId())
                             .title(collection.getTitle())
                             .coverList(coverImages)
@@ -80,10 +87,13 @@ public class CollectionService {
                 })
                 .toList();
 
-        // 컬렉션 정보를 리스트로 감싸 반환
+        // 컬렉션 정보를 담은 CollectionListRes 객체 생성
+        // 순서 orderIndex 필드값에 따라 오름차순으로 정렬
         CollectionListRes collectionListRes = CollectionListRes.builder()
                 .totalCollections((long) collectionListDetailRes.size())
-                .collectionListDetailRes(collectionListDetailRes)
+                .collectionListDetailRes(collectionListDetailRes.stream()
+                        .sorted((a, b) -> (int) (a.getOrder() - b.getOrder()))
+                        .collect(Collectors.toList()))
                 .build();
 
         ApiResponse response = ApiResponse.builder()
@@ -167,16 +177,49 @@ public class CollectionService {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("도서를 찾을 수 없습니다."));
 
-        CollectionBook collectionBook = CollectionBook.builder()
-                .collection(collection)
-                .book(book)
-                .build();
+        // 만약 collectionBook이 이미 존재한다면 추가하지 않고 메세지 반환
+        CollectionBook collectionBookCheck = collectionBookRepository.findByCollectionAndBook(collection, book);
+        if (collectionBookCheck != null) {
+            ApiResponse response = ApiResponse.builder()
+                    .check(false)
+                    .information("이미 컬렉션에 추가된 도서입니다.")
+                    .build();
+            return ResponseEntity.badRequest().body(response);
+        }
+        else{
+            CollectionBook collectionBook = CollectionBook.builder()
+                    .collection(collection)
+                    .book(book)
+                    .build();
 
-        collectionBookRepository.save(collectionBook);
+            collectionBookRepository.save(collectionBook);
+
+            ApiResponse response = ApiResponse.builder()
+                    .check(true)
+                    .information("컬렉션에 도서 추가 완료")
+                    .build();
+
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    @Transactional
+    public ResponseEntity<?> deleteBookFromCollection(UserPrincipal userPrincipal, Long collectionId, DeleteBookReq deleteBookReq) {
+
+        // 컬렉션 검증
+        Collection collection = findCollectionByUserAndCollectionId(userPrincipal, collectionId);
+        List<Long> bookIds = deleteBookReq.getBookIds();
+
+        // 컬렉션에 속한 도서 중 삭제 요청된 도서를 찾아 삭제
+        for (Long bookId : bookIds) {
+            CollectionBook collectionBook = collectionBookRepository.findById(bookId)
+                    .orElseThrow(() -> new RuntimeException("컬렉션 도서를 찾을 수 없습니다."));
+            collectionBookRepository.delete(collectionBook);
+        }
 
         ApiResponse response = ApiResponse.builder()
                 .check(true)
-                .information("컬렉션에 도서 추가 완료")
+                .information("컬렉션 도서 삭제 완료")
                 .build();
 
         return ResponseEntity.ok(response);
@@ -185,8 +228,40 @@ public class CollectionService {
 
     // 컬렉션 순서 변경
     // 컬렉션 목록의 순서를 모두 요청값으로 받아서 수정
-//    @Transactional
-//    public void updateCollectionOrder(UserPrincipal userPrincipal, CollectionOrder) {
-//
-//    }
+    @Transactional
+    public ResponseEntity<?> editCollectionOrder(UserPrincipal userPrincipal, List<CollectionOrderReq> collectionOrderReqList) {
+        User user = userService.findByEmail(userPrincipal.getEmail())
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+        // 컬렉션 순서 변경
+        // 1. 요청값의 collectionId를 통해 컬렉션 객체를 찾음
+        // 2. 컬렉션 객체의 orderIndex를 요청값의 order로 변경
+        // 3. 순서 top 4의 컬렉션은 MAIN으로 변경, 나머지는 NORMAL로 변경
+
+        for(int i = 0 ; i < collectionOrderReqList.size() ; i++){
+            CollectionOrderReq collectionOrderReq = collectionOrderReqList.get(i);
+            Collection collection = collectionRepository.findById(collectionOrderReq.getCollectionId())
+                    .orElseThrow(() -> new RuntimeException("컬렉션을 찾을 수 없습니다."));
+            Long idx = collectionOrderReq.getOrder();
+
+            // 컬렉션 순서 변경
+            collection.updateOrderIndex(idx);
+
+            // 컬렉션 상태 변경
+            if(i < 4){
+                collection.updateStatus(CollectionStatus.MAIN);
+            }
+            else{
+                collection.updateStatus(CollectionStatus.NORMAL);
+            }
+        }
+
+        ApiResponse response = ApiResponse.builder()
+                .check(true)
+                .information("컬렉션 순서 변경 완료")
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
 }

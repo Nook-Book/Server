@@ -13,6 +13,10 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 public class CollectionListDetailRes {
+
+    @Schema(type = "Long", example = "1", description = "컬렉션 순서")
+    private Long order;
+
     @Schema(type = "Long", example = "1", description = "컬렉션 ID")
     private Long id;
 

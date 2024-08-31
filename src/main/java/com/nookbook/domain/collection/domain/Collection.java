@@ -32,17 +32,29 @@ public class Collection extends BaseEntity {
     private List<CollectionBook> collectionBooks;
 
     @Column(name = "order_index")
-    private int orderIndex;
+    private Long orderIndex;
+
+    @Enumerated(EnumType.STRING)
+    private CollectionStatus collectionStatus;
 
 
     @Builder
-    public Collection(String title, User user, int orderIndex) {
+    public Collection(String title, User user, Long orderIndex, CollectionStatus collectionStatus) {
         this.title = title;
         this.user = user;
         this.orderIndex = orderIndex;
+        this.collectionStatus = collectionStatus;
     }
 
     public void updateTitle(String title) {
         this.title = title;
+    }
+
+    public void updateOrderIndex(Long orderIndex) {
+        this.orderIndex = orderIndex;
+    }
+
+    public void updateStatus(CollectionStatus collectionStatus) {
+        this.collectionStatus = collectionStatus;
     }
 }

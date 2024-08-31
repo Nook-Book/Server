@@ -2,6 +2,7 @@ package com.nookbook.domain.user.application;
 
 import com.nookbook.domain.collection.application.CollectionService;
 import com.nookbook.domain.collection.domain.Collection;
+import com.nookbook.domain.collection.domain.CollectionStatus;
 import com.nookbook.domain.collection.domain.repository.CollectionRepository;
 import com.nookbook.domain.s3.application.S3Uploader;
 import com.nookbook.domain.user.domain.User;
@@ -71,6 +72,7 @@ public class UserService {
                 .map(title -> Collection.builder()
                         .title(title)
                         .user(user)
+                        .collectionStatus(CollectionStatus.MAIN)
                         .build())
                 .collect(Collectors.toList());
 
