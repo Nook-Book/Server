@@ -17,6 +17,6 @@ public class CollectionBooksListDetailRes {
     @Schema(type = "String", example = "조이의 첫 도서", description = "도서 제목")
     private String title;
 
-    @Schema(type = "String", example = "Zoey", description = "도서 저자")
+    @Schema(type = "String", example = "조이의 첫 도서표지.png", description = "도서 표지 이미지")
     private String cover;
 }
