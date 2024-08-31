@@ -26,11 +26,4 @@ public interface CollectionRepository extends JpaRepository<Collection, Long> {
 
     Optional<Integer> findMaxOrderIndexByUser(User user);
 
-    @Modifying
-    @Query("UPDATE Collection c SET c.orderIndex = c.orderIndex - 1 WHERE c.user = :user AND c.orderIndex BETWEEN :start AND :end")
-    void decrementOrderIndexBetween(@Param("user") User user, @Param("start") Long start, @Param("end") Long end);
-
-    @Modifying
-    @Query("UPDATE Collection c SET c.orderIndex = c.orderIndex + 1 WHERE c.user = :user AND c.orderIndex BETWEEN :start AND :end")
-    void incrementOrderIndexBetween(@Param("user") User user, @Param("start") Long start, @Param("end") Long end);
 }
