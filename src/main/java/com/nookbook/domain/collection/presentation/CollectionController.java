@@ -128,6 +128,16 @@ public class CollectionController {
         return collectionService.addBookToCollection(userPrincipal, collectionId, bookId);
     }
 
-
+    @Operation(summary = "현재 컬렉션 상세 조회 API", description = "현재 컬렉션에 등록된 도서 목록을 조회하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "현재 컬렉션 상세 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CollectionListRes.class))}),
+            @ApiResponse(responseCode = "400", description = "현재 컬렉션 상세 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @GetMapping("/current")
+    public ResponseEntity<?> getCurrentCollectionBooks(
+            @Parameter @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return collectionService.getCurrentCollectionBooks(userPrincipal);
+    }
 
 }

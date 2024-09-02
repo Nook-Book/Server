@@ -1,6 +1,7 @@
 package com.nookbook.domain.collection.domain.repository;
 
 import com.nookbook.domain.collection.domain.Collection;
+import com.nookbook.domain.collection.domain.CollectionStatus;
 import com.nookbook.domain.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -26,4 +27,5 @@ public interface CollectionRepository extends JpaRepository<Collection, Long> {
 
     Optional<Integer> findMaxOrderIndexByUser(User user);
 
+    List<Collection> findAllByUserAndCollectionStatus(User user, CollectionStatus collectionStatus);
 }

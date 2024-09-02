@@ -11,10 +11,7 @@ import com.nookbook.domain.collection.dto.request.CollectionCreateReq;
 import com.nookbook.domain.collection.dto.request.CollectionOrderReq;
 import com.nookbook.domain.collection.dto.request.DeleteBookReq;
 import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
-import com.nookbook.domain.collection.dto.response.CollectionBooksListDetailRes;
-import com.nookbook.domain.collection.dto.response.CollectionBooksListRes;
-import com.nookbook.domain.collection.dto.response.CollectionListDetailRes;
-import com.nookbook.domain.collection.dto.response.CollectionListRes;
+import com.nookbook.domain.collection.dto.response.*;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.global.config.security.token.UserPrincipal;
@@ -25,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -134,6 +132,19 @@ public class CollectionService {
     public ResponseEntity<?> getCollectionBooks(UserPrincipal userPrincipal, Long collectionId) {
         Collection collection = findCollectionByUserAndCollectionId(userPrincipal, collectionId);
 
+        // 컬렉션 내의 도서 목록 조회
+        CollectionBooksListRes collectionBooksListRes = getCollectionBooksListDetailRes(collection);
+
+        ApiResponse response = ApiResponse.builder()
+                .check(true)
+                .information(collectionBooksListRes)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    // 컬렉션 내의 도서 목록 조회 매소드 분리
+    public CollectionBooksListRes getCollectionBooksListDetailRes(Collection collection) {
         // CollectionBook 엔티티에서 Book 객체 추출
         List<Book> books = collection.getCollectionBooks().stream()
                 .map(CollectionBook::getBook)
@@ -153,13 +164,9 @@ public class CollectionService {
                 .collectionBooksListDetailRes(bookResponses)
                 .build();
 
-        ApiResponse response = ApiResponse.builder()
-                .check(true)
-                .information(collectionBooksListRes)
-                .build();
-
-        return ResponseEntity.ok(response);
+        return collectionBooksListRes;
     }
+
 
 
     // 컬렉션 소유자 검증
@@ -276,4 +283,35 @@ public class CollectionService {
         return ResponseEntity.ok(response);
     }
 
+
+    // 현재 컬렉션 id 목록 조회
+    public ResponseEntity<?> getCurrentCollectionBooks(UserPrincipal userPrincipal) {
+        User user = userService.findByEmail(userPrincipal.getEmail())
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+        // 유저의 컬렉션 중 CollectionStatus.MAIN인 컬렉션을 찾아 도서 목록 조회
+        List<Collection> mainCollections = collectionRepository.findAllByUserAndCollectionStatus(user, CollectionStatus.MAIN);
+
+        // 순서대로 정렬
+        mainCollections.sort((a, b) -> (int) (a.getOrderIndex() - b.getOrderIndex()));
+
+        // id만 순서대로 저장
+        ArrayList<Long> collectionIdList = new ArrayList<>();
+        for(Collection collection : mainCollections){
+            collectionIdList.add(collection.getCollectionId());
+        }
+
+        MainCollectionListRes mainCollectionListRes = MainCollectionListRes.builder()
+                .totalCollections(collectionIdList.size())
+                .collectionIdList(collectionIdList)
+                .build();
+
+        ApiResponse response = ApiResponse.builder()
+                .check(true)
+                .information(mainCollectionListRes)
+                .build();
+
+        return ResponseEntity.ok(response);
+
+    }
 }
