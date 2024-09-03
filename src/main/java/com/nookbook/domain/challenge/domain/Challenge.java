@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.joda.time.LocalDateTime;
+import java.time.LocalDate;
 
 import java.util.List;
 
@@ -27,23 +27,27 @@ public class Challenge extends BaseEntity {
     private String challengeCover;
 
     @Column(name="start_date", nullable = false)
-    private LocalDateTime startDate;
+    private LocalDate startDate;
 
     @Column(name="end_date", nullable = false)
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
     @Column(name="day_goal") // null 가능
     private int dailyGoal;
+
+    @Enumerated(EnumType.STRING)
+    private ChallengeStatus challengeStatus;
 
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants;
 
     @Builder
-    public Challenge(String title, String challengeCover, LocalDateTime startDate, LocalDateTime endDate, int dailyGoal) {
+    public Challenge(String title, String challengeCover, LocalDate startDate, LocalDate endDate, int dailyGoal, ChallengeStatus challengeStatus) {
         this.title = title;
         this.challengeCover = challengeCover;
         this.startDate = startDate;
         this.endDate = endDate;
         this.dailyGoal = dailyGoal;
+        this.challengeStatus = challengeStatus;
     }
 }
