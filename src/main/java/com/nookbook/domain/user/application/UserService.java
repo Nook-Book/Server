@@ -1,5 +1,9 @@
 package com.nookbook.domain.user.application;
 
+import com.nookbook.domain.collection.application.CollectionService;
+import com.nookbook.domain.collection.domain.Collection;
+import com.nookbook.domain.collection.domain.CollectionStatus;
+import com.nookbook.domain.collection.domain.repository.CollectionRepository;
 import com.nookbook.domain.s3.application.S3Uploader;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
@@ -19,8 +23,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,9 +36,11 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final S3Uploader s3Uploader;
+    private final CollectionRepository collectionRepository;
 
     @Transactional
     public void saveUser(User user) {
+        // 유저 정보 저장
         userRepository.save(user);
     }
 
@@ -45,6 +54,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
 
         user.saveUserInfo(userInfoReq.getNicknameId(), userInfoReq.getNickname());
+        createDefaultCollection(user);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -52,6 +62,21 @@ public class UserService {
                 .build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    @Transactional
+    public void createDefaultCollection(User user) {
+        List<String> titles = Arrays.asList("읽고 싶은", "읽는 중", "읽음");
+
+        List<Collection> collections = titles.stream()
+                .map(title -> Collection.builder()
+                        .title(title)
+                        .user(user)
+                        .collectionStatus(CollectionStatus.MAIN)
+                        .build())
+                .collect(Collectors.toList());
+
+        collectionRepository.saveAll(collections);
     }
 
 
