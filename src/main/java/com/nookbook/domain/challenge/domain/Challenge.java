@@ -1,6 +1,7 @@
 package com.nookbook.domain.challenge.domain;
 
 import com.nookbook.domain.common.BaseEntity;
+import com.nookbook.domain.user.domain.User;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,13 +42,23 @@ public class Challenge extends BaseEntity {
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "generater_id", nullable = false)
+    private User generater;
+
     @Builder
-    public Challenge(String title, String challengeCover, LocalDate startDate, LocalDate endDate, int dailyGoal, ChallengeStatus challengeStatus) {
+    public Challenge(String title, String challengeCover, LocalDate startDate, LocalDate endDate, int dailyGoal, ChallengeStatus challengeStatus, List<Participant> participants, User generater) {
         this.title = title;
         this.challengeCover = challengeCover;
         this.startDate = startDate;
         this.endDate = endDate;
         this.dailyGoal = dailyGoal;
         this.challengeStatus = challengeStatus;
+        this.participants = participants;
+        this.generater = generater;
+    }
+
+    public void updateChallengeCover(String coverImageUrl) {
+        this.challengeCover = coverImageUrl;
     }
 }
