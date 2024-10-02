@@ -11,4 +11,7 @@ import java.util.Optional;
 @Repository
 public interface UserBookRepository extends JpaRepository<UserBook, Long> {
     Optional<UserBook> findByUserAndBook(User user, Book book);
+
+    //가장 최근에 수정된 UserBook
+    UserBook findFirstByUserOrderByUpdatedAtDesc(User user);
 }

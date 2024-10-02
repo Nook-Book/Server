@@ -1,15 +1,22 @@
 package com.nookbook.domain.challenge.application;
 
+import com.nookbook.domain.book.domain.Book;
+import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.challenge.domain.Challenge;
 import com.nookbook.domain.challenge.domain.ChallengeStatus;
+import com.nookbook.domain.challenge.domain.Participant;
 import com.nookbook.domain.challenge.domain.repository.ChallengeRepository;
 import com.nookbook.domain.challenge.domain.repository.ParticipantRepository;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
+import com.nookbook.domain.challenge.dto.response.ChallengeDetailRes;
 import com.nookbook.domain.challenge.dto.response.ChallengeListDetailRes;
 import com.nookbook.domain.challenge.dto.response.ChallengeListRes;
+import com.nookbook.domain.challenge.dto.response.ParticipantStatusListRes;
 import com.nookbook.domain.s3.application.S3Uploader;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
+import com.nookbook.domain.user_book.domain.UserBook;
+import com.nookbook.domain.user_book.domain.repository.UserBookRepository;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +37,10 @@ public class ChallengeService {
     private final UserService userService;
     private final ChallengeRepository challengeRepository;
     private final ParticipantService participantService;
-    private final S3Uploader s3Uploader;
     private final ParticipantRepository participantRepository;
+    private final S3Uploader s3Uploader;
+    private final UserBookRepository userBookRepository;
+    private final BookRepository bookRepository;
 
     // 챌린지 생성
     @Transactional
@@ -74,6 +83,7 @@ public class ChallengeService {
                 .endDate(endDate) // 종료일을 마지막 시간으로 설정
                 .dailyGoal(challengeCreateReq.getDailyGoal())
                 .challengeStatus(challengeStatus)
+                .owner(user)
                 .build();
 
         // 새로운 챌린지 저장
@@ -152,5 +162,68 @@ public class ChallengeService {
                 .build();
 
         return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<?> getChallengeDetail(UserPrincipal userPrincipal, Long challengeId) {
+        User user = userService.findByEmail(userPrincipal.getEmail())
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new RuntimeException("챌린지 정보를 찾을 수 없습니다."));
+
+        Boolean isEditable = challenge.getOwner().equals(user);
+        List<ParticipantStatusListRes> participants = getParticipantStatusList(user, challenge);
+
+        // 챌린지 총 시간 계산
+        int totalDate  = (int) (challenge.getEndDate().toEpochDay() - challenge.getStartDate().toEpochDay());
+        Integer dailyGoal = challenge.getDailyGoal();
+
+        int totalHour = 0;
+        if (dailyGoal != null) {
+            totalHour = totalDate * dailyGoal / 60;
+        }
+
+        ChallengeDetailRes challengeDetailRes = ChallengeDetailRes.builder()
+                .challengeId(challenge.getChallengeId())
+                .isEditable(isEditable)
+                .title(challenge.getTitle())
+                .challengeCover(challenge.getChallengeCover())
+                .challengeStatus(challenge.getChallengeStatus())
+                .startDate(challenge.getStartDate())
+                .endDate(challenge.getEndDate())
+                .totalHour(totalHour)
+                .dailyGoal(challenge.getDailyGoal())
+                .participants(participants)
+                .build();
+
+        ApiResponse response = ApiResponse.builder()
+                .check(true)
+                .information(challengeDetailRes)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    // 참여자 목록 조회
+    public List<ParticipantStatusListRes> getParticipantStatusList(User user, Challenge challenge) {
+        List<Participant> participants = participantRepository.findAllByChallenge(challenge);
+        // 가장 최근 읽고 있는 / 읽었던 책 정보
+        UserBook userBook = userBookRepository.findFirstByUserOrderByUpdatedAtDesc(user);
+        Book book = bookRepository.findById(userBook.getBook().getBookId())
+                .orElseThrow(() -> new RuntimeException("책 정보를 찾을 수 없습니다."));
+        // 참여자 목록 조회
+        List<ParticipantStatusListRes> participantStatusListRes = participants.stream()
+                .map(participant -> ParticipantStatusListRes.builder()
+                        .participantId(participant.getUser().getUserId())
+                        .nickname(participant.getUser().getNickname())
+                        .readingBookTitle(book.getTitle())
+                        .readingBookImage(book.getTitle())
+                        .participantImage(participant.getUser().getImageUrl())
+                        .participantStatus(participant.getParticipantStatus())
+                        .build())
+                .toList();
+
+        return participantStatusListRes;
     }
 }
