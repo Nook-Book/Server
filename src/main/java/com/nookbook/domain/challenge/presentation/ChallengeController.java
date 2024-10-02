@@ -2,6 +2,7 @@ package com.nookbook.domain.challenge.presentation;
 
 import com.nookbook.domain.challenge.application.ChallengeService;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
+import com.nookbook.domain.challenge.dto.response.ChallengeDetailRes;
 import com.nookbook.domain.challenge.dto.response.ChallengeListRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
@@ -51,6 +52,19 @@ public class ChallengeController {
             @Parameter @CurrentUser UserPrincipal userPrincipal
     ) {
         return challengeService.getChallengeList(userPrincipal);
+    }
+
+    @Operation(summary = "챌린지 상세 조회 API", description = "챌린지 상세 정보를 조회하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "챌린지 상세 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ChallengeDetailRes.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지 상세 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @GetMapping("/{challengeId}")
+    public ResponseEntity<?> getChallengeDetail(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
+    ) {
+        return challengeService.getChallengeDetail(userPrincipal, challengeId);
     }
 
 
