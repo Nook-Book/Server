@@ -8,10 +8,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 
     @Query("SELECT c FROM Challenge c JOIN c.participants p WHERE p.user = :user")
     List<Challenge> findAllByUserParticipant(@Param("user") User user);
+
 }
