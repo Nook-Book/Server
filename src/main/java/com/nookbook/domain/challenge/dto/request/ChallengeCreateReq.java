@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalTime;
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,5 +25,12 @@ public class ChallengeCreateReq {
 
     @Schema(type = "int", example = "75", description = "일일 목표 독서 시간 (분 단위)")
     private int dailyGoal;
+
+    @Schema(type = "String", example = "09:00", description = "일일목표 시작 시간")
+    private LocalTime startTime;
+
+    @Schema(type = "String", example = "21:00", description = "일일목표 종료 시간")
+    private LocalTime endTime;
+
 
 }
