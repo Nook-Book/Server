@@ -35,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -88,7 +89,10 @@ public class ChallengeService {
                 .startDate(startDate)  // LocalDate를 LocalDateTime으로 변환하여 저장
                 .endDate(endDate) // 종료일을 마지막 시간으로 설정
                 .dailyGoal(challengeCreateReq.getDailyGoal())
+                .startTime(challengeCreateReq.getStartTime())
+                .endTime(challengeCreateReq.getEndTime())
                 .challengeStatus(challengeStatus)
+                .participants(new ArrayList<>())
                 .owner(user)
                 .build();
 
@@ -287,6 +291,38 @@ public class ChallengeService {
 
 
     @Transactional
+    public ResponseEntity<?> updateChallengeInfo(UserPrincipal userPrincipal, Long challengeId, ChallengeCreateReq challengeUpdateReq) {
+        User user = validateUser(userPrincipal);
+        Challenge challenge = validateChallenge(challengeId);
+        validateChallengeAuthorization(user, challenge);
+
+        // 데이터 포맷
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate startDate = LocalDate.parse(challengeUpdateReq.getStartDate(), dateFormatter);
+        LocalDate endDate = LocalDate.parse(challengeUpdateReq.getEndDate(), dateFormatter);
+
+        // Update challenge information
+        challenge.updateChallengeInfo(
+                challengeUpdateReq.getTitle(),
+                startDate,
+                endDate,
+                challengeUpdateReq.getDailyGoal(),
+                challengeUpdateReq.getStartTime(),
+                challengeUpdateReq.getEndTime()
+        );
+
+        challengeRepository.save(challenge);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information("챌린지 정보 수정이 완료되었습니다.")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+
+    @Transactional
     public ResponseEntity<?> deleteChallenge(UserPrincipal userPrincipal, Long challengeId) {
         User user = validateUser(userPrincipal);
         Challenge challenge = validateChallenge(challengeId);
@@ -335,10 +371,10 @@ public class ChallengeService {
         }
     }
 
+    // 책 검증 메서드
     private Book validateBook(Long bookId) {
         return bookRepository.findById(bookId)
                 .orElseThrow(BookNotFoundException::new);
     }
-
 
 }
