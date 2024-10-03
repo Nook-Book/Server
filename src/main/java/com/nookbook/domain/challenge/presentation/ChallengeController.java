@@ -67,6 +67,23 @@ public class ChallengeController {
         return challengeService.getChallengeDetail(userPrincipal, challengeId);
     }
 
+    // TODO: 챌린지 참가자 삭제 API 구현
+    // - 챌린지 owner만 참가자를 삭제 가능
+    @Operation(summary = "챌린지 참가자 삭제 API", description = "챌린지 참가자를 삭제하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "챌린지 참가자 삭제 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지 참가자 삭제 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @DeleteMapping("/{challengeId}/participant/{participantId}")
+    public ResponseEntity<?> deleteParticipant(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId,
+            @Parameter(description = "참가자 ID") @PathVariable Long participantId
+    ) {
+        return challengeService.deleteParticipant(userPrincipal, challengeId, participantId);
+    }
+
+
 
 
 }

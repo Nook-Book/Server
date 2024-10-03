@@ -1,5 +1,6 @@
 package com.nookbook.domain.challenge.application;
 
+import com.nookbook.domain.book.BookNotFoundException;
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.challenge.domain.Challenge;
@@ -12,13 +13,20 @@ import com.nookbook.domain.challenge.dto.response.ChallengeDetailRes;
 import com.nookbook.domain.challenge.dto.response.ChallengeListDetailRes;
 import com.nookbook.domain.challenge.dto.response.ChallengeListRes;
 import com.nookbook.domain.challenge.dto.response.ParticipantStatusListRes;
+import com.nookbook.domain.challenge.exception.ChallengeNotAuthorizedException;
+import com.nookbook.domain.challenge.exception.ChallengeNotFoundException;
+import com.nookbook.domain.challenge.exception.ParticipantNotFoundException;
+import com.nookbook.domain.challenge.exception.ParticipantNotInChallengeException;
 import com.nookbook.domain.s3.application.S3Uploader;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
+import com.nookbook.domain.user.exception.UserNotFoundException;
 import com.nookbook.domain.user_book.domain.UserBook;
 import com.nookbook.domain.user_book.domain.repository.UserBookRepository;
 import com.nookbook.global.config.security.token.UserPrincipal;
+import com.nookbook.global.exception.DefaultException;
 import com.nookbook.global.payload.ApiResponse;
+import com.nookbook.global.payload.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -48,9 +56,7 @@ public class ChallengeService {
             UserPrincipal userPrincipal, ChallengeCreateReq challengeCreateReq, MultipartFile challengeCover)
     {
         // 사용자 검증
-        User user = userService.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
-
+        User user = validateUser(userPrincipal);
         // 커버 이미지 s3 업로드
         String coverImageUrl = s3Uploader.uploadImage(challengeCover);
 
@@ -102,8 +108,8 @@ public class ChallengeService {
 
     // 유저가 참여중인 챌린지 목록 조회 (현재 진행중인 챌린지 / 종료된 챌린지)
     public ResponseEntity<?> getChallengeList(UserPrincipal userPrincipal) {
-        User user = userService.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+        // 사용자 검증
+        User user = validateUser(userPrincipal);
 
         // 사용자가 참여한 챌린지 목록 조회
         List<Challenge> challengeList = challengeRepository.findAllByUserParticipant(user);
@@ -165,11 +171,10 @@ public class ChallengeService {
     }
 
     public ResponseEntity<?> getChallengeDetail(UserPrincipal userPrincipal, Long challengeId) {
-        User user = userService.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
-
-        Challenge challenge = challengeRepository.findById(challengeId)
-                .orElseThrow(() -> new RuntimeException("챌린지 정보를 찾을 수 없습니다."));
+        // 사용자 검증
+        User user = validateUser(userPrincipal);
+        // 챌린지 검증
+        Challenge challenge = validateChallenge(challengeId);
 
         Boolean isEditable = challenge.getOwner().equals(user);
         List<ParticipantStatusListRes> participants = getParticipantStatusList(user, challenge);
@@ -210,8 +215,7 @@ public class ChallengeService {
         List<Participant> participants = participantRepository.findAllByChallenge(challenge);
         // 가장 최근 읽고 있는 / 읽었던 책 정보
         UserBook userBook = userBookRepository.findFirstByUserOrderByUpdatedAtDesc(user);
-        Book book = bookRepository.findById(userBook.getBook().getBookId())
-                .orElseThrow(() -> new RuntimeException("책 정보를 찾을 수 없습니다."));
+        Book book = validateBook(userBook.getBook().getBookId());
         // 참여자 목록 조회
         List<ParticipantStatusListRes> participantStatusListRes = participants.stream()
                 .map(participant -> ParticipantStatusListRes.builder()
@@ -226,4 +230,60 @@ public class ChallengeService {
 
         return participantStatusListRes;
     }
+    @Transactional
+    public ResponseEntity<?> deleteParticipant(UserPrincipal userPrincipal, Long challengeId, Long participantId) {
+        User user = validateUser(userPrincipal);
+        Challenge challenge = validateChallenge(challengeId);
+        validateChallengeAuthorization(user, challenge);
+        Participant participant = validateParticipant(participantId);
+        validateParticipantInChallenge(participant, challenge);
+
+        // 참가자 삭제
+        participantRepository.delete(participant);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information("참가자 삭제가 완료되었습니다.")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    // 사용자 검증 메서드
+    private User validateUser(UserPrincipal userPrincipal) {
+        return userService.findByEmail(userPrincipal.getEmail())
+                .orElseThrow(UserNotFoundException::new);
+    }
+
+    // 챌린지 검증 메서드
+    private Challenge validateChallenge(Long challengeId) {
+        return challengeRepository.findById(challengeId)
+                .orElseThrow(ChallengeNotFoundException::new);
+    }
+
+    // 참가자 검증 메서드
+    private Participant validateParticipant(Long participantId) {
+        return participantRepository.findById(participantId)
+                .orElseThrow(ParticipantNotFoundException::new);
+    }
+
+    // 챌린지 수정 권한 검증
+    private void validateChallengeAuthorization(User user, Challenge challenge) {
+        if (!challenge.getOwner().equals(user)) {
+            throw new ChallengeNotAuthorizedException();
+        }
+    }
+
+    // 참가자가 해당 챌린지에 속하는지 검증하는 메서드
+    private void validateParticipantInChallenge(Participant participant, Challenge challenge) {
+        if (!participant.getChallenge().equals(challenge)) {
+            throw new ParticipantNotInChallengeException();
+        }
+    }
+
+    private Book validateBook(Long bookId) {
+        return bookRepository.findById(bookId)
+                .orElseThrow(BookNotFoundException::new);
+    }
+
 }
