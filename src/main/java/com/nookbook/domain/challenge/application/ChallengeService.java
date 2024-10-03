@@ -94,7 +94,6 @@ public class ChallengeService {
 
         // 새로운 챌린지 저장
         challengeRepository.save(challenge);
-
         // 챌리지를 생성한 유저는 participant로 등록
         participantService.saveParticipant(user, challenge);
 
@@ -261,6 +260,26 @@ public class ChallengeService {
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information("참가자 추가가 완료되었습니다.")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Transactional
+    public ResponseEntity<?> updateChallengeImage(UserPrincipal userPrincipal, Long challengeId, MultipartFile challengeCover) {
+        User user = validateUser(userPrincipal);
+        Challenge challenge = validateChallenge(challengeId);
+        validateChallengeAuthorization(user, challenge);
+
+        // 커버 이미지 s3 업로드
+        String coverImageUrl = s3Uploader.uploadImage(challengeCover);
+
+        // 챌린지 이미지 수정
+        challenge.updateChallengeCover(coverImageUrl);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information("챌린지 이미지 수정이 완료되었습니다.")
                 .build();
 
         return ResponseEntity.ok(apiResponse);

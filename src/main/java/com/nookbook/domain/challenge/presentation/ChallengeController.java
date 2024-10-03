@@ -100,6 +100,21 @@ public class ChallengeController {
         return challengeService.addParticipant(userPrincipal, challengeId, participantId);
     }
 
+    // 챌린지 이미지 수정 API
+    @Operation(summary = "챌린지 이미지 수정 API", description = "챌린지 이미지를 수정하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "챌린지 이미지 수정 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지 이미지 수정 실���", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PatchMapping("/{challengeId}/image")
+    public ResponseEntity<?> updateChallengeImage(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId,
+            @RequestPart MultipartFile challengeCover
+    ) {
+        return challengeService.updateChallengeImage(userPrincipal, challengeId, challengeCover);
+    }
+
 
 
 
