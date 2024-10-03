@@ -285,6 +285,24 @@ public class ChallengeService {
         return ResponseEntity.ok(apiResponse);
     }
 
+
+    @Transactional
+    public ResponseEntity<?> deleteChallenge(UserPrincipal userPrincipal, Long challengeId) {
+        User user = validateUser(userPrincipal);
+        Challenge challenge = validateChallenge(challengeId);
+        validateChallengeAuthorization(user, challenge);
+
+        // 챌린지 삭제
+        challengeRepository.delete(challenge);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information("챌린지 삭제가 완료되었습니다.")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
         return userService.findByEmail(userPrincipal.getEmail())
@@ -321,5 +339,6 @@ public class ChallengeService {
         return bookRepository.findById(bookId)
                 .orElseThrow(BookNotFoundException::new);
     }
+
 
 }
