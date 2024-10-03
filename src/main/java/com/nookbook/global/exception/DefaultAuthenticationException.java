@@ -1,4 +1,4 @@
-package com.nookbook.global.error;
+package com.nookbook.global.exception;
 
 
 import com.nookbook.global.payload.ErrorCode;
