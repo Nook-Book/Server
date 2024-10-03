@@ -20,6 +20,7 @@ import com.nookbook.domain.challenge.exception.ParticipantNotInChallengeExceptio
 import com.nookbook.domain.s3.application.S3Uploader;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
+import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user.exception.UserNotFoundException;
 import com.nookbook.domain.user_book.domain.UserBook;
 import com.nookbook.domain.user_book.domain.repository.UserBookRepository;
@@ -50,6 +51,7 @@ public class ChallengeService {
     private final S3Uploader s3Uploader;
     private final UserBookRepository userBookRepository;
     private final BookRepository bookRepository;
+    private final UserRepository userRepository;
 
     // 챌린지 생성
     @Transactional
@@ -339,6 +341,26 @@ public class ChallengeService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    public ResponseEntity<?> changeOwner(UserPrincipal userPrincipal, Long challengeId, Long newOwnerId) {
+        User user = validateUser(userPrincipal);
+        Challenge challenge = validateChallenge(challengeId);
+        validateChallengeAuthorization(user, challenge);
+
+        User newOwner = userRepository.findById(newOwnerId)
+                .orElseThrow(UserNotFoundException::new);
+
+        // 챌린지 방장 변경
+        challenge.changeOwner(newOwner);
+        challengeRepository.save(challenge);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information("챌린지 방장 변경이 완료되었습니다.")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
         return userService.findByEmail(userPrincipal.getEmail())
@@ -376,5 +398,6 @@ public class ChallengeService {
         return bookRepository.findById(bookId)
                 .orElseThrow(BookNotFoundException::new);
     }
+
 
 }

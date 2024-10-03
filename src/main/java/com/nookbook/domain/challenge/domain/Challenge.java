@@ -83,4 +83,8 @@ public class Challenge extends BaseEntity {
         this.startTime = startTime;
         this.endTime = endTime;
     }
+
+    public void changeOwner(User newOwner) {
+        this.owner = newOwner;
+    }
 }

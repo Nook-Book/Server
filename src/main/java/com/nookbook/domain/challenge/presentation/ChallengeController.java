@@ -144,6 +144,21 @@ public class ChallengeController {
         return challengeService.deleteChallenge(userPrincipal, challengeId);
     }
 
+    // 챌린지 방장 변경 API
+    @Operation(summary = "챌린지 방장 변경 API", description = "챌린지 방장을 변경하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "챌린지 방장 변경 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지 방장 변경 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PatchMapping("/{challengeId}/owner/{newOwnerId}")
+    public ResponseEntity<?> changeOwner(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId,
+            @Parameter(description = "새로운 방장 ID") @PathVariable Long newOwnerId
+    ) {
+        return challengeService.changeOwner(userPrincipal, challengeId, newOwnerId);
+    }
+
 
 
 }
