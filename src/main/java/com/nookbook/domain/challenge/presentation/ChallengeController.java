@@ -28,6 +28,7 @@ public class ChallengeController {
 
     private final ChallengeService challengeService;
 
+    // 새 챌린지 생성 API
     @Operation(summary = "새 챌린지 생성 API", description = "새 챌린지를 생성하는 API입니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "챌린지 생성 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
@@ -42,6 +43,7 @@ public class ChallengeController {
         return challengeService.createChallenge(userPrincipal, challengeCreateReq, challengeCover);
     }
 
+    // 챌린지 목록 조회 API
     @Operation(summary = "챌린지 목록 조회 API", description = "챌린지 목록을 조회하는 API입니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "챌린지 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ChallengeListRes.class))}),
@@ -54,6 +56,7 @@ public class ChallengeController {
         return challengeService.getChallengeList(userPrincipal);
     }
 
+    // 챌린지 상세 조회 API
     @Operation(summary = "챌린지 상세 조회 API", description = "챌린지 상세 정보를 조회하는 API입니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "챌린지 상세 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ChallengeDetailRes.class))}),
@@ -67,8 +70,7 @@ public class ChallengeController {
         return challengeService.getChallengeDetail(userPrincipal, challengeId);
     }
 
-    // TODO: 챌린지 참가자 삭제 API 구현
-    // - 챌린지 owner만 참가자를 삭제 가능
+    // 챌린지 참가자 삭제 API
     @Operation(summary = "챌린지 참가자 삭제 API", description = "챌린지 참가자를 삭제하는 API입니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "챌린지 참가자 삭제 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
@@ -81,6 +83,21 @@ public class ChallengeController {
             @Parameter(description = "참가자 ID") @PathVariable Long participantId
     ) {
         return challengeService.deleteParticipant(userPrincipal, challengeId, participantId);
+    }
+
+    // 챌린지 참가자 추가 API
+    @Operation(summary = "챌린지 참가자 추가 API", description = "챌린지 참가자를 추가하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "챌린지 참가자 추가 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지 참가자 추가 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PostMapping("/{challengeId}/participant/{participantId}")
+    public ResponseEntity<?> addParticipant(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId,
+            @Parameter(description = "참가자 ID") @PathVariable Long participantId
+    ) {
+        return challengeService.addParticipant(userPrincipal, challengeId, participantId);
     }
 
 

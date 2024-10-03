@@ -249,6 +249,23 @@ public class ChallengeService {
         return ResponseEntity.ok(apiResponse);
     }
 
+
+    @Transactional
+    public ResponseEntity<?> addParticipant(UserPrincipal userPrincipal, Long challengeId, Long participantId) {
+        User user = validateUser(userPrincipal);
+        Challenge challenge = validateChallenge(challengeId);
+        validateChallengeAuthorization(user, challenge);
+        // 챌린지 참가자 추가
+        participantService.saveParticipant(user, challenge);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information("참가자 추가가 완료되었습니다.")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
         return userService.findByEmail(userPrincipal.getEmail())
