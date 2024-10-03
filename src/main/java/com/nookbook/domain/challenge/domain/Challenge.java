@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -66,11 +67,20 @@ public class Challenge extends BaseEntity {
         this.startTime = startTime;
         this.endTime = endTime;
         this.challengeStatus = challengeStatus;
-        this.participants = participants;
+        this.participants = new ArrayList<>();
         this.owner = owner;
     }
 
     public void updateChallengeCover(String coverImageUrl) {
         this.challengeCover = coverImageUrl;
+    }
+
+    public void updateChallengeInfo(String title, LocalDate startDate, LocalDate endDate, Integer dailyGoal, LocalTime startTime, LocalTime endTime) {
+        this.title = title;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.dailyGoal = dailyGoal;
+        this.startTime = startTime;
+        this.endTime = endTime;
     }
 }
