@@ -25,7 +25,7 @@ public class ChallengeDetailRes {
     @Schema(type = "String", example = "밍쥬피쉬의 미라클 모닝 독서 챌린지", description = "챌린지 제목")
     private String title;
 
-    @Schema(type = "String", example = "밍쥬피쉬증명사진.jpg", description = "챌린지 커버 이미지")
+    @Schema(type = "String", example = "챌린지커버이미지.jpg", description = "챌린지 커버 이미지")
     private String challengeCover;
 
     @Schema(type = "String", example = "WAITING / PROGRESS / END", description = "챌린지 상태")
