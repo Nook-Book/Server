@@ -1,5 +1,6 @@
 package com.nookbook.domain.challenge.domain;
 
+import com.nookbook.domain.common.BaseEntity;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.challenge.domain.ParticipantStatus;
 import jakarta.persistence.*;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Table(name="Participant")
 @NoArgsConstructor
 @Getter
-public class Participant {
+public class Participant extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "participant_id", nullable = false)
