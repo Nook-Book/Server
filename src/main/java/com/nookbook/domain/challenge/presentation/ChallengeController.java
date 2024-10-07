@@ -86,10 +86,10 @@ public class ChallengeController {
     }
 
     // 챌린지 참가자 추가 API
-    @Operation(summary = "챌린지 참가자 추가 API", description = "챌린지 참가자를 추가하는 API입니다.")
+    @Operation(summary = "챌린지 참가자 초대 요청 API", description = "챌린지에 참가자를 초대하는 API입니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "챌린지 참가자 추가 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
-            @ApiResponse(responseCode = "400", description = "챌린지 참가자 추가 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+            @ApiResponse(responseCode = "200", description = "챌린지 참가자 초대 요청 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지 참가자 초대 요청 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
     @PostMapping("/{challengeId}/participant/{participantId}")
     public ResponseEntity<?> addParticipant(
@@ -97,7 +97,7 @@ public class ChallengeController {
             @Parameter(description = "챌린지 ID") @PathVariable Long challengeId,
             @Parameter(description = "참가자 ID") @PathVariable Long participantId
     ) {
-        return challengeService.addParticipant(userPrincipal, challengeId, participantId);
+        return challengeService.inviteParticipant(userPrincipal, challengeId, participantId);
     }
 
     // 챌린지 이미지 수정 API
@@ -158,6 +158,8 @@ public class ChallengeController {
     ) {
         return challengeService.changeOwner(userPrincipal, challengeId, newOwnerId);
     }
+
+    // TODO: 참가자 목록 조회 (방장인지에 대한 여부 포함)
 
 
 
