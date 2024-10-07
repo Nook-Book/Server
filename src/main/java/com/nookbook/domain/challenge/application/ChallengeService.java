@@ -5,8 +5,10 @@ import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.challenge.domain.Challenge;
 import com.nookbook.domain.challenge.domain.ChallengeStatus;
+import com.nookbook.domain.challenge.domain.Invitation;
 import com.nookbook.domain.challenge.domain.Participant;
 import com.nookbook.domain.challenge.domain.repository.ChallengeRepository;
+import com.nookbook.domain.challenge.domain.repository.InvitationRepository;
 import com.nookbook.domain.challenge.domain.repository.ParticipantRepository;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
 import com.nookbook.domain.challenge.dto.response.ChallengeDetailRes;
@@ -48,6 +50,8 @@ public class ChallengeService {
     private final ChallengeRepository challengeRepository;
     private final ParticipantService participantService;
     private final ParticipantRepository participantRepository;
+    private final InvitationRepository invitationRepository;
+    private final InvitationService invitationService;
     private final S3Uploader s3Uploader;
     private final UserBookRepository userBookRepository;
     private final BookRepository bookRepository;
@@ -115,7 +119,6 @@ public class ChallengeService {
     public ResponseEntity<?> getChallengeList(UserPrincipal userPrincipal) {
         // 사용자 검증
         User user = validateUser(userPrincipal);
-
         // 사용자가 참여한 챌린지 목록 조회
         List<Challenge> challengeList = challengeRepository.findAllByUserParticipant(user);
 
@@ -256,12 +259,14 @@ public class ChallengeService {
 
 
     @Transactional
-    public ResponseEntity<?> addParticipant(UserPrincipal userPrincipal, Long challengeId, Long participantId) {
+    public ResponseEntity<?> inviteParticipant(UserPrincipal userPrincipal, Long challengeId, Long participantId) {
         User user = validateUser(userPrincipal);
+        User participant = userRepository.findById(participantId)
+                .orElseThrow(UserNotFoundException::new);
         Challenge challenge = validateChallenge(challengeId);
-        validateChallengeAuthorization(user, challenge);
+        validateChallengeAuthorization(user, challenge); // 챌린지 owner만 참가자 초대 가능
         // 챌린지 참가자 추가
-        participantService.saveParticipant(user, challenge);
+        invitationService.inviteParticipant(challenge, participant);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
