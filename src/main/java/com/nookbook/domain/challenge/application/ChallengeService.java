@@ -282,6 +282,8 @@ public class ChallengeService {
         Challenge challenge = validateChallenge(challengeId);
         validateChallengeAuthorization(user, challenge);
 
+        // 기존 이미지 삭제
+        s3Uploader.deleteFile(challenge.getChallengeCover());
         // 커버 이미지 s3 업로드
         String coverImageUrl = s3Uploader.uploadImage(challengeCover);
 
@@ -366,6 +368,10 @@ public class ChallengeService {
         return ResponseEntity.ok(apiResponse);
     }
 
+//    public ResponseEntity<?> getParticipantList(UserPrincipal userPrincipal, Long challengeId) {
+//
+//    }
+
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
         return userService.findByEmail(userPrincipal.getEmail())
@@ -403,6 +409,5 @@ public class ChallengeService {
         return bookRepository.findById(bookId)
                 .orElseThrow(BookNotFoundException::new);
     }
-
 
 }
