@@ -6,6 +6,7 @@ import com.nookbook.domain.book.dto.response.MostReadCategoriesRes;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.dto.request.NicknameCheckReq;
 import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
+import com.nookbook.domain.user.dto.response.MyInfoRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;
@@ -97,5 +98,17 @@ public class MyPageController {
             @Parameter(description = "독서 통계를 확인하려는 연도를 입력해주세요", required = true) @RequestParam int year
     ) {
         return bookService.countReadBooksByYear(userPrincipal, year);
+    }
+
+    @Operation(summary = "[마이페이지] 내 정보 조회", description = "마이페이지의 내 정보(아이디, 닉네임, 친구 수)를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = MyInfoRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping
+    public ResponseEntity<?> findMyInformation(
+            @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return userService.getMyInfo(userPrincipal);
     }
 }

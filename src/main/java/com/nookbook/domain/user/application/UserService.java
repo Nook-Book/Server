@@ -10,6 +10,7 @@ import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
 import com.nookbook.domain.user.dto.request.NicknameCheckReq;
 import com.nookbook.domain.user.dto.request.UserInfoReq;
+import com.nookbook.domain.user.dto.response.MyInfoRes;
 import com.nookbook.domain.user.dto.response.NicknameCheckRes;
 import com.nookbook.domain.user.dto.response.NicknameIdCheckRes;
 import com.nookbook.global.DefaultAssert;
@@ -164,6 +165,22 @@ public class UserService {
 
     // 내 정보 조회
     // 닉네임 아이디 친구 수
+    public ResponseEntity<ApiResponse> getMyInfo(UserPrincipal userPrincipal) {
+        User user = validUserByUserId(userPrincipal.getId());
+        // TODO: 친구 수 구하는 로직
+        int num = 0;
+        MyInfoRes myInfoRes = MyInfoRes.builder()
+                .nicknameId(user.getNicknameId())
+                .nickname(user.getNickname())
+                .friendsNum(num)
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(myInfoRes)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
 
     // 프로필 사진 등록
     @Transactional
