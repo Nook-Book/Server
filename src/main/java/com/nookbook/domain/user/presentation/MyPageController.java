@@ -75,4 +75,15 @@ public class MyPageController {
         return userService.updateImage(userPrincipal, userId, isDefaultImage, image);
     }
 
+    @Operation(summary = "[마이페이지] 독서 통계(카테고리별)", description = "마이페이지의 독서 통계(카테고리)를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/report/category")
+    public ResponseEntity<?> findReadingReportByCategory(
+            @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return bookService.countReadBooksByCategory(userPrincipal);
+    }
 }
