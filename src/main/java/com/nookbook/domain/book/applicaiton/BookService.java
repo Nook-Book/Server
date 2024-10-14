@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.book.dto.response.*;
+import com.nookbook.domain.collection.domain.repository.CollectionBookRepository;
 import com.nookbook.domain.keyword.application.KeywordService;
 import com.nookbook.domain.note.domain.repository.NoteRepository;
 import com.nookbook.domain.user.domain.User;
@@ -38,6 +39,7 @@ public class BookService {
     private final BookRepository bookRepository;
     private final NoteRepository noteRepository;
     private final UserBookRepository userBookRepository;
+    private final CollectionBookRepository collectionBookRepository;
 
     private final KeywordService keywordService;
 
@@ -142,16 +144,10 @@ public class BookService {
             Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
             if (userBookOptional.isPresent()) {
                 UserBook userBook = userBookOptional.get();
-
                 // 독서 상태 확인
                 bookStatus = userBookOptional.get().getBookStatus();
-
                 // 컬렉션 저장 여부 확인
-                // Optional<Collection> collectionOptional = collectionRepository.findByUserAndIsbn(user, isbn13);
-                // if (collectionOptional.isPresent()) {
-                //     isStoredCollection = true; // 컬렉션에 저장된 상태
-                // }
-
+                isStoredCollection = collectionBookRepository.existsByCollectionUserAndBook(user, book);
                 // 노트 존재 여부 확인
                 hasNote = noteRepository.existsByUserBook(userBook);
             }
