@@ -27,6 +27,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -335,6 +336,7 @@ public class BookService {
                         .category(entry.getKey()) // 카테고리명
                         .count(Math.toIntExact(entry.getValue()))  // 카테고리에서 읽은 책 수
                         .build())
+                .sorted(Comparator.comparing(MostReadCategoriesRes::getCategory))
                 .collect(Collectors.toList());
 
         // ApiResponse로 변환하여 반환
@@ -347,6 +349,34 @@ public class BookService {
     }
 
     // 독서 리포트 - 독서 통계
+    public ResponseEntity<ApiResponse> countReadBooksByYear(UserPrincipal userPrincipal, int year) {
+        User user = validUserById(userPrincipal.getId());
+        List<UserBook> userBooks = userBookRepository.findUserBooksByStatusAndYear(user, BookStatus.READ, year);
+
+        // 월별로 그룹화하여 카운트
+        Map<Integer, Long> monthCountMap = userBooks.stream()
+                .collect(Collectors.groupingBy(
+                        userBook -> Integer.valueOf(userBook.getUpdatedAt().format(DateTimeFormatter.ofPattern("MM"))),
+                        Collectors.counting()
+                ));
+
+        // 카테고리별 결과를 응답 객체로 변환
+        List<BookStatisticsRes> bookStatisticsRes = monthCountMap.entrySet().stream()
+                .map(entry -> BookStatisticsRes.builder()
+                        .month(entry.getKey()) // 카테고리명
+                        .count(Math.toIntExact(entry.getValue()))  // 카테고리에서 읽은 책 수
+                        .build())
+                .sorted(Comparator.comparingInt(BookStatisticsRes::getMonth))
+                .collect(Collectors.toList());
+
+        // ApiResponse로 변환하여 반환
+        ApiResponse response = ApiResponse.builder()
+                .check(true)
+                .information(bookStatisticsRes)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
 
     private User validUserById(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
