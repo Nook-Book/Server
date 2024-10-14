@@ -22,4 +22,7 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
             "AND FUNCTION('YEAR', ub.updatedAt) = :year")
     List<UserBook> findUserBooksByStatusAndYear(User user, BookStatus bookStatus, int year);
 
+
+    //가장 최근에 수정된 UserBook
+    UserBook findFirstByUserOrderByUpdatedAtDesc(User user);
 }

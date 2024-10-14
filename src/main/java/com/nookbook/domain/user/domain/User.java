@@ -1,10 +1,15 @@
 package com.nookbook.domain.user.domain;
 
+import com.nookbook.domain.challenge.domain.Invitation;
+import com.nookbook.domain.challenge.domain.Participant;
 import com.nookbook.domain.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name="User")
@@ -37,6 +42,13 @@ public class User extends BaseEntity {
     private String imageUrl = "https://";
 
     private String imageName = "default.png";
+
+    // Participant와 Invitation 연관관계 추가
+    @OneToMany(mappedBy = "user")
+    private List<Participant> participants = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Invitation> invitations = new ArrayList<>();
 
 
     @Enumerated(EnumType.STRING)
