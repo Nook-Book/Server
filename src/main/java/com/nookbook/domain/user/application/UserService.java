@@ -120,7 +120,7 @@ public class UserService {
 
     // 아이디 수정
     @Transactional
-    public ResponseEntity<?> updateNicknameId(@CurrentUser UserPrincipal userPrincipal, Long userId, NicknameIdCheckReq nicknameIdCheckReq) {
+    public ResponseEntity<?> updateNicknameId(UserPrincipal userPrincipal, NicknameIdCheckReq nicknameIdCheckReq) {
         User user = validUserByUserId(userPrincipal.getId());
         String nicknameId = nicknameIdCheckReq.getNicknameId();
         boolean isAvailable = checkDuplicateNicknameId(nicknameId);
@@ -138,7 +138,7 @@ public class UserService {
 
     // 닉네임 수정
     @Transactional
-    public ResponseEntity<?> updateNickname(@CurrentUser UserPrincipal userPrincipal, Long userId, NicknameCheckReq nicknameCheckReq) {
+    public ResponseEntity<?> updateNickname(UserPrincipal userPrincipal, NicknameCheckReq nicknameCheckReq) {
         User user = validUserByUserId(userPrincipal.getId());
         String nickname = nicknameCheckReq.getNickname();
         boolean isAvailable = checkDuplicateNickname(nickname);
@@ -167,7 +167,7 @@ public class UserService {
 
     // 프로필 사진 등록
     @Transactional
-    public ResponseEntity<?> updateImage(@CurrentUser UserPrincipal userPrincipal, Long userId, Boolean isDefaultImage, Optional<MultipartFile> image) {
+    public ResponseEntity<?> updateImage(UserPrincipal userPrincipal, Boolean isDefaultImage, Optional<MultipartFile> image) {
         User user = validUserByUserId(userPrincipal.getId());
         if (!Objects.equals(user.getImageName(), "default.png")) {
             s3Uploader.deleteFile(user.getImageName());
@@ -190,10 +190,6 @@ public class UserService {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
-
-    // 기록 전체 보기
-    // 독서 리포트 조회
-
 
     private User validUserByUserId(Long userId) {
         Optional<User> user = userRepository.findById(userId);
