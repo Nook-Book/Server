@@ -4,7 +4,6 @@ import com.nookbook.domain.challenge.application.ChallengeService;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
 import com.nookbook.domain.challenge.dto.response.ChallengeDetailRes;
 import com.nookbook.domain.challenge.dto.response.ChallengeListRes;
-import com.nookbook.domain.challenge.dto.response.ChallengeParticipantListRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;

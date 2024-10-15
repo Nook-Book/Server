@@ -4,10 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
-import com.nookbook.domain.book.dto.response.BestSellerRes;
-import com.nookbook.domain.book.dto.response.BookDetailRes;
-import com.nookbook.domain.book.dto.response.BookRes;
-import com.nookbook.domain.book.dto.response.SearchRes;
+import com.nookbook.domain.book.dto.response.*;
+import com.nookbook.domain.collection.domain.repository.CollectionBookRepository;
 import com.nookbook.domain.keyword.application.KeywordService;
 import com.nookbook.domain.note.domain.repository.NoteRepository;
 import com.nookbook.domain.user.domain.User;
@@ -29,7 +27,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +40,7 @@ public class BookService {
     private final BookRepository bookRepository;
     private final NoteRepository noteRepository;
     private final UserBookRepository userBookRepository;
+    private final CollectionBookRepository collectionBookRepository;
 
     private final KeywordService keywordService;
 
@@ -144,16 +145,10 @@ public class BookService {
             Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
             if (userBookOptional.isPresent()) {
                 UserBook userBook = userBookOptional.get();
-
                 // 독서 상태 확인
                 bookStatus = userBookOptional.get().getBookStatus();
-
                 // 컬렉션 저장 여부 확인
-                // Optional<Collection> collectionOptional = collectionRepository.findByUserAndIsbn(user, isbn13);
-                // if (collectionOptional.isPresent()) {
-                //     isStoredCollection = true; // 컬렉션에 저장된 상태
-                // }
-
+                isStoredCollection = collectionBookRepository.existsByCollectionUserAndBook(user, book);
                 // 노트 존재 여부 확인
                 hasNote = noteRepository.existsByUserBook(userBook);
             }
@@ -321,6 +316,68 @@ public class BookService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    // 독서 리포트 - 카테고리
+    public ResponseEntity<ApiResponse> countReadBooksByCategory(UserPrincipal userPrincipal) {
+        User user = validUserById(userPrincipal.getId());
+        // groupby에 따라서 카테고리에 맞는 점수 배정
+        // 읽은 책 조회
+        List<UserBook> userBooks = userBookRepository.findByUserAndBookStatus(user, BookStatus.READ);
+
+        // 카테고리별로 그룹화하여 카운트 (카테고리명과 그에 대한 책 수를 매핑)
+        Map<String, Long> categoryCountMap = userBooks.stream()
+                .collect(Collectors.groupingBy(
+                        userBook -> userBook.getBook().getCategory(),
+                        Collectors.counting()
+                ));
+
+        // 카테고리별 결과를 응답 객체로 변환
+        List<MostReadCategoriesRes> readCategoriesRes = categoryCountMap.entrySet().stream()
+                .map(entry -> MostReadCategoriesRes.builder()
+                        .category(entry.getKey()) // 카테고리명
+                        .count(Math.toIntExact(entry.getValue()))  // 카테고리에서 읽은 책 수
+                        .build())
+                .sorted(Comparator.comparing(MostReadCategoriesRes::getCategory))
+                .collect(Collectors.toList());
+
+        // ApiResponse로 변환하여 반환
+        ApiResponse response = ApiResponse.builder()
+                .check(true)
+                .information(readCategoriesRes)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    // 독서 리포트 - 독서 통계
+    public ResponseEntity<ApiResponse> countReadBooksByYear(UserPrincipal userPrincipal, int year) {
+        User user = validUserById(userPrincipal.getId());
+        List<UserBook> userBooks = userBookRepository.findUserBooksByStatusAndYear(user, BookStatus.READ, year);
+
+        // 월별로 그룹화하여 카운트
+        Map<Integer, Long> monthCountMap = userBooks.stream()
+                .collect(Collectors.groupingBy(
+                        userBook -> Integer.valueOf(userBook.getUpdatedAt().format(DateTimeFormatter.ofPattern("MM"))),
+                        Collectors.counting()
+                ));
+
+        // 카테고리별 결과를 응답 객체로 변환
+        List<BookStatisticsRes> bookStatisticsRes = monthCountMap.entrySet().stream()
+                .map(entry -> BookStatisticsRes.builder()
+                        .month(entry.getKey()) // 카테고리명
+                        .count(Math.toIntExact(entry.getValue()))  // 카테고리에서 읽은 책 수
+                        .build())
+                .sorted(Comparator.comparingInt(BookStatisticsRes::getMonth))
+                .collect(Collectors.toList());
+
+        // ApiResponse로 변환하여 반환
+        ApiResponse response = ApiResponse.builder()
+                .check(true)
+                .information(bookStatisticsRes)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
     private User validUserById(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
@@ -332,5 +389,7 @@ public class BookService {
         DefaultAssert.isTrue(bookOptional.isPresent(), "해당 도서가 존재하지 않습니다.");
         return bookOptional.get();
     }
+
+
 
 }
