@@ -1,0 +1,118 @@
+name: Deploy to Amazon EC2
+
+on:
+  push:
+    branches:
+      - main
+
+# 환경 변수 설정
+env:
+  AWS_REGION: ap-northeast-2
+  S3_BUCKET_NAME: nookbook-deploy-bucket
+  CODE_DEPLOY_APPLICATION_NAME: nookbook-codedeploy-app
+  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: nookbook-deployment-group
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # JDK 17 세팅
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # gradle 캐싱
+      - name: Gradle Caching
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # 파일 생성
+      - name: create files
+        run: |
+          cd ./src/main/resources
+    
+          # nook-book-service.json 생성
+          touch ./nook-book-service.json
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" | base64 --decode > ./nook-book-service.json 
+          echo "GOOGLE_APPLICATION_CREDENTIALS=./nook-book-service.json" >> $GITHUB_ENV
+    
+          # database 디렉토리 및 파일 생성
+          mkdir -p ./database
+          touch ./database/application-database.yml
+          echo "${{ secrets.APPLICATION_RDS }}" | base64 --decode > ./database/application-database.yml  
+
+          # book 디렉토리 및 파일 생성
+          mkdir -p ./book
+          touch ./book/application-book.yml 
+          echo "${{ secrets.APPLICATION_BOOK }}" | base64 --decode > ./book/application-book.yml  
+          
+          # s3 디렉토리 및 파일 생성
+          mkdir -p ./s3
+          touch ./s3/application-s3.yml 
+          echo "${{ secrets.APPLICATION_S3 }}" | base64 --decode > ./s3/application-s3.yml
+
+          # oauth2 디렉토리 및 파일 생성
+          mkdir -p ./oauth2
+          touch ./oauth2/application-oauth2.yml 
+          echo "${{ secrets.APPLICATION_OAUTH2 }}" | base64 --decode > ./oauth2/application-oauth2.yml
+
+          # vision 디렉토리 및 파일 생성
+          mkdir -p ./vision
+          touch ./vision/application-vision.yml 
+          echo "${{ secrets.APPLICATION_VISION }}" | base64 --decode > ./vision/application-vision.yml
+
+          # webclient 디렉토리 및 파일 생성
+          mkdir -p ./webclient
+          touch ./webclient/application-webclient.yml 
+          echo "${{ secrets.APPLICATION_WEBCLIENT }}" | base64 --decode > ./webclient/application-webclient.yml
+
+      # 권한 부여
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+        
+      # Gradle build (Test 제외)
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test
+
+      # AWS 인증 (IAM 사용자 Access Key, Secret Key 활용)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 빌드 결과물을 S3 버킷에 업로드
+      - name: Upload to AWS S3
+        run: |
+          aws deploy push \
+            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+            --ignore-hidden-files \
+            --s3-location s3://$S3_BUCKET_NAME/$GITHUB_SHA.zip \
+            --source .
+
+      # S3 버킷에 있는 파일을 대상으로 CodeDeploy 실행
+      - name: Deploy to AWS EC2 from S3
+        run: |
+          aws deploy create-deployment \
+            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+            --deployment-config-name CodeDeployDefault.AllAtOnce \
+            --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+            --s3-location bucket=$S3_BUCKET_NAME,key=$GITHUB_SHA.zip,bundleType=zip
