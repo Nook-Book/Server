@@ -1,7 +1,7 @@
 package com.nookbook.global;
 
-import com.nookbook.global.error.DefaultAuthenticationException;
-import com.nookbook.global.error.DefaultException;
+import com.nookbook.global.exception.DefaultAuthenticationException;
+import com.nookbook.global.exception.DefaultException;
 import com.nookbook.global.payload.ErrorCode;
 import org.springframework.util.Assert;
 
