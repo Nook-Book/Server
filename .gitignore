@@ -42,4 +42,7 @@ out/
 /src/main/resources/webclient/
 /src/main/resources/s3/
 /src/main/resources/book/
+/src/main/resources/vision/
+
+/src/main/resources/nook-book-service.json
 
