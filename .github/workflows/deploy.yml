@@ -56,32 +56,32 @@ jobs:
           # database 디렉토리 및 파일 생성
           mkdir -p ./database
           touch ./database/application-database.yml
-          echo "${{ secrets.APPLICATION_DATABASE }}" | base64 --decode > ./database/application-database.yml  
+          echo "${{ secrets.APPLICATION_DATABASE_YML }}" | base64 --decode > ./database/application-database.yml  
 
           # book 디렉토리 및 파일 생성
           mkdir -p ./book
           touch ./book/application-book.yml 
-          echo "${{ secrets.APPLICATION_BOOK }}" | base64 --decode > ./book/application-book.yml  
+          echo "${{ secrets.APPLICATION_BOOK_YML }}" | base64 --decode > ./book/application-book.yml  
           
           # s3 디렉토리 및 파일 생성
           mkdir -p ./s3
           touch ./s3/application-s3.yml 
-          echo "${{ secrets.APPLICATION_S3 }}" | base64 --decode > ./s3/application-s3.yml
+          echo "${{ secrets.APPLICATION_S3_YML }}" | base64 --decode > ./s3/application-s3.yml
 
           # oauth2 디렉토리 및 파일 생성
           mkdir -p ./oauth2
           touch ./oauth2/application-oauth2.yml 
-          echo "${{ secrets.APPLICATION_OAUTH2 }}" | base64 --decode > ./oauth2/application-oauth2.yml
+          echo "${{ secrets.APPLICATION_OAUTH2_YML }}" | base64 --decode > ./oauth2/application-oauth2.yml
 
           # vision 디렉토리 및 파일 생성
           mkdir -p ./vision
           touch ./vision/application-vision.yml 
-          echo "${{ secrets.APPLICATION_VISION }}" | base64 --decode > ./vision/application-vision.yml
+          echo "${{ secrets.APPLICATION_VISION_YML }}" | base64 --decode > ./vision/application-vision.yml
 
           # webclient 디렉토리 및 파일 생성
           mkdir -p ./webclient
           touch ./webclient/application-webclient.yml 
-          echo "${{ secrets.APPLICATION_WEBCLIENT }}" | base64 --decode > ./webclient/application-webclient.yml
+          echo "${{ secrets.APPLICATION_WEBCLIENT_YML }}" | base64 --decode > ./webclient/application-webclient.yml
 
       # 권한 부여
       - name: Grant execute permission for gradlew
