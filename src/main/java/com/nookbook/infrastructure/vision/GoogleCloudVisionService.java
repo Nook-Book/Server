@@ -1,4 +1,4 @@
-package com.nookbook.global.infrastructure.vision;
+package com.nookbook.infrastructure.vision;
 
 import com.google.cloud.vision.v1.*;
 import com.nookbook.global.payload.ApiResponse;

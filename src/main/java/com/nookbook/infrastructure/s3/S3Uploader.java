@@ -1,4 +1,4 @@
-package com.nookbook.global.infrastructure.s3;
+package com.nookbook.infrastructure.s3;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;

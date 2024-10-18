@@ -7,7 +7,7 @@ import com.nookbook.domain.note.dto.response.NoteDetailRes;
 import com.nookbook.domain.note.dto.response.NoteRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
-import com.nookbook.global.infrastructure.vision.GoogleCloudVisionService;
+import com.nookbook.infrastructure.vision.GoogleCloudVisionService;
 import com.nookbook.global.payload.ErrorResponse;
 import com.nookbook.global.payload.Message;
 import io.swagger.v3.oas.annotations.Operation;

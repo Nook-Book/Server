@@ -1,4 +1,4 @@
-package com.nookbook.global.infrastructure.vision;
+package com.nookbook.infrastructure.vision;
 
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;

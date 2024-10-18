@@ -3,7 +3,7 @@ package com.nookbook.domain.user.application;
 import com.nookbook.domain.collection.domain.Collection;
 import com.nookbook.domain.collection.domain.CollectionStatus;
 import com.nookbook.domain.collection.domain.repository.CollectionRepository;
-import com.nookbook.global.infrastructure.s3.S3Uploader;
+import com.nookbook.infrastructure.s3.S3Uploader;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
