@@ -1,10 +1,9 @@
 package com.nookbook.domain.user.application;
 
-import com.nookbook.domain.collection.application.CollectionService;
 import com.nookbook.domain.collection.domain.Collection;
 import com.nookbook.domain.collection.domain.CollectionStatus;
 import com.nookbook.domain.collection.domain.repository.CollectionRepository;
-import com.nookbook.domain.s3.application.S3Uploader;
+import com.nookbook.infrastructure.s3.S3Uploader;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
@@ -14,7 +13,6 @@ import com.nookbook.domain.user.dto.response.MyInfoRes;
 import com.nookbook.domain.user.dto.response.NicknameCheckRes;
 import com.nookbook.domain.user.dto.response.NicknameIdCheckRes;
 import com.nookbook.global.DefaultAssert;
-import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import com.nookbook.global.payload.Message;
