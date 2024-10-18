@@ -50,13 +50,13 @@ jobs:
     
           # nook-book-service.json 생성
           touch ./nook-book-service.json
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" | base64 --decode > ./nook-book-service.json 
+          echo "${{ secrets.NOOK_BOOK_SERVICE_JSON }}" | base64 --decode > ./nook-book-service.json 
           echo "GOOGLE_APPLICATION_CREDENTIALS=./nook-book-service.json" >> $GITHUB_ENV
     
           # database 디렉토리 및 파일 생성
           mkdir -p ./database
           touch ./database/application-database.yml
-          echo "${{ secrets.APPLICATION_RDS }}" | base64 --decode > ./database/application-database.yml  
+          echo "${{ secrets.APPLICATION_DATABASE }}" | base64 --decode > ./database/application-database.yml  
 
           # book 디렉토리 및 파일 생성
           mkdir -p ./book
