@@ -6,6 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
+import java.util.TimeZone;
+
 @SpringBootApplication
 @EnableJpaAuditing
 @PropertySource(value = { "classpath:database/application-database.yml" }, factory = YamlPropertySourceFactory.class)
@@ -18,6 +20,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 public class NookBookApplication {
 
     public static void main(String[] args) {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
         SpringApplication.run(NookBookApplication.class, args);
     }
 
