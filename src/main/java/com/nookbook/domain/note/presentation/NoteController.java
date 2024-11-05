@@ -102,7 +102,7 @@ public class NoteController {
             @ApiResponse(responseCode = "200", description = "추출 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class) ) } ),
             @ApiResponse(responseCode = "400", description = "추출 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
-    @GetMapping("/text")
+    @PostMapping("/text")
     public ResponseEntity<?> detectText(
             // @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "Multipart form data 형식의 파일을 입력해주세요.", required = true) @RequestPart MultipartFile image
