@@ -84,7 +84,6 @@ jobs:
           echo "${{ secrets.APPLICATION_WEBCLIENT_YML }}" | base64 --decode > ./webclient/application-webclient.yml
 
           # keystore.p12 파일 생성
-          cd ./src/main/resources  # src/main/resources 디렉토리로 이동
           touch ./keystore.p12
           echo "${{ secrets.KEYSTORE_P12 }}" | base64 --decode > ./keystore.p12
 
