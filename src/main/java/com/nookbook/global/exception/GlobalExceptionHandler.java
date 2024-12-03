@@ -14,30 +14,21 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleDefaultException(DefaultException ex) {
         ErrorCode errorCode = ex.getErrorCode();
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .code(errorCode.getCode())
-                .status(errorCode.getStatus())
-                .message(errorCode.getMessage())
-                .build();
+                .code(errorCode).build();
         return new ResponseEntity<>(errorResponse, HttpStatus.valueOf(errorCode.getStatus()));
     }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex) {
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .code("NOT_FOUND")
-                .status(404)
-                .message(ex.getMessage())
-                .build();
+                .code(ErrorCode.NOT_FOUND).build();
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(DuplicateException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateException(DuplicateException ex) {
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .code("DUPLICATE_ERROR")
-                .status(409)
-                .message(ex.getMessage())
-                .build();
+                .code(ErrorCode.DUPLICATE_ERROR).build();
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 }
