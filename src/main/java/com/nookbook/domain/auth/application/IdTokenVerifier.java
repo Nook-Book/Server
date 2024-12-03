@@ -25,9 +25,9 @@ import java.security.Key;
 @RequiredArgsConstructor
 public class IdTokenVerifier {
 
-    @Value("${app.auth.kakao.userInfoUri}")
+    @Value("${spring.security.oauth2.client.provider.kakao.user-info-uri}")
     private String kakaoUserInfoUri;
-    @Value("${app.auth.tokenSecret}")
+    @Value("${app.auth.token-secret}")
     private String jwtSecret;
 
     private static final Logger logger = LoggerFactory.getLogger(IdTokenVerifier.class);

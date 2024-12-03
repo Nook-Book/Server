@@ -18,13 +18,13 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtil {
 
-    @Value("${app.auth.tokenSecret}")
+    @Value("${app.auth.token-secret}")
     private String jwtSecret; // Base64로 인코딩된 Secret Key
 
-    @Value("${app.auth.tokenExpirationMsec}")
+    @Value("${app.auth.access-token-expiration-msec}")
     private long jwtExpirationInMs;
 
-    @Value("${app.auth.refreshTokenExpirationMsec}")
+    @Value("${app.auth.refresh-token-expiration-msec}")
     private long jwtRefreshExpirationInMs;
 
     private SecretKey getSigningKey() {
