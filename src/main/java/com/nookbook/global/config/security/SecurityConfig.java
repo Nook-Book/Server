@@ -6,7 +6,6 @@ import com.nookbook.domain.auth.application.CustomUserDetailsService;
 import com.nookbook.domain.auth.domain.repository.CustomAuthorizationRequestRepository;
 import com.nookbook.global.config.security.handler.CustomSimpleUrlAuthenticationFailureHandler;
 import com.nookbook.global.config.security.handler.CustomSimpleUrlAuthenticationSuccessHandler;
-import com.nookbook.global.config.security.token.CustomAuthenticationEntryPoint;
 import com.nookbook.global.config.security.token.CustomOncePerRequestFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -34,11 +33,12 @@ public class SecurityConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
-    private final CustomUserDetailsService customUserDetailsService;
-    private final CustomDefaultOAuth2UserService customOAuth2UserService;
-    private final CustomSimpleUrlAuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-    private final CustomSimpleUrlAuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
-    private final CustomAuthorizationRequestRepository customAuthorizationRequestRepository;
+
+     private final CustomUserDetailsService customUserDetailsService;
+     private final CustomDefaultOAuth2UserService customOAuth2UserService;
+     private final CustomSimpleUrlAuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+     private final CustomSimpleUrlAuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+     private final CustomAuthorizationRequestRepository customAuthorizationRequestRepository;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -54,6 +54,7 @@ public class SecurityConfig {
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
 
+        // OAuth2 관련 의존성 제거
         authenticationProvider.setUserDetailsService(customUserDetailsService);
         authenticationProvider.setPasswordEncoder(passwordEncoder());
 
@@ -73,29 +74,19 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(new CustomAuthenticationEntryPoint()))
+                // .exceptionHandling(exception -> exception.authenticationEntryPoint(new CustomAuthenticationEntryPoint()))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/error", "/favicon.ico", "/**/*.png", "/**/*.gif", "/**/*.svg", "/**/*.jpg", "/**/*.html", "/**/*.css", "/**/*.js")
                         .permitAll()
                         .requestMatchers("/swagger", "/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs/**", "/v3/api-docs/**")
                         .permitAll()
-                        .requestMatchers("/login/**", "/auth/**", "/oauth2/**", "/api/v1/note/text")
+                        .requestMatchers("/login/**", "/auth/idTokenLogin", "/oauth2/**", "/api/v1/note/text")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
-                .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(authorization -> authorization
-                                .baseUri("/oauth2/authorize")
-                                .authorizationRequestRepository(customAuthorizationRequestRepository))
-                        .redirectionEndpoint(redirection -> redirection
-                                .baseUri("/oauth2/callback/*"))
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService))
-                        .successHandler(oAuth2AuthenticationSuccessHandler)
-                        .failureHandler((request, response, exception) -> {
-                            logger.error("OAuth2 Authentication Failure: {}", exception.getMessage());
-                            oAuth2AuthenticationFailureHandler.onAuthenticationFailure(request, response, exception);
-                        }));
+                        .oauth2Login(oauth2 -> oauth2
+                                .userInfoEndpoint(userInfo -> userInfo
+                                        .userService(customOAuth2UserService)));
 
         http.addFilterBefore(customOncePerRequestFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
