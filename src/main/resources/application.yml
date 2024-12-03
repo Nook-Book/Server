@@ -24,4 +24,4 @@ server:
     include-stacktrace: always
 
   #port 설정
-  port: 8080
+  port: 8081
