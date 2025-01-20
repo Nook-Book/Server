@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.book.dto.response.*;
-import com.nookbook.domain.collection.domain.Collection;
 import com.nookbook.domain.collection.domain.CollectionBook;
 import com.nookbook.domain.collection.domain.repository.CollectionBookRepository;
 import com.nookbook.domain.keyword.application.KeywordService;
@@ -265,16 +264,13 @@ public class BookService {
         try {
             // JSON 문자열을 Map 형태로 변환
             Map<String, Object> map = objectMapper.readValue(json, new TypeReference<>() {});
-
             // "item" 배열을 추출
             List<Map<String, Object>> items = (List<Map<String, Object>>) map.get("item");
-
             // 첫 번째 아이템을 BookDetailRes로 변환
             BookDetailRes bookDetailRes = null;
             if (items != null && !items.isEmpty()) {
                 Map<String, Object> item = items.get(0);
                 bookDetailRes = objectMapper.convertValue(item, BookDetailRes.class);
-
                 // subInfo를 추출하고 itemPage 값을 설정
                 Map<String, Object> subInfo = (Map<String, Object>) item.get("subInfo");
                 if (subInfo != null) {
@@ -287,7 +283,6 @@ public class BookService {
             }
             // BookDetailRes 객체 반환
             return bookDetailRes;
-
         } catch (Exception e) {
             System.err.println("Error converting JSON to BookRes: " + e.getMessage());
             e.printStackTrace();

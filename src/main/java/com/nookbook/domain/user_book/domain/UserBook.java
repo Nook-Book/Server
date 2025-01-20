@@ -8,6 +8,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigInteger;
+import java.time.Duration;
+import java.time.LocalTime;
+
 @Entity
 @Table(name="User_Book")
 @NoArgsConstructor
@@ -27,6 +31,9 @@ public class UserBook extends BaseEntity {
     @JoinColumn(name = "book_id")
     private Book book;
 
+    // 누적 독서 시간
+    private BigInteger totalReadTime = BigInteger.ZERO;
+
     @Enumerated(EnumType.STRING)
     private BookStatus bookStatus = BookStatus.BEFORE_READ;
 
@@ -38,4 +45,6 @@ public class UserBook extends BaseEntity {
     }
 
     public void updateBookStatus(BookStatus bookStatus) { this.bookStatus = bookStatus; }
+
+    public void updateTotalReadTime(BigInteger totalReadTime) { this.totalReadTime = totalReadTime; }
 }
