@@ -48,11 +48,6 @@ jobs:
         run: |
           cd ./src/main/resources
     
-          # nook-book-service.json 생성
-          touch ./nook-book-service.json
-          echo "${{ secrets.NOOK_BOOK_SERVICE_JSON }}" | base64 --decode > ./nook-book-service.json 
-          echo "GOOGLE_APPLICATION_CREDENTIALS=./nook-book-service.json" >> $GITHUB_ENV
-    
           # database 디렉토리 및 파일 생성
           mkdir -p ./database
           touch ./database/application-database.yml
@@ -72,11 +67,6 @@ jobs:
           mkdir -p ./oauth2
           touch ./oauth2/application-oauth2.yml 
           echo "${{ secrets.APPLICATION_OAUTH2_YML }}" | base64 --decode > ./oauth2/application-oauth2.yml
-
-          # vision 디렉토리 및 파일 생성
-          mkdir -p ./vision
-          touch ./vision/application-vision.yml 
-          echo "${{ secrets.APPLICATION_VISION_YML }}" | base64 --decode > ./vision/application-vision.yml
 
           # webclient 디렉토리 및 파일 생성
           mkdir -p ./webclient
