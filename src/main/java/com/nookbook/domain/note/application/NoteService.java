@@ -6,6 +6,7 @@ import com.nookbook.domain.note.domain.Note;
 import com.nookbook.domain.note.domain.repository.NoteRepository;
 import com.nookbook.domain.note.dto.request.CreateNoteReq;
 import com.nookbook.domain.note.dto.request.UpdateNoteReq;
+import com.nookbook.domain.note.dto.response.ImageUrlRes;
 import com.nookbook.domain.note.dto.response.NoteDetailRes;
 import com.nookbook.domain.note.dto.response.NoteListRes;
 import com.nookbook.domain.note.dto.response.NoteRes;
@@ -18,10 +19,12 @@ import com.nookbook.global.DefaultAssert;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import com.nookbook.global.payload.Message;
+import com.nookbook.infrastructure.s3.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +38,8 @@ public class NoteService {
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final UserBookRepository userBookRepository;
+
+    private final S3Uploader s3Uploader;
 
     // 노트 저장
     @Transactional
@@ -50,7 +55,7 @@ public class NoteService {
             userBook = UserBook.builder()
                     .user(user)
                     .book(book)
-                    .bookStatus(BookStatus.BEFORE_READ)  // 상태 변경은 수동으로
+                    .bookStatus(BookStatus.BEFORE_READ)
                     .build();
             userBookRepository.save(userBook);
         } else {
@@ -163,6 +168,26 @@ public class NoteService {
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(noteDetailRes)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    public ResponseEntity<?> uploadImage(MultipartFile image) {
+        ImageUrlRes imageUrlRes = ImageUrlRes.builder()
+                .imageUrl(s3Uploader.uploadImage(image))
+                .build();
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(imageUrlRes)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    public ResponseEntity<?> deleteImage(String imageUrl) {
+        s3Uploader.deleteFile(s3Uploader.extractImageNameFromUrl(imageUrl));
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information("이미지가 삭제되었습니다.")
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
