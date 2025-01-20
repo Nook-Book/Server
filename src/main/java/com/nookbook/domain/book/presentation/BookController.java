@@ -3,6 +3,9 @@ package com.nookbook.domain.book.presentation;
 import com.nookbook.domain.book.applicaiton.BookService;
 import com.nookbook.domain.book.dto.response.*;
 import com.nookbook.domain.keyword.application.KeywordService;
+import com.nookbook.domain.timer.application.TimerService;
+import com.nookbook.domain.timer.dto.request.CreateTimerReq;
+import com.nookbook.domain.timer.dto.response.TimerRes;
 import com.nookbook.domain.user_book.domain.BookStatus;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
@@ -20,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalTime;
+
 @Tag(name = "Book", description = "Book API")
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +33,7 @@ public class BookController {
 
     private final BookService bookService;
     private final KeywordService keywordService;
+    private final TimerService timerService;
 
     @Operation(summary = "도서 검색", description = "도서를 제목, 저자, 출판사로 검색합니다.")
     @ApiResponses(value = {
@@ -111,4 +117,30 @@ public class BookController {
         return keywordService.deleteKeyword(userPrincipal, keywordId);
     }
 
+    @Operation(summary = "타이머 기록 조회", description = "타이머 기록의 누적 시간 및 목록을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = TimerRes.class)) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @GetMapping("/{bookId}/timer")
+    public ResponseEntity<?> getTimerRecord(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "도서의 id를 입력해주세요.", required = true) @PathVariable Long bookId
+    ) {
+        return timerService.getTimerRecords(userPrincipal, bookId);
+    }
+
+    @Operation(summary = "타이머 기록 저장", description = "타이머 기록을 저장합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = TimerRes.class)) } ),
+            @ApiResponse(responseCode = "400", description = "저장 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @PostMapping("/{bookId}/timer")
+    public ResponseEntity<?> saveTimerRecord(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "도서의 id를 입력해주세요.", required = true) @PathVariable Long bookId,
+            @Parameter(description = "시간을 입력해주세요.", required = true) @RequestBody CreateTimerReq createTimerReq
+            ) {
+        return timerService.saveTimerRecord(userPrincipal, bookId, createTimerReq);
+    }
 }
