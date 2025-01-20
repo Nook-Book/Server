@@ -27,6 +27,9 @@ public class CollectionListDetailRes {
     @Schema(type = "String", example = "읽고 싶은", description = "컬렉션 제목")
     private String collectionTitle;
 
+    @Schema(type = "int", example = "3", description = "컬렉션 내 도서 수")
+    private int totalBooks;
+
     @Schema(type = "List", description = "컬렉션에 속한 책 표지 이미지 목록")
     private List<String> collectionBooksCoverList;
 

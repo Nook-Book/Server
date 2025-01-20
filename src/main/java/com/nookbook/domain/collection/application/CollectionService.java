@@ -81,6 +81,7 @@ public class CollectionService {
                             .collectionStatus(collection.getCollectionStatus())
                             .collectionId(collection.getCollectionId())
                             .collectionTitle(collection.getTitle())
+                            .totalBooks(collection.getCollectionBooks().size()) // 컬렉션 내 도서 수
                             .collectionBooksCoverList(coverImages)
                             .build();
                 })
@@ -151,6 +152,7 @@ public class CollectionService {
         List<CollectionBooksListDetailRes> bookResponses = books.stream()
                 .map(book -> CollectionBooksListDetailRes.builder()
                         .bookId(book.getBookId())
+                        .isbn(book.getIsbn())
                         .title(book.getTitle())
                         .cover(book.getImage())
                         .build())
@@ -225,7 +227,7 @@ public class CollectionService {
 
         // 컬렉션에 속한 도서 중 삭제 요청된 도서를 찾아 삭제
         for (Long bookId : bookIds) {
-            CollectionBook collectionBook = collectionBookRepository.findById(bookId)
+            CollectionBook collectionBook = collectionBookRepository.findByCollectionIdAndBookId(collectionId, bookId)
                     .orElseThrow(() -> new RuntimeException("컬렉션 도서를 찾을 수 없습니다."));
             collectionBookRepository.delete(collectionBook);
         }
