@@ -8,6 +8,7 @@ import com.nookbook.domain.collection.dto.request.DeleteBookReq;
 import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
 import com.nookbook.domain.collection.dto.response.CollectionBooksListRes;
 import com.nookbook.domain.collection.dto.response.CollectionListRes;
+import com.nookbook.domain.collection.dto.response.MainCollectionListRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;
@@ -130,7 +131,7 @@ public class CollectionController {
 
     @Operation(summary = "현재 컬렉션 상세 조회 API", description = "현재 컬렉션에 등록된 도서 목록을 조회하는 API입니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "현재 컬렉션 상세 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CollectionListRes.class))}),
+            @ApiResponse(responseCode = "200", description = "현재 컬렉션 상세 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = MainCollectionListRes.class))}),
             @ApiResponse(responseCode = "400", description = "현재 컬렉션 상세 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
     @GetMapping("/current")
