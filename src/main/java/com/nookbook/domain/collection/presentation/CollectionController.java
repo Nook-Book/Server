@@ -105,7 +105,7 @@ public class CollectionController {
             @ApiResponse(responseCode = "200", description = "컬렉션 등록 도서 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
             @ApiResponse(responseCode = "400", description = "컬렉션 등록 도서 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @PostMapping("/{collectionId}/order")
+    @PostMapping("/order")
     public ResponseEntity<?> editCollectionOrder(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @RequestBody List<CollectionOrderReq> collectionOrderReqList
