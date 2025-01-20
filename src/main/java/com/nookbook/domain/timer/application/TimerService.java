@@ -93,7 +93,7 @@ public class TimerService {
         List<TimerRecordRes> timerRecordRes = timerList.stream()
                 .map(timer -> TimerRecordRes.builder()
                         .timerId(timer.getTimerId())
-                        .date(timer.getCreatedAt().toLocalDate())
+                        .date(timer.getCreatedAt())
                         .readTime(convertBigIntegerToString(timer.getReadTime()))
                         .build())
                 .toList();
