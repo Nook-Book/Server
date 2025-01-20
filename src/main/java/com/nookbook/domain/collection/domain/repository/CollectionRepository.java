@@ -25,7 +25,8 @@ public interface CollectionRepository extends JpaRepository<Collection, Long> {
 
     List<String> findTop4BookImagesByCollectionId(@Param("collectionId") Long collectionId);
 
-    Optional<Integer> findMaxOrderIndexByUser(User user);
+    @Query("SELECT MAX(c.orderIndex) FROM Collection c WHERE c.user = :user")
+    Optional<Long> findMaxOrderIndexByUser(@Param("user") User user);
 
     List<Collection> findAllByUserAndCollectionStatus(User user, CollectionStatus collectionStatus);
 }

@@ -44,8 +44,7 @@ public class CollectionService {
     public ResponseEntity<?> createCollection(UserPrincipal userPrincipal, CollectionCreateReq collectionCreateReq) {
         User user = validateUser(userPrincipal);
         // 사용자의 마지막 컬렉션 순서를 가져와서 새로운 순서를 지정
-        int maxOrderIndex = collectionRepository.findMaxOrderIndexByUser(user).orElse(0);
-
+        long maxOrderIndex = collectionRepository.findMaxOrderIndexByUser(user).orElse(1L);
 
         Collection collection = Collection.builder()
                 .title(collectionCreateReq.getTitle())
