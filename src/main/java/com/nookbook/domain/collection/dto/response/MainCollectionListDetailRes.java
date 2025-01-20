@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class CollectionListDetailRes {
+public class MainCollectionListDetailRes {
 
     @Schema(type = "Long", example = "1", description = "컬렉션 순서")
     private Long order;
@@ -27,7 +27,7 @@ public class CollectionListDetailRes {
     @Schema(type = "String", example = "읽고 싶은", description = "컬렉션 제목")
     private String collectionTitle;
 
-    @Schema(type = "List", description = "컬렉션에 속한 책 표지 이미지 목록")
-    private List<String> collectionBooksCoverList;
+    @Schema(type = "List", description = "컬렉션에 속한 책 정보 목록")
+    private List<CollectionBooksListDetailRes> collectionBooksListDetailRes;
 
 }

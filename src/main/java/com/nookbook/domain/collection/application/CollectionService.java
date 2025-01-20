@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -78,9 +79,9 @@ public class CollectionService {
                     return CollectionListDetailRes.builder()
                             .order(collection.getOrderIndex())
                             .collectionStatus(collection.getCollectionStatus())
-                            .id(collection.getCollectionId())
-                            .title(collection.getTitle())
-                            .coverList(coverImages)
+                            .collectionId(collection.getCollectionId())
+                            .collectionTitle(collection.getTitle())
+                            .collectionBooksCoverList(coverImages)
                             .build();
                 })
                 .toList();
@@ -278,7 +279,7 @@ public class CollectionService {
     }
 
 
-    // 현재 컬렉션 id 목록 조회
+    // 현재 컬렉션들의 정보 상세 조회
     public ResponseEntity<?> getCurrentCollectionBooks(UserPrincipal userPrincipal) {
         User user = validateUser(userPrincipal);
 
@@ -294,10 +295,37 @@ public class CollectionService {
             collectionIdList.add(collection.getCollectionId());
         }
 
+        List<MainCollectionListDetailRes> mainCollectionListDetailRes = mainCollections.stream()
+                .map(collection -> {
+                    // 컬렉션에 속한 도서 중 최근 추가된 4권의 표지 이미지 리스트
+                    List<Book> books = collection.getCollectionBooks().stream()
+                            .map(CollectionBook::getBook)
+                            .toList();
+                    // 특정 컬렉션 내 도서 정보
+                    List<CollectionBooksListDetailRes> bookInfo = books.stream()
+                            .map(book -> CollectionBooksListDetailRes.builder()
+                                    .bookId(book.getBookId())
+                                    .title(book.getTitle())
+                                    .cover(book.getImage())
+                                    .build())
+                            .toList();
+                    // 컬렉션 각각의 정보
+                    return MainCollectionListDetailRes.builder()
+                            .order(collection.getOrderIndex())
+                            .collectionStatus(collection.getCollectionStatus())
+                            .collectionId(collection.getCollectionId())
+                            .collectionTitle(collection.getTitle())
+                            .collectionBooksListDetailRes(bookInfo)
+                            .build();
+                })
+                .toList();
+
+
         MainCollectionListRes mainCollectionListRes = MainCollectionListRes.builder()
-                .totalCollections(collectionIdList.size())
-                .collectionIdList(collectionIdList)
+                .totalCollections(mainCollectionListDetailRes.size())
+                .mainCollectionListDetailRes(mainCollectionListDetailRes)
                 .build();
+
 
         ApiResponse response = ApiResponse.builder()
                 .check(true)
