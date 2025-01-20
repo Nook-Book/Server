@@ -42,7 +42,7 @@ public class TimerService {
         Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
         UserBook userBook = userBookOptional.get();
         plusTotalReadTime(userBook, userBook.getTotalReadTime(), createTimerReq.getTime());
-        if (timerRepository.countByUserBook(userBook) >= 5) {
+        if (timerRepository.countByUserBook(userBook) >= 10) {
             Timer oldestTimer = timerRepository.findTop1ByUserBookOrderByCreatedAtAsc(userBook);
             timerRepository.delete(oldestTimer);
         }
