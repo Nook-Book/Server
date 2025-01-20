@@ -14,6 +14,9 @@ public class CollectionBooksListDetailRes {
     @Schema(type = "Long", example = "1", description = "도서 ID")
     private Long bookId;
 
+    @Schema(type = "String", example = "24347", description = "도서의 isbn 정보")
+    private String isbn;
+
     @Schema(type = "String", example = "조이의 첫 도서", description = "도서 제목")
     private String title;
 
