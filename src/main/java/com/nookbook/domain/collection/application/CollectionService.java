@@ -81,6 +81,7 @@ public class CollectionService {
                             .collectionStatus(collection.getCollectionStatus())
                             .collectionId(collection.getCollectionId())
                             .collectionTitle(collection.getTitle())
+                            .totalBooks(collection.getCollectionBooks().size()) // 컬렉션 내 도서 수
                             .collectionBooksCoverList(coverImages)
                             .build();
                 })
