@@ -305,6 +305,7 @@ public class CollectionService {
                     List<CollectionBooksListDetailRes> bookInfo = books.stream()
                             .map(book -> CollectionBooksListDetailRes.builder()
                                     .bookId(book.getBookId())
+                                    .isbn(book.getIsbn())
                                     .title(book.getTitle())
                                     .cover(book.getImage())
                                     .build())
