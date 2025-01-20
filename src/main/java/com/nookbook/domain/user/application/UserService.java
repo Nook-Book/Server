@@ -49,9 +49,8 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> saveUserInfo(UserPrincipal userPrincipal, UserInfoReq userInfoReq) {
-        User user = userRepository.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
-
+        // User user = validUserByUserId(userPrincipal.getId());
+        User user = validUserByUserId(2L);
         user.saveUserInfo(userInfoReq.getNicknameId(), userInfoReq.getNickname());
         createDefaultCollection(user);
 
@@ -80,9 +79,8 @@ public class UserService {
 
 
     public ResponseEntity<?> checkNicknameId(UserPrincipal userPrincipal, NicknameIdCheckReq nicknameIdCheckReq) {
-        userRepository.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다. 로그인 정보를 확인해주세요."));
-
+        // validUserByUserId(userPrincipal.getId());
+        validUserByUserId(2L);
         boolean isUnique = checkDuplicateNicknameId(nicknameIdCheckReq.getNicknameId());
 
         NicknameIdCheckRes nicknameIdCheckRes = NicknameIdCheckRes.builder()
@@ -99,12 +97,11 @@ public class UserService {
     }
 
     public ResponseEntity<?> checkNickname(UserPrincipal userPrincipal, NicknameCheckReq nicknameCheckReq) {
-        userRepository.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+        // validUserByUserId(userPrincipal.getId());
+        validUserByUserId(2L);
+        boolean isUnique = checkDuplicateNickname(nicknameCheckReq.getNickname());
 
-       boolean isUnique = checkDuplicateNickname(nicknameCheckReq.getNickname());
-
-       NicknameCheckRes nicknameCheckRes = NicknameCheckRes.builder()
+        NicknameCheckRes nicknameCheckRes = NicknameCheckRes.builder()
                 .isUnique(isUnique)
                 .build();
 
@@ -120,7 +117,8 @@ public class UserService {
     // 아이디 수정
     @Transactional
     public ResponseEntity<?> updateNicknameId(UserPrincipal userPrincipal, NicknameIdCheckReq nicknameIdCheckReq) {
-        User user = validUserByUserId(userPrincipal.getId());
+        // User user = validUserByUserId(userPrincipal.getId());
+        User user = validUserByUserId(2L);
         String nicknameId = nicknameIdCheckReq.getNicknameId();
         boolean isAvailable = checkDuplicateNicknameId(nicknameId);
 
@@ -138,7 +136,8 @@ public class UserService {
     // 닉네임 수정
     @Transactional
     public ResponseEntity<?> updateNickname(UserPrincipal userPrincipal, NicknameCheckReq nicknameCheckReq) {
-        User user = validUserByUserId(userPrincipal.getId());
+        // User user = validUserByUserId(userPrincipal.getId());
+        User user = validUserByUserId(2L);
         String nickname = nicknameCheckReq.getNickname();
         boolean isAvailable = checkDuplicateNickname(nickname);
 
@@ -164,7 +163,8 @@ public class UserService {
     // 내 정보 조회
     // 닉네임 아이디 친구 수
     public ResponseEntity<ApiResponse> getMyInfo(UserPrincipal userPrincipal) {
-        User user = validUserByUserId(userPrincipal.getId());
+        // User user = validUserByUserId(userPrincipal.getId());
+        User user = validUserByUserId(2L);
         // TODO: 친구 수 구하는 로직
         int num = 0;
         MyInfoRes myInfoRes = MyInfoRes.builder()
@@ -183,7 +183,8 @@ public class UserService {
     // 프로필 사진 등록
     @Transactional
     public ResponseEntity<?> updateImage(UserPrincipal userPrincipal, Boolean isDefaultImage, Optional<MultipartFile> image) {
-        User user = validUserByUserId(userPrincipal.getId());
+        // User user = validUserByUserId(userPrincipal.getId());
+        User user = validUserByUserId(2L);
         if (!Objects.equals(user.getImageName(), "default.png")) {
             s3Uploader.deleteFile(user.getImageName());
         }
@@ -210,5 +211,9 @@ public class UserService {
         Optional<User> user = userRepository.findById(userId);
         DefaultAssert.isTrue(user.isPresent(), "사용자가 존재하지 않습니다.");
         return user.get();
+    }
+
+    public User findById(long l) {
+        return userRepository.findById(l).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
     }
 }

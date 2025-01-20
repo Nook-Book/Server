@@ -163,7 +163,8 @@ public class NoteService {
     }
 
     private User validUserById(Long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
+        // Optional<User> userOptional = userRepository.findById(userId);
+        Optional<User> userOptional = userRepository.findById(2L);
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
         return userOptional.get();
     }

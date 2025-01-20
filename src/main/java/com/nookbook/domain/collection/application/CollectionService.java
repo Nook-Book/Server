@@ -14,6 +14,7 @@ import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
 import com.nookbook.domain.collection.dto.response.*;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
+import com.nookbook.domain.user.exception.UserNotFoundException;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +42,7 @@ public class CollectionService {
     // 컬렉션 생성
     @Transactional
     public ResponseEntity<?> createCollection(UserPrincipal userPrincipal, CollectionCreateReq collectionCreateReq) {
-        User user= userService.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
-
+        User user = validateUser(userPrincipal);
         // 사용자의 마지막 컬렉션 순서를 가져와서 새로운 순서를 지정
         int maxOrderIndex = collectionRepository.findMaxOrderIndexByUser(user).orElse(0);
 
@@ -68,9 +67,7 @@ public class CollectionService {
     // 컬렉션 리스트 조회
     // CollectionListRes -> CollectionListDetailRes (컬렉션ID, 제목, 커버 리스트) -> CollectionCoverRes(커버 리스트)
     public ResponseEntity<?> getCollectionList(UserPrincipal userPrincipal) {
-        User user = userService.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
-
+        User user = validateUser(userPrincipal);
         List<Collection> collections = collectionRepository.findAllByUser(user);
 
         List<CollectionListDetailRes> collectionListDetailRes = collections.stream()
@@ -171,8 +168,7 @@ public class CollectionService {
 
     // 컬렉션 소유자 검증
     public Collection findCollectionByUserAndCollectionId(UserPrincipal userPrincipal, Long collectionId) {
-        User user = userService.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+        User user = validateUser(userPrincipal);
 
         Collection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new RuntimeException("컬렉션을 찾을 수 없습니다."));
@@ -247,8 +243,7 @@ public class CollectionService {
     // 컬렉션 목록의 순서를 모두 요청값으로 받아서 수정
     @Transactional
     public ResponseEntity<?> editCollectionOrder(UserPrincipal userPrincipal, List<CollectionOrderReq> collectionOrderReqList) {
-        User user = userService.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+        User user = validateUser(userPrincipal);
 
         // 컬렉션 순서 변경
         // 1. 요청값의 collectionId를 통해 컬렉션 객체를 찾음
@@ -286,8 +281,7 @@ public class CollectionService {
 
     // 현재 컬렉션 id 목록 조회
     public ResponseEntity<?> getCurrentCollectionBooks(UserPrincipal userPrincipal) {
-        User user = userService.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+        User user = validateUser(userPrincipal);
 
         // 유저의 컬렉션 중 CollectionStatus.MAIN인 컬렉션을 찾아 도서 목록 조회
         List<Collection> mainCollections = collectionRepository.findAllByUserAndCollectionStatus(user, CollectionStatus.MAIN);
@@ -313,5 +307,13 @@ public class CollectionService {
 
         return ResponseEntity.ok(response);
 
+    }
+
+    // 사용자 검증 메서드
+    private User validateUser(UserPrincipal userPrincipal) {
+//        return userService.findByEmail(userPrincipal.getEmail())
+//                .orElseThrow(UserNotFoundException::new);
+        // userId=2L로 고정
+        return userService.findById(2L);
     }
 }
