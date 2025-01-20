@@ -7,6 +7,7 @@ import com.nookbook.domain.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,6 +15,5 @@ public interface CollectionBookRepository extends JpaRepository<CollectionBook, 
 
     CollectionBook findByCollectionAndBook(Collection collection, Book book);
 
-    boolean existsByCollectionUserAndBook(User user, Book book);
-
+    List<CollectionBook> findByCollectionUserAndBook(User user, Book book);
 }
