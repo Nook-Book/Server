@@ -7,7 +7,6 @@ import com.nookbook.domain.note.dto.response.NoteDetailRes;
 import com.nookbook.domain.note.dto.response.NoteRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
-import com.nookbook.infrastructure.vision.GoogleCloudVisionService;
 import com.nookbook.global.payload.ErrorResponse;
 import com.nookbook.global.payload.Message;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class NoteController {
 
     private final NoteService noteService;
-    private final GoogleCloudVisionService googleCloudVisionService;
 
     @Operation(summary = "독서 노트 저장", description = "독서 노트를 저장합니다.")
     @ApiResponses(value = {
@@ -97,16 +95,4 @@ public class NoteController {
         return noteService.getNoteList(userPrincipal, bookId);
     }
 
-    @Operation(summary = "사진 텍스트 추출", description = "텍스트를 추출하여 응답합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "추출 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class) ) } ),
-            @ApiResponse(responseCode = "400", description = "추출 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
-    } )
-    @PostMapping("/text")
-    public ResponseEntity<?> detectText(
-            // @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "Multipart form data 형식의 파일을 입력해주세요.", required = true) @RequestPart MultipartFile image
-            ) {
-        return googleCloudVisionService.detectTextGcs(image);
-    }
 }

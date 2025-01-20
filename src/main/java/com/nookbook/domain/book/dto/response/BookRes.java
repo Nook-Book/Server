@@ -28,19 +28,14 @@ public class BookRes {
     @Schema(type = "boolean", example = "true", description = "도서의 컬렉션 저장 여부")
     private boolean storedCollection;
 
+    @Schema(type = "array", example = "[1, 23, 43]", description = "컬렉션의 id 리스트")
+    private List<Long> collectionIds;
+
     @Schema(type = "boolean", example = "true", description = "사용자의 해당 도서의 노트 존재 여부")
     private boolean hasNote;
 
     @JsonProperty("item")
     @Schema(type = "BookDetailRes", example = "BookDetailRes의 Schemas를 참고해주세요.", description = "조회한 도서의 상세 정보")
     private BookDetailRes item;
-
-    public void updateBookStatus(BookStatus bookStatus) {
-        this.bookStatus = bookStatus;
-    }
-
-    public void updateStoredCollection(boolean storedCollection) {
-        this.storedCollection = storedCollection;
-    }
 
 }
