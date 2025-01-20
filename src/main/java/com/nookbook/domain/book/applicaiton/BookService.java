@@ -60,7 +60,8 @@ public class BookService {
     // 검색
     @Transactional
     public ResponseEntity<?> searchBooks(UserPrincipal userPrincipal, String keyword, int page) {
-        User user = validUserById(userPrincipal.getId());
+        // User user = validUserById(userPrincipal.getId());
+        User user = validUserById(1L);
         // 검색 키워드 저장
         keywordService.saveKeyword(user, keyword);
 
@@ -130,7 +131,8 @@ public class BookService {
     // 상세 조회
     @Transactional
     public ResponseEntity<?> getBookDetail(UserPrincipal userPrincipal, String isbn13) {
-        User user = validUserById(userPrincipal.getId());
+        // User user = validUserById(userPrincipal.getId());
+        User user = validUserById(1L);
         BookStatus bookStatus = BookStatus.BEFORE_READ;
         boolean isStoredCollection = false;
         boolean hasNote = false;
@@ -286,7 +288,8 @@ public class BookService {
     // 독서 상태 변경
     @Transactional
     public ResponseEntity<?> updateBookStatus(UserPrincipal userPrincipal, Long bookId) {
-        User user = validUserById(userPrincipal.getId());
+        // User user = validUserById(userPrincipal.getId());
+        User user = validUserById(1L);
         Optional<Book> bookOptional = bookRepository.findById(bookId);
         DefaultAssert.isTrue(bookOptional.isPresent(), "해당 도서가 존재하지 않습니다.");
         Book book = bookOptional.get();
@@ -318,7 +321,8 @@ public class BookService {
 
     // 독서 리포트 - 카테고리
     public ResponseEntity<ApiResponse> countReadBooksByCategory(UserPrincipal userPrincipal) {
-        User user = validUserById(userPrincipal.getId());
+        // User user = validUserById(userPrincipal.getId());
+        User user = validUserById(1L);
         // groupby에 따라서 카테고리에 맞는 점수 배정
         // 읽은 책 조회
         List<UserBook> userBooks = userBookRepository.findByUserAndBookStatus(user, BookStatus.READ);
@@ -350,7 +354,8 @@ public class BookService {
 
     // 독서 리포트 - 독서 통계
     public ResponseEntity<ApiResponse> countReadBooksByYear(UserPrincipal userPrincipal, int year) {
-        User user = validUserById(userPrincipal.getId());
+        // User user = validUserById(userPrincipal.getId());
+        User user = validUserById(1L);
         List<UserBook> userBooks = userBookRepository.findUserBooksByStatusAndYear(user, BookStatus.READ, year);
 
         // 월별로 그룹화하여 카운트
@@ -380,7 +385,7 @@ public class BookService {
 
     private User validUserById(Long userId) {
         // Optional<User> userOptional = userRepository.findById(userId);
-        Optional<User> userOptional = userRepository.findById(2L);
+        Optional<User> userOptional = userRepository.findById(1L);
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
         return userOptional.get();
     }

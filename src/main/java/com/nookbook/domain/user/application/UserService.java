@@ -80,7 +80,7 @@ public class UserService {
 
     public ResponseEntity<?> checkNicknameId(UserPrincipal userPrincipal, NicknameIdCheckReq nicknameIdCheckReq) {
         // validUserByUserId(userPrincipal.getId());
-        validUserByUserId(2L);
+        validUserByUserId(1L);
         boolean isUnique = checkDuplicateNicknameId(nicknameIdCheckReq.getNicknameId());
 
         NicknameIdCheckRes nicknameIdCheckRes = NicknameIdCheckRes.builder()
@@ -98,7 +98,7 @@ public class UserService {
 
     public ResponseEntity<?> checkNickname(UserPrincipal userPrincipal, NicknameCheckReq nicknameCheckReq) {
         // validUserByUserId(userPrincipal.getId());
-        validUserByUserId(2L);
+        validUserByUserId(1L);
         boolean isUnique = checkDuplicateNickname(nicknameCheckReq.getNickname());
 
         NicknameCheckRes nicknameCheckRes = NicknameCheckRes.builder()
@@ -118,7 +118,7 @@ public class UserService {
     @Transactional
     public ResponseEntity<?> updateNicknameId(UserPrincipal userPrincipal, NicknameIdCheckReq nicknameIdCheckReq) {
         // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(2L);
+        User user = validUserByUserId(1L);
         String nicknameId = nicknameIdCheckReq.getNicknameId();
         boolean isAvailable = checkDuplicateNicknameId(nicknameId);
 
@@ -137,7 +137,7 @@ public class UserService {
     @Transactional
     public ResponseEntity<?> updateNickname(UserPrincipal userPrincipal, NicknameCheckReq nicknameCheckReq) {
         // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(2L);
+        User user = validUserByUserId(1L);
         String nickname = nicknameCheckReq.getNickname();
         boolean isAvailable = checkDuplicateNickname(nickname);
 
@@ -164,7 +164,7 @@ public class UserService {
     // 닉네임 아이디 친구 수
     public ResponseEntity<ApiResponse> getMyInfo(UserPrincipal userPrincipal) {
         // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(2L);
+        User user = validUserByUserId(1L);
         // TODO: 친구 수 구하는 로직
         int num = 0;
         MyInfoRes myInfoRes = MyInfoRes.builder()
@@ -184,7 +184,7 @@ public class UserService {
     @Transactional
     public ResponseEntity<?> updateImage(UserPrincipal userPrincipal, Boolean isDefaultImage, Optional<MultipartFile> image) {
         // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(2L);
+        User user = validUserByUserId(1L);
         if (!Objects.equals(user.getImageName(), "default.png")) {
             s3Uploader.deleteFile(user.getImageName());
         }

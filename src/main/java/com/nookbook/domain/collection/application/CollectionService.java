@@ -243,7 +243,7 @@ public class CollectionService {
     // 컬렉션 목록의 순서를 모두 요청값으로 받아서 수정
     @Transactional
     public ResponseEntity<?> editCollectionOrder(UserPrincipal userPrincipal, List<CollectionOrderReq> collectionOrderReqList) {
-        User user = validateUser(userPrincipal);
+        validateUser(userPrincipal);
 
         // 컬렉션 순서 변경
         // 1. 요청값의 collectionId를 통해 컬렉션 객체를 찾음
@@ -314,6 +314,6 @@ public class CollectionService {
 //        return userService.findByEmail(userPrincipal.getEmail())
 //                .orElseThrow(UserNotFoundException::new);
         // userId=2L로 고정
-        return userService.findById(2L);
+        return userService.findById(1L);
     }
 }
