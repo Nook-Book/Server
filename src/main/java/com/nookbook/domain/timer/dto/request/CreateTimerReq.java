@@ -8,6 +8,6 @@ import java.math.BigInteger;
 @Getter
 public class CreateTimerReq {
 
-    @Schema(type = "BigInteger", example = "3200000", description = "특정 도서의 누적 독서 시간입니다. 초단위로 전달해주세요.")
+    @Schema(type = "BigInteger", example = "48000", description = "특정 도서의 타이머 독서 시간입니다. 초단위로 전달해주세요.")
     private BigInteger time;
 }

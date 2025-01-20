@@ -1,7 +1,6 @@
 package com.nookbook.domain.timer.domain;
 
 import com.nookbook.domain.common.BaseEntity;
-import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user_book.domain.UserBook;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -9,8 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigInteger;
-import java.time.Duration;
-import java.time.LocalTime;
 
 @Entity
 @Table(name="Timer")
