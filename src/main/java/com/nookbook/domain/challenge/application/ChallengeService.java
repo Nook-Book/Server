@@ -371,8 +371,10 @@ public class ChallengeService {
 
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
-        return userService.findByEmail(userPrincipal.getEmail())
-                .orElseThrow(UserNotFoundException::new);
+//        return userService.findByEmail(userPrincipal.getEmail())
+//                .orElseThrow(UserNotFoundException::new);
+        // userId=1L로 고정
+        return userService.findById(1L);
     }
 
     // 챌린지 검증 메서드
