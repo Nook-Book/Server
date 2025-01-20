@@ -3,6 +3,7 @@ package com.nookbook.domain.note.presentation;
 import com.nookbook.domain.note.application.NoteService;
 import com.nookbook.domain.note.dto.request.CreateNoteReq;
 import com.nookbook.domain.note.dto.request.UpdateNoteReq;
+import com.nookbook.domain.note.dto.response.ImageUrlRes;
 import com.nookbook.domain.note.dto.response.NoteDetailRes;
 import com.nookbook.domain.note.dto.response.NoteRes;
 import com.nookbook.global.config.security.token.CurrentUser;
@@ -93,6 +94,30 @@ public class NoteController {
             @Parameter(description = "도서의 id를 입력해주세요.", required = true) @PathVariable Long bookId
     ) {
         return noteService.getNoteList(userPrincipal, bookId);
+    }
+
+    @Operation(summary = "이미지 업로드", description = "이미지를 업로드하고, URL을 반환합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "업로드 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ImageUrlRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "업로드 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @PostMapping("/image")
+    public ResponseEntity<?> uploadNoteImage(
+            @Parameter(description = "업로드할 이미지를 입력해주세요.", required = true) @RequestPart MultipartFile image
+    ) {
+        return noteService.uploadImage(image);
+    }
+
+    @Operation(summary = "이미지 삭제", description = "이미지를 삭제합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "삭제 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "삭제 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @DeleteMapping("/image")
+    public ResponseEntity<?> deleteNoteImage(
+            @Parameter(description = "삭제할 이미지의 URL을 입력해주세요.", required = true) @RequestParam String imageUrl
+    ) {
+        return noteService.deleteImage(imageUrl);
     }
 
 }
