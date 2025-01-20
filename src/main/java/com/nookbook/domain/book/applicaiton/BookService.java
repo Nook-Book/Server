@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.book.dto.response.*;
+import com.nookbook.domain.collection.domain.Collection;
+import com.nookbook.domain.collection.domain.CollectionBook;
 import com.nookbook.domain.collection.domain.repository.CollectionBookRepository;
 import com.nookbook.domain.keyword.application.KeywordService;
 import com.nookbook.domain.note.domain.repository.NoteRepository;
@@ -136,6 +138,7 @@ public class BookService {
         BookStatus bookStatus = BookStatus.BEFORE_READ;
         boolean isStoredCollection = false;
         boolean hasNote = false;
+        List<Long> ids = new ArrayList<>();
 
         BookDetailRes bookDetailRes;
         Book book;
@@ -149,12 +152,17 @@ public class BookService {
                 UserBook userBook = userBookOptional.get();
                 // 독서 상태 확인
                 bookStatus = userBookOptional.get().getBookStatus();
-                // 컬렉션 저장 여부 확인
-                isStoredCollection = collectionBookRepository.existsByCollectionUserAndBook(user, book);
                 // 노트 존재 여부 확인
                 hasNote = noteRepository.existsByUserBook(userBook);
             }
-
+            // 컬렉션 저장 여부 확인
+            List<CollectionBook> collectionBooks = collectionBookRepository.findByCollectionUserAndBook(user, book);
+            isStoredCollection = !collectionBooks.isEmpty();
+            if (isStoredCollection) {
+                ids = collectionBooks.stream()
+                        .map(collectionBook -> collectionBook.getCollection().getCollectionId())
+                        .collect(Collectors.toList());
+            }
             bookDetailRes = BookDetailRes.builder()
                     .title(book.getTitle())
                     .author(book.getAuthor())
@@ -165,6 +173,7 @@ public class BookService {
                     .description(book.getInfo())
                     .toc(book.getIdx())
                     .link(book.getLink())
+                    .category(book.getCategory())
                     .build();
         }
 
@@ -172,6 +181,7 @@ public class BookService {
                 .bookId(book.getBookId())
                 .bookStatus(bookStatus)
                 .storedCollection(isStoredCollection)
+                .collectionIds(ids)
                 .hasNote(hasNote)
                 .item(bookDetailRes)
                 .build();

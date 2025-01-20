@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,4 +21,7 @@ public interface CollectionBookRepository extends JpaRepository<CollectionBook, 
     @Query(
             "select cb from CollectionBook cb where cb.collection.collectionId = :collectionId and cb.book.bookId = :bookId")
     Optional<CollectionBook> findByCollectionIdAndBookId(Long collectionId, Long bookId);
+
+    List<CollectionBook> findByCollectionUserAndBook(User user, Book book);
+
 }
