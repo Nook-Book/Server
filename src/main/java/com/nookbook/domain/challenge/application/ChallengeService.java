@@ -10,10 +10,7 @@ import com.nookbook.domain.challenge.domain.repository.ChallengeRepository;
 import com.nookbook.domain.challenge.domain.repository.InvitationRepository;
 import com.nookbook.domain.challenge.domain.repository.ParticipantRepository;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
-import com.nookbook.domain.challenge.dto.response.ChallengeDetailRes;
-import com.nookbook.domain.challenge.dto.response.ChallengeListDetailRes;
-import com.nookbook.domain.challenge.dto.response.ChallengeListRes;
-import com.nookbook.domain.challenge.dto.response.ParticipantStatusListRes;
+import com.nookbook.domain.challenge.dto.response.*;
 import com.nookbook.domain.challenge.exception.ChallengeNotAuthorizedException;
 import com.nookbook.domain.challenge.exception.ChallengeNotFoundException;
 import com.nookbook.domain.challenge.exception.ParticipantNotFoundException;
@@ -203,6 +200,8 @@ public class ChallengeService {
                 .endDate(challenge.getEndDate())
                 .totalHour(totalHour)
                 .dailyGoal(challenge.getDailyGoal())
+                .dailyStartTime(challenge.getStartTime())
+                .dailyEndTime(challenge.getEndTime())
                 .participants(participants)
                 .build();
 
@@ -365,9 +364,33 @@ public class ChallengeService {
         return ResponseEntity.ok(apiResponse);
     }
 
-//    public ResponseEntity<?> getParticipantList(UserPrincipal userPrincipal, Long challengeId) {
-//
-//    }
+    public ResponseEntity<?> getParticipantList(UserPrincipal userPrincipal, Long challengeId) {
+        User user = validateUser(userPrincipal);
+
+        Challenge challenge = validateChallenge(challengeId);
+        List<Participant> participants = challenge.getParticipants();
+
+        List<ParticipantRes> participantResList = participants.stream()
+                .map(participant -> ParticipantRes.builder()
+                        .participantId(participant.getParticipantId())
+                        .participantNickname((participant.getUser().getNickname()))
+                        .participantImage(participant.getUser().getImageUrl())
+                        .role(participantService.getParticipantRole(challenge, participant))
+                        .build())
+                .toList();
+
+        ParticipantListRes participantListRes = ParticipantListRes.builder()
+                .isOwner(challenge.getOwner().equals(user))
+                .participantList(participantResList)
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(participantListRes)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
 
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {

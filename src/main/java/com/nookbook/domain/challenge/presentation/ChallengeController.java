@@ -4,6 +4,7 @@ import com.nookbook.domain.challenge.application.ChallengeService;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
 import com.nookbook.domain.challenge.dto.response.ChallengeDetailRes;
 import com.nookbook.domain.challenge.dto.response.ChallengeListRes;
+import com.nookbook.domain.challenge.dto.response.ParticipantListRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;
@@ -158,19 +159,19 @@ public class ChallengeController {
     ) {
         return challengeService.changeOwner(userPrincipal, challengeId, newOwnerId);
     }
-//
-//    // TODO: 참가자 목록 조회 (방장인지/일반인지에 대한 여부 정보 포함)
-//    @Operation(summary = "챌린지 참가자 목록 조회 API", description = "챌린지 참가자 목록을 조회하는 API입니다.")
-//    @ApiResponses(value = {
-//            @ApiResponse(responseCode = "200", description = "챌린지 참가자 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ChallengeParticipantListRes.class))}),
-//            @ApiResponse(responseCode = "400", description = "챌린지 참가자 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
-//    })
-//    @GetMapping("/{challengeId}/participant")
-//    public ResponseEntity<?> getParticipantList(
-//            @Parameter @CurrentUser UserPrincipal userPrincipal,
-//            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
-//    ) {
-//        return challengeService.getParticipantList(userPrincipal, challengeId);
-//    }
-//
+
+    // TODO: 참가자 목록 조회 (방장인지/일반인지에 대한 여부 정보 포함)
+    @Operation(summary = "챌린지 참가자 목록 조회 API", description = "챌린지 참가자 목록을 조회하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "챌린지 참가자 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ParticipantListRes.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지 참가자 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @GetMapping("/{challengeId}/participant")
+    public ResponseEntity<?> getParticipantList(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
+    ) {
+        return challengeService.getParticipantList(userPrincipal, challengeId);
+    }
+
 }
