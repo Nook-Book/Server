@@ -200,6 +200,8 @@ public class ChallengeService {
                 .endDate(challenge.getEndDate())
                 .totalHour(totalHour)
                 .dailyGoal(challenge.getDailyGoal())
+                .dailyStartTime(challenge.getStartTime())
+                .dailyEndTime(challenge.getEndTime())
                 .participants(participants)
                 .build();
 
