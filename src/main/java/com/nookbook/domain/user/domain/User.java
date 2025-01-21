@@ -3,6 +3,7 @@ package com.nookbook.domain.user.domain;
 import com.nookbook.domain.challenge.domain.Invitation;
 import com.nookbook.domain.challenge.domain.Participant;
 import com.nookbook.domain.common.BaseEntity;
+import com.nookbook.domain.friend.domain.Friend;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -50,6 +51,8 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user")
     private List<Invitation> invitations = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user")
+    private List<Friend> friends = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private Role role;
