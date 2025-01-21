@@ -38,8 +38,7 @@ public class User extends BaseEntity {
 
     private String providerId;
 
-    // 이미지는 기본 고정 필요
-    private String imageUrl = "https://";
+    private String imageUrl = "https://nookbook-image-bucket.s3.amazonaws.com/default.png";
 
     private String imageName = "default.png";
 

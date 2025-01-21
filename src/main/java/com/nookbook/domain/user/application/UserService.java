@@ -194,7 +194,7 @@ public class UserService {
         String imageUrl;
         if (isDefaultImage && image.isEmpty()) {
             imageName = "default.png";
-            imageUrl = "https://";   // 추후 수정
+            imageUrl = "https://nookbook-image-bucket.s3.amazonaws.com/default.png";
         } else {
             imageName = s3Uploader.uploadImage(image.get());
             imageUrl = s3Uploader.getFullPath(imageName);
