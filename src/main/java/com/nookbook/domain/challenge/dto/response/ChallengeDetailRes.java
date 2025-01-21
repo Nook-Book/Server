@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Builder
@@ -42,6 +43,12 @@ public class ChallengeDetailRes {
 
     @Schema(type = "Integer", example = "75", description = "일일 목표 독서 시간 (분 단위)")
     private Integer dailyGoal; // 선택적 필드이므로 null을 허용하는 Integer 타입으로 변경
+
+    @Schema(type = "LocalTime", example = "08:00", description = "일일 독서 시작 시간")
+    private LocalTime dailyStartTime;
+
+    @Schema(type = "LocalTime", example = "22:00", description = "일일 독서 종료 시간")
+    private LocalTime dailyEndTime;
 
     @Schema(type = "int", description = "참여자 목록")
     private List<ParticipantStatusListRes> participants;
