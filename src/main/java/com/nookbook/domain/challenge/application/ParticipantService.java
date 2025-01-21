@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -25,5 +27,13 @@ public class ParticipantService {
                 .build();
 
         participantRepository.save(participant);
+    }
+
+    public String getParticipantRole(Challenge challenge, Participant participant) {
+        if (challenge.getOwner().equals(participant.getUser())) {
+            return "방장";
+        } else {
+            return "일반";
+        }
     }
 }
