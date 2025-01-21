@@ -18,6 +18,9 @@ public class MyInfoRes {
     @Schema(type = "String", example = "기무라타쿠야가되", description = "사용자의 닉네임입니다.")
     private String nickname;
 
+    @Schema(type = "String", example = "https://nookbook-s3-bucket.amazons.com/akfjvndij0e3.png", description = "사용자의 프로필 사진 URL입니다.")
+    private String imageUrl;
+
     @Schema(type = "int", example = "12", description = "특정 사용자의 친구 수 입니다.")
     private int friendsNum;
 }

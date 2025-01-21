@@ -170,6 +170,7 @@ public class UserService {
         MyInfoRes myInfoRes = MyInfoRes.builder()
                 .nicknameId(user.getNicknameId())
                 .nickname(user.getNickname())
+                .imageUrl(user.getImageUrl())
                 .friendsNum(num)
                 .build();
 

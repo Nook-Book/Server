@@ -100,7 +100,7 @@ public class MyPageController {
         return bookService.countReadBooksByYear(userPrincipal, year);
     }
 
-    @Operation(summary = "[마이페이지] 내 정보 조회", description = "마이페이지의 내 정보(아이디, 닉네임, 친구 수)를 조회합니다.")
+    @Operation(summary = "[마이페이지] 내 정보 조회", description = "마이페이지의 내 정보(아이디, 닉네임, 프로필 이미지, 친구 수)를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = MyInfoRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
