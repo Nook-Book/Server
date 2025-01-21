@@ -42,7 +42,7 @@ public class S3Uploader {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.");
         }
 
-        return saveFileName;
+        return getFullPath(saveFileName);
     }
 
     // 파일 저장명 만들기
