@@ -329,7 +329,7 @@ public class BookService {
     public ResponseEntity<ApiResponse> countReadBooksByCategory(UserPrincipal userPrincipal, Long userId) {
         // User user = validUserById(userPrincipal.getId());
         User user = validUserById(1L);
-        User targetUser = validUserById(userId);
+        User targetUser = userId != null ? validUserById(userId) : user;
         // groupby에 따라서 카테고리에 맞는 점수 배정
         // 읽은 책 조회
         List<UserBook> userBooks = userBookRepository.findByUserAndBookStatus(targetUser, BookStatus.READ);
@@ -363,7 +363,7 @@ public class BookService {
     public ResponseEntity<ApiResponse> countReadBooksByYear(UserPrincipal userPrincipal, Long userId,  int year) {
         // User user = validUserById(userPrincipal.getId());
         User user = validUserById(1L);
-        User targetUser = validUserById(userId);
+        User targetUser = userId != null ? validUserById(userId) : user;
         List<UserBook> userBooks = userBookRepository.findUserBooksByStatusAndYear(targetUser, BookStatus.READ, year);
 
         // 월별로 그룹화하여 카운트
