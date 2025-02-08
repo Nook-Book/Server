@@ -14,4 +14,6 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     boolean existsByUserBook(UserBook userBook);
 
     List<Note> findByUserBookOrderByCreatedAtDesc(UserBook userBook);
+
+    List<Note> findByUserBookInOrderByCreatedAtDesc(List<UserBook> userBooks);
 }

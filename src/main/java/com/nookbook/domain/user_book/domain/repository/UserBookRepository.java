@@ -25,4 +25,6 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
 
     //가장 최근에 수정된 UserBook
     UserBook findFirstByUserOrderByUpdatedAtDesc(User user);
+
+    List<UserBook> findByUser(User user);
 }

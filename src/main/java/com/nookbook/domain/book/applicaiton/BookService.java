@@ -196,6 +196,7 @@ public class BookService {
         Book book = Book.builder()
                 .title(bookDetailRes.getTitle())
                 .author(bookDetailRes.getAuthor())
+                .publisher(bookDetailRes.getPublisher())
                 .image(bookDetailRes.getCover())
                 .page(bookDetailRes.getPage())
                 .isbn(bookDetailRes.getIsbn13())
@@ -325,12 +326,13 @@ public class BookService {
     }
 
     // 독서 리포트 - 카테고리
-    public ResponseEntity<ApiResponse> countReadBooksByCategory(UserPrincipal userPrincipal) {
+    public ResponseEntity<ApiResponse> countReadBooksByCategory(UserPrincipal userPrincipal, Long userId) {
         // User user = validUserById(userPrincipal.getId());
         User user = validUserById(1L);
+        User targetUser = validUserById(userId);
         // groupby에 따라서 카테고리에 맞는 점수 배정
         // 읽은 책 조회
-        List<UserBook> userBooks = userBookRepository.findByUserAndBookStatus(user, BookStatus.READ);
+        List<UserBook> userBooks = userBookRepository.findByUserAndBookStatus(targetUser, BookStatus.READ);
 
         // 카테고리별로 그룹화하여 카운트 (카테고리명과 그에 대한 책 수를 매핑)
         Map<String, Long> categoryCountMap = userBooks.stream()
@@ -358,10 +360,11 @@ public class BookService {
     }
 
     // 독서 리포트 - 독서 통계
-    public ResponseEntity<ApiResponse> countReadBooksByYear(UserPrincipal userPrincipal, int year) {
+    public ResponseEntity<ApiResponse> countReadBooksByYear(UserPrincipal userPrincipal, Long userId,  int year) {
         // User user = validUserById(userPrincipal.getId());
         User user = validUserById(1L);
-        List<UserBook> userBooks = userBookRepository.findUserBooksByStatusAndYear(user, BookStatus.READ, year);
+        User targetUser = validUserById(userId);
+        List<UserBook> userBooks = userBookRepository.findUserBooksByStatusAndYear(targetUser, BookStatus.READ, year);
 
         // 월별로 그룹화하여 카운트
         Map<Integer, Long> monthCountMap = userBooks.stream()
@@ -390,7 +393,7 @@ public class BookService {
 
     private User validUserById(Long userId) {
         // Optional<User> userOptional = userRepository.findById(userId);
-        Optional<User> userOptional = userRepository.findById(1L);
+        Optional<User> userOptional = userRepository.findById(userId);
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
         return userOptional.get();
     }

@@ -93,7 +93,7 @@ public class NoteController {
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "도서의 id를 입력해주세요.", required = true) @PathVariable Long bookId
     ) {
-        return noteService.getNoteList(userPrincipal, bookId);
+        return noteService.getNoteListByBookId(userPrincipal, bookId);
     }
 
     @Operation(summary = "이미지 업로드", description = "이미지를 업로드하고, URL을 반환합니다.")
