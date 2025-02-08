@@ -190,11 +190,16 @@ public class NoteService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    public ResponseEntity<?> getNoteList(UserPrincipal userPrincipal, Long userId) {
+    public ResponseEntity<?> getNoteList(UserPrincipal userPrincipal, Long userId, String keyword) {
         // User user = validUserById(userPrincipal.getId());
         User user = validUserById(1L);
         User targetUser = validUserById(userId);
-        List<UserBook> userBooks = userBookRepository.findByUser(targetUser);
+        List<UserBook> userBooks;
+        if (keyword == null) {
+            userBooks = userBookRepository.findByUser(targetUser);
+        } else {
+            userBooks = userBookRepository.findByUserAndBookTitleLike(targetUser, keyword);
+        }
         List<Note> notes = noteRepository.findByUserBookInOrderByCreatedAtDesc(userBooks);
 
         List<OtherUserNoteListRes> noteListRes = notes.stream()

@@ -118,7 +118,7 @@ public class MyPageController {
         return userService.getUserInfo(userPrincipal, userId);
     }
 
-    @Operation(summary = "[마이페이지] 기록 전체보기 목록 조회", description = "친구페이지의 기록 전체보기 목록을 조회합니다.")
+    @Operation(summary = "[마이페이지] 기록 전체보기 목록 조회 및 검색", description = "친구페이지의 기록 전체보기 목록 조회 또는 검색하여 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
@@ -126,8 +126,10 @@ public class MyPageController {
     @GetMapping("/note/{userId}")
     public ResponseEntity<?> findUserAllNotes(
             @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.") @PathVariable Long userId
+            @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.") @PathVariable Long userId,
+            @Parameter(description = "검색하고자 하는 단어를 입력해주세요. 없다면 입력하지 않습니다.") @RequestParam(required = false) String keyword
     ) {
-        return noteService.getNoteList(userPrincipal, userId);
+        return noteService.getNoteList(userPrincipal, userId, keyword);
     }
+
 }
