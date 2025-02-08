@@ -9,6 +9,7 @@ import com.nookbook.domain.user.application.FriendService;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.dto.request.NicknameCheckReq;
 import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
+import com.nookbook.domain.user.dto.response.FriendsRequestRes;
 import com.nookbook.domain.user.dto.response.SearchUserRes;
 import com.nookbook.domain.user.dto.response.UserInfoRes;
 import com.nookbook.global.config.security.token.CurrentUser;
@@ -148,7 +149,7 @@ public class MyPageController {
         return friendService.searchUsers(userPrincipal, false, keyword);
     }
 
-    @Operation(summary = "친구 목록 조회 및 검색", description = "친구 목록을 조회하거나 검색하여 조회합니다.")
+    @Operation(summary = "친구 목록 - 조회 및 검색", description = "친구 목록을 조회하거나 검색하여 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = SearchUserRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
@@ -159,6 +160,31 @@ public class MyPageController {
             @Parameter(description = "검색하고자 하는 단어를 입력해주세요. 없다면 입력하지 않습니다.") @RequestParam(required = false) String keyword
     ) {
         return friendService.searchUsers(userPrincipal, true, keyword);
+    }
+
+    @Operation(summary = "친구 추가 - 내가 보낸/받은 요청 목록 조회", description = "내가 보낸/받은 요청 목록을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = FriendsRequestRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/friend/pending")
+    public ResponseEntity<?> getFriendsRequest(
+            @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return friendService.getFriendRequestList(userPrincipal);
+    }
+
+    @Operation(summary = "친구 요청", description = "다른 사용자에게 친구를 요청합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "저장 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PostMapping("/friend/{userId}")
+    public ResponseEntity<?> sendFriendRequest(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.") @PathVariable Long userId
+    ) {
+        return friendService.sendFriendRequest(userPrincipal, userId);
     }
 
 }

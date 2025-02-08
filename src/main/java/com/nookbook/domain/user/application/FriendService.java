@@ -5,6 +5,7 @@ import com.nookbook.domain.user.domain.FriendRequestStatus;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.FriendRepository;
 import com.nookbook.domain.user.domain.repository.UserRepository;
+import com.nookbook.domain.user.dto.response.FriendsRequestRes;
 import com.nookbook.domain.user.dto.response.SearchUserRes;
 import com.nookbook.global.DefaultAssert;
 import com.nookbook.global.config.security.token.UserPrincipal;
@@ -54,7 +55,6 @@ public class FriendService {
                 : userRepository.findUsersInFriend(user, FriendRequestStatus.FRIEND_ACCEPT);
     }
 
-    // 친구 요청
     @Transactional
     public ResponseEntity<?> sendFriendRequest(UserPrincipal userPrincipal, Long userId) {
         // User user = validUserByUserId(userPrincipal.getId());
@@ -71,8 +71,35 @@ public class FriendService {
                 .build());
     }
 
-    // 친구 요청 보낸/받은 목록 조회
-    // 친구 목록 조회
+    public ResponseEntity<?> getFriendRequestList(UserPrincipal userPrincipal) {
+        // User user = validUserByUserId(userPrincipal.getId());
+        User user = validUserByUserId(1L);
+        List<Friend> sentRequests = friendRepository.findBySenderAndFriendRequestStatus(user, FriendRequestStatus.FRIEND_REQUEST);
+        List<Friend> receivedRequests = friendRepository.findByReceiverAndFriendRequestStatus(user, FriendRequestStatus.FRIEND_REQUEST);
+        FriendsRequestRes friendsRequestRes = FriendsRequestRes.builder()
+                .sentRequest(buildSearchUserRes(sentRequests, true))
+                .receivedRequest(buildSearchUserRes(receivedRequests, false))
+                .build();
+        return ResponseEntity.ok(ApiResponse.builder()
+                .check(true)
+                .information(friendsRequestRes)
+                .build());
+    }
+
+    private List<SearchUserRes> buildSearchUserRes(List<Friend> friends, boolean isSent) {
+        return friends.stream()
+                .map(friend -> {
+                    User user = isSent ? friend.getReceiver() : friend.getSender();
+                    return SearchUserRes.builder()
+                            .userId(user.getUserId())
+                            .nickname(user.getNickname())
+                            .imageUrl(user.getImageUrl())
+                            .build();}
+                )
+                .collect(Collectors.toList());
+    }
+
+    // 보낸 요청 취소
 
     // 친구 요청 삭제
     // 친구 요청 수락

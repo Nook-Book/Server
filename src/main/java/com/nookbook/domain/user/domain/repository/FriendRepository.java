@@ -19,4 +19,7 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
             "WHERE (f.sender = :user OR f.receiver = :user) AND f.friendRequestStatus = :friendRequestStatus")
     int countBySenderOrReceiverAndFriendRequestStatus(@Param("user") User user, @Param("friendRequestStatus") FriendRequestStatus friendRequestStatus);
 
+    List<Friend> findBySenderAndFriendRequestStatus(User user, FriendRequestStatus friendRequestStatus);
+
+    List<Friend> findByReceiverAndFriendRequestStatus(User user, FriendRequestStatus friendRequestStatus);
 }
