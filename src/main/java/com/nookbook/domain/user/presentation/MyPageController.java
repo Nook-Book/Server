@@ -5,9 +5,11 @@ import com.nookbook.domain.book.dto.response.BookStatisticsRes;
 import com.nookbook.domain.book.dto.response.MostReadCategoriesRes;
 import com.nookbook.domain.note.application.NoteService;
 import com.nookbook.domain.note.dto.response.OtherUserNoteListRes;
+import com.nookbook.domain.user.application.FriendService;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.dto.request.NicknameCheckReq;
 import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
+import com.nookbook.domain.user.dto.response.SearchUserRes;
 import com.nookbook.domain.user.dto.response.UserInfoRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
@@ -31,12 +33,13 @@ import java.util.Optional;
 @Tag(name = "User MyPage", description = "User MyPage API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/mypage")
+@RequestMapping("/api/v1/my-page")
 public class MyPageController {
 
     private final UserService userService;
     private final BookService bookService;
     private final NoteService noteService;
+    private final FriendService friendService;
 
     @Operation(summary = "[마이페이지] 사용자 아이디 변경", description = "사용자의 아이디를 변경합니다.")
     @ApiResponses(value = {
@@ -123,13 +126,39 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/note/{userId}")
+    @GetMapping("/friend/{userId}/note")
     public ResponseEntity<?> findUserAllNotes(
             @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.") @PathVariable Long userId,
             @Parameter(description = "검색하고자 하는 단어를 입력해주세요. 없다면 입력하지 않습니다.") @RequestParam(required = false) String keyword
     ) {
         return noteService.getNoteList(userPrincipal, userId, keyword);
+    }
+
+    @Operation(summary = "친구 추가 - 검색", description = "사용자 전체를 대상으로 단어를 검색하여 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = SearchUserRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/friend/all")
+    public ResponseEntity<?> searchAllUsers(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "검색하고자 하는 단어를 입력해주세요.") @RequestParam String keyword
+    ) {
+        return friendService.searchUsers(userPrincipal, false, keyword);
+    }
+
+    @Operation(summary = "친구 목록 조회 및 검색", description = "친구 목록을 조회하거나 검색하여 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = SearchUserRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/friend")
+    public ResponseEntity<?> searchFriends(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "검색하고자 하는 단어를 입력해주세요. 없다면 입력하지 않습니다.") @RequestParam(required = false) String keyword
+    ) {
+        return friendService.searchUsers(userPrincipal, true, keyword);
     }
 
 }

@@ -190,7 +190,7 @@ public class UserService {
         Optional<Friend> friendOptional = friendRepository.findBySenderAndReceiver(user, targetUser)
                 .or(() -> friendRepository.findBySenderAndReceiver(targetUser, user));
         return friendOptional.map(friend -> {
-            if (friend.getStatus() == FriendRequestStatus.FRIEND_REQUEST) {
+            if (friend.getFriendRequestStatus() == FriendRequestStatus.FRIEND_REQUEST) {
                 return user.equals(friend.getSender()) ? "REQUEST_SENT" : "REQUEST_RECEIVED";
             } else {
                 return friend.getStatus().toString();

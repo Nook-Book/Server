@@ -1,5 +1,6 @@
 package com.nookbook.domain.user.domain;
 
+import com.nookbook.domain.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Table(name="Friend")
 @NoArgsConstructor
 @Getter
-public class Friend {
+public class Friend extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,12 +26,15 @@ public class Friend {
     private User receiver;
 
     @Enumerated(EnumType.STRING)
-    private FriendRequestStatus status;
+    private FriendRequestStatus friendRequestStatus = FriendRequestStatus.FRIEND_REQUEST;
 
     @Builder
-    public Friend(User sender, User receiver, FriendRequestStatus status) {
+    public Friend(User sender, User receiver) {
         this.sender = sender;
         this.receiver = receiver;
-        this.status = status;
+    }
+
+    public void updateFriendRequestStatus(FriendRequestStatus status) {
+        this.friendRequestStatus = status;
     }
 }
