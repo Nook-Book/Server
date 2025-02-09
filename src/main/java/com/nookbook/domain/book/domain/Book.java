@@ -34,6 +34,9 @@ public class Book {
     @Column(name="publishedDate")
     private LocalDate publishedDate;
 
+    @Column(name = "publisher")
+    private String publisher;
+
     @Column(name="info", columnDefinition = "TEXT")
     private String info;
 
@@ -50,9 +53,10 @@ public class Book {
     private String link;
 
     @Builder
-    public Book(String title, String author, int page, String isbn, LocalDate publishedDate, String info, String idx, String category, String image, String link) {
+    public Book(String title, String author, String publisher, int page, String isbn, LocalDate publishedDate, String info, String idx, String category, String image, String link) {
         this.title = title;
         this.author = author;
+        this.publisher = publisher;
         this.page = page;
         this.isbn = isbn;
         this.publishedDate = publishedDate;

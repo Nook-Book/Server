@@ -6,10 +6,7 @@ import com.nookbook.domain.note.domain.Note;
 import com.nookbook.domain.note.domain.repository.NoteRepository;
 import com.nookbook.domain.note.dto.request.CreateNoteReq;
 import com.nookbook.domain.note.dto.request.UpdateNoteReq;
-import com.nookbook.domain.note.dto.response.ImageUrlRes;
-import com.nookbook.domain.note.dto.response.NoteDetailRes;
-import com.nookbook.domain.note.dto.response.NoteListRes;
-import com.nookbook.domain.note.dto.response.NoteRes;
+import com.nookbook.domain.note.dto.response.*;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user_book.domain.BookStatus;
@@ -118,7 +115,7 @@ public class NoteService {
     }
 
     // 책 정보 조회(제목, 이미지) && 노트 목록 조회
-    public ResponseEntity<?> getNoteList(UserPrincipal userPrincipal, Long bookId) {
+    public ResponseEntity<?> getNoteListByBookId(UserPrincipal userPrincipal, Long bookId) {
         // User user = validUserById(userPrincipal.getId());
         User user = validUserById(1L);
         Book book = validBookById(bookId);
@@ -193,9 +190,39 @@ public class NoteService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    public ResponseEntity<?> getNoteList(UserPrincipal userPrincipal, Long userId, String keyword) {
+        // User user = validUserById(userPrincipal.getId());
+        User user = validUserById(1L);
+        User targetUser = validUserById(userId);
+        List<UserBook> userBooks;
+        if (keyword == null) {
+            userBooks = userBookRepository.findByUser(targetUser);
+        } else {
+            userBooks = userBookRepository.findByUserAndBookTitleLike(targetUser, keyword);
+        }
+        List<Note> notes = noteRepository.findByUserBookInOrderByCreatedAtDesc(userBooks);
+
+        List<OtherUserNoteListRes> noteListRes = notes.stream()
+                .map(note -> {
+                    Book book = note.getUserBook().getBook();
+                    return OtherUserNoteListRes.builder()
+                            .bookId(book.getBookId())
+                            .cover(book.getImage())
+                            .title(book.getTitle())
+                            .author(book.getAuthor())
+                            .publisher(book.getPublisher())
+                            .build();
+                })
+                .toList();
+        return ResponseEntity.ok(ApiResponse.builder()
+                        .check(true)
+                        .information(noteListRes)
+                        .build());
+    }
+
     private User validUserById(Long userId) {
         // Optional<User> userOptional = userRepository.findById(userId);
-        Optional<User> userOptional = userRepository.findById(1L);
+        Optional<User> userOptional = userRepository.findById(userId);
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
         return userOptional.get();
     }
