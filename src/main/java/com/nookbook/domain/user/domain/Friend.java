@@ -37,9 +37,4 @@ public class Friend extends BaseEntity {
     public void updateFriendRequestStatus(FriendRequestStatus friendRequestStatus) {
         this.friendRequestStatus = friendRequestStatus;
     }
-
-    // 사용자 본인이 아닌 친구의 user id를 가져오는 유틸 메서드
-    public Long getFriendUserId(User currentUser) {
-        return sender.equals(currentUser) ? receiver.getUserId() : sender.getUserId();
-    }
 }

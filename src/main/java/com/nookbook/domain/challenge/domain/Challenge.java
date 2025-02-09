@@ -56,6 +56,7 @@ public class Challenge extends BaseEntity {
     private User owner;
 
 
+
     @Builder
     public Challenge(String title, String challengeCover, LocalDate startDate, LocalDate endDate, Integer dailyGoal, LocalTime startTime, LocalTime endTime, ChallengeStatus challengeStatus, List<Participant> participants, User owner) {
         this.title = title;

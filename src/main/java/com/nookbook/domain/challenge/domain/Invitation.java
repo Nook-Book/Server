@@ -26,19 +26,10 @@ public class Invitation extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    private InvitationStatus invitationStatus;
-
     @Builder
     public Invitation(Challenge challenge, User user) {
         this.challenge = challenge;
         this.user = user;
-        this.invitationStatus = InvitationStatus.INVITING;
-    }
-
-    // invitation status 변경
-    public void updateInvitationStatus(InvitationStatus invitationStatus) {
-        this.invitationStatus = invitationStatus;
     }
 
 }

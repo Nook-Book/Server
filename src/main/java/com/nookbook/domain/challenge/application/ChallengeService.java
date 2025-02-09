@@ -3,7 +3,9 @@ package com.nookbook.domain.challenge.application;
 import com.nookbook.domain.book.BookNotFoundException;
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
-import com.nookbook.domain.challenge.domain.*;
+import com.nookbook.domain.challenge.domain.Challenge;
+import com.nookbook.domain.challenge.domain.ChallengeStatus;
+import com.nookbook.domain.challenge.domain.Participant;
 import com.nookbook.domain.challenge.domain.repository.ChallengeRepository;
 import com.nookbook.domain.challenge.domain.repository.InvitationRepository;
 import com.nookbook.domain.challenge.domain.repository.ParticipantRepository;
@@ -13,8 +15,6 @@ import com.nookbook.domain.challenge.exception.ChallengeNotAuthorizedException;
 import com.nookbook.domain.challenge.exception.ChallengeNotFoundException;
 import com.nookbook.domain.challenge.exception.ParticipantNotFoundException;
 import com.nookbook.domain.challenge.exception.ParticipantNotInChallengeException;
-import com.nookbook.domain.user.application.FriendService;
-import com.nookbook.domain.user.domain.Friend;
 import com.nookbook.infrastructure.s3.S3Uploader;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
@@ -25,9 +25,6 @@ import com.nookbook.domain.user_book.domain.repository.UserBookRepository;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,7 +50,6 @@ public class ChallengeService {
     private final UserBookRepository userBookRepository;
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
-    private final FriendService friendService;
 
     // 챌린지 생성
     @Transactional
@@ -135,13 +131,6 @@ public class ChallengeService {
                 .filter(challenge -> challenge.getChallengeStatus().equals(ChallengeStatus.END))
                 .toList();
 
-        // 초대 수락 대기중인 챌린지 목록
-        List<Invitation> invitations = invitationRepository.findAllByUser(user);
-        List<Challenge> waitingInvitationList = invitations.stream()
-                .filter(invitation -> invitation.getInvitationStatus().equals(InvitationStatus.INVITING))
-                .map(Invitation::getChallenge)
-                .toList();
-
         ChallengeListRes challengeListRes = ChallengeListRes.builder()
                 .waitingCount(waitingChallengeList.size())
                 .waitingList(
@@ -166,16 +155,6 @@ public class ChallengeService {
                 .endCount(endChallengeList.size())
                 .endList(
                         endChallengeList.stream()
-                                .map(challenge -> ChallengeListDetailRes.builder()
-                                        .challengeId(challenge.getChallengeId())
-                                        .title(challenge.getTitle())
-                                        .challengeCover(challenge.getChallengeCover())
-                                        .build())
-                                .toList()
-                )
-                .waitingInvitationCount(waitingInvitationList.size())
-                .waitingInvitationList(
-                        waitingInvitationList.stream()
                                 .map(challenge -> ChallengeListDetailRes.builder()
                                         .challengeId(challenge.getChallengeId())
                                         .title(challenge.getTitle())
@@ -280,16 +259,14 @@ public class ChallengeService {
         User user = validateUser(userPrincipal);
         User participant = userRepository.findById(participantId)
                 .orElseThrow(UserNotFoundException::new);
-
         Challenge challenge = validateChallenge(challengeId);
-
         validateChallengeAuthorization(user, challenge); // 챌린지 owner만 참가자 초대 가능
-        // 챌린지 참가자 초대
+        // 챌린지 참가자 추가
         invitationService.inviteParticipant(challenge, participant);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information("참가 요청이 완료되었습니다.")
+                .information("참가자 추가가 완료되었습니다.")
                 .build();
 
         return ResponseEntity.ok(apiResponse);
@@ -415,92 +392,6 @@ public class ChallengeService {
         return ResponseEntity.ok(apiResponse);
     }
 
-
-
-    public Page<ChallengeInvitationRes> getInviteFriends(UserPrincipal userPrincipal, Long challengeId, Integer page) {
-        User user = validateUser(userPrincipal);
-        Challenge challenge = validateChallenge(challengeId);
-
-        // 기본 페이지 번호 설정
-        int pageNumber = (page == null || page < 0) ? 0 : page;
-        Pageable pageable = PageRequest.of(pageNumber, 20);  // 한 페이지에 20개
-
-        // 사용자의 친구 목록 페이징 조회
-        Page<Friend> inviteFriendsPage = friendService.getFriends(user, pageable);
-
-        // 해당 챌린지의 invitation 목록 조회
-        List<Invitation> invitations = invitationRepository.findAllByChallenge(challenge);
-
-        // DTO 변환
-        Page<ChallengeInvitationRes> challengeInvitationResPage = inviteFriendsPage.map(friend -> {
-            Long friendUserId = friend.getFriendUserId(user);  // 친구의 userId 가져오기
-            return ChallengeInvitationRes.builder()
-                    .userId(friendUserId)
-                    .nickname(userService.findById(friendUserId).getNickname())  // userId로 닉네임 조회
-                    .isInvitable(invitations.stream()
-                            .noneMatch(invitation -> invitation.getUser().getUserId().equals(friendUserId)))
-                    .build();
-        });
-
-        return challengeInvitationResPage;
-    }
-
-
-    @Transactional
-    public ResponseEntity<?> acceptInvitation(UserPrincipal userPrincipal, Long challengeId) {
-        User user = validateUser(userPrincipal);
-        Challenge challenge = validateChallenge(challengeId);
-
-        // 해당 챌린지의 invitation 목록 조회
-        List<Invitation> invitations = invitationRepository.findAllByChallenge(challenge);
-
-        // 해당 유저의 invitation 찾기
-        Invitation invitation = invitations.stream()
-                .filter(inv -> inv.getUser().equals(user))
-                .findFirst()
-                .orElseThrow();
-
-        // 초대 수락
-        invitationService.acceptInvitation(invitation.getInvitationId());
-
-        // 챌린지 참가자(participant)로 등록
-        participantService.saveParticipant(user, challenge);
-
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information("챌린지 참가가 완료되었습니다.")
-                .build();
-
-        return ResponseEntity.ok(apiResponse);
-
-    }
-
-    @Transactional
-    public ResponseEntity<?> rejectInvitation(UserPrincipal userPrincipal, Long challengeId) {
-        User user = validateUser(userPrincipal);
-        Challenge challenge = validateChallenge(challengeId);
-
-        // 해당 챌린지의 invitation 목록 조회
-        List<Invitation> invitations = invitationRepository.findAllByChallenge(challenge);
-
-        // 해당 유저의 invitation 찾기
-        Invitation invitation = invitations.stream()
-                .filter(inv -> inv.getUser().equals(user))
-                .findFirst()
-                .orElseThrow();
-
-        // 초대 거절
-        invitationService.rejectInvitation(invitation.getInvitationId());
-
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information("챌린지 참가 요청을 거절하였습니다.")
-                .build();
-
-        return ResponseEntity.ok(apiResponse);
-    }
-
-
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
 //        return userService.findByEmail(userPrincipal.getEmail())
@@ -540,6 +431,5 @@ public class ChallengeService {
         return bookRepository.findById(bookId)
                 .orElseThrow(BookNotFoundException::new);
     }
-
 
 }

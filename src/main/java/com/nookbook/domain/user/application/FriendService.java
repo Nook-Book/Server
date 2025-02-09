@@ -11,8 +11,6 @@ import com.nookbook.global.DefaultAssert;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -148,13 +146,6 @@ public class FriendService {
                 .check(true)
                 .information(msg)
                 .build());
-    }
-
-
-    // 사용자의 친구 목록 조회
-    public Page<Friend> getFriends(User user, Pageable pageable) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        return friendRepository.findAcceptedFriends(user, pageable);
     }
 
     private User validUserByUserId(Long userId) {
