@@ -63,7 +63,7 @@ public class FriendService {
         User targetUser = validUserByUserId(userId);
         DefaultAssert.isTrue(targetUser != user, "본인에게 친구 요청을 보낼 수 없습니다.");
 
-        boolean available = friendRepository.existsBySenderAndReceiver(user, targetUser) || friendRepository.existsByReceiverAndSender(targetUser, user);
+        boolean available = !friendRepository.existsBySenderAndReceiver(user, targetUser) || !friendRepository.existsByReceiverAndSender(targetUser, user);
         DefaultAssert.isTrue(available, "이미 친구 요청을 보내거나 받은 상태입니다.");
 
         Friend friend = Friend.builder()

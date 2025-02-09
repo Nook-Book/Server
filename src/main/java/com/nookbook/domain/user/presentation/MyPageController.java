@@ -179,7 +179,7 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "저장 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class) ) } ),
             @ApiResponse(responseCode = "400", description = "저장 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PostMapping("/friend/{userId}")
+    @PostMapping("/friend/pending/{userId}")
     public ResponseEntity<?> sendFriendRequest(
             @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.") @PathVariable Long userId
@@ -192,7 +192,7 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "저장 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class) ) } ),
             @ApiResponse(responseCode = "400", description = "저장 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PutMapping("/friend/{friendId}")
+    @PutMapping("/friend/pending/{friendId}")
     public ResponseEntity<?> acceptOrRejectFriendRequest(
             @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "친구 요청 목록에서 조회한 friendId를 입력해주세요.") @PathVariable Long friendId,
