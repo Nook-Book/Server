@@ -25,6 +25,9 @@ import com.nookbook.domain.user_book.domain.repository.UserBookRepository;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -413,40 +416,35 @@ public class ChallengeService {
     }
 
 
-    public ResponseEntity<?> getInviteFriends(UserPrincipal userPrincipal, Long challengeId) {
+
+    public Page<ChallengeInvitationRes> getInviteFriends(UserPrincipal userPrincipal, Long challengeId, Integer page) {
         User user = validateUser(userPrincipal);
         Challenge challenge = validateChallenge(challengeId);
 
-        // 사용자의 친구 목록 (accept 상태) 조회
-        List<Friend> friends = friendService.getFriends(user);
+        // 기본 페이지 번호 설정
+        int pageNumber = (page == null || page < 0) ? 0 : page;
+        Pageable pageable = PageRequest.of(pageNumber, 20);  // 한 페이지에 20개
 
-        // 전체 친구 목록 - 이미 참가중인 친구 제외
-        List<Friend> inviteFriends = friends.stream()
-                .filter(friend -> !participantRepository.existsByUserUserIdAndChallenge(friend.getFriendId(), challenge))
-                .toList();
+        // 사용자의 친구 목록 페이징 조회
+        Page<Friend> inviteFriendsPage = friendService.getFriends(user, pageable);
 
         // 해당 챌린지의 invitation 목록 조회
         List<Invitation> invitations = invitationRepository.findAllByChallenge(challenge);
 
-        List<ChallengeInvitationRes> challengeInvitationResList = inviteFriends.stream()
-                .map(friend -> {
-                    Long friendUserId = friend.getFriendUserId(user);  // 친구의 userId 가져오기
-                    return ChallengeInvitationRes.builder()
-                            .userId(friendUserId)
-                            .nickname(userService.findById(friendUserId).getNickname())  // userId로 닉네임 조회
-                            .isInvitable(invitations.stream()
+        // DTO 변환
+        Page<ChallengeInvitationRes> challengeInvitationResPage = inviteFriendsPage.map(friend -> {
+            Long friendUserId = friend.getFriendUserId(user);  // 친구의 userId 가져오기
+            return ChallengeInvitationRes.builder()
+                    .userId(friendUserId)
+                    .nickname(userService.findById(friendUserId).getNickname())  // userId로 닉네임 조회
+                    .isInvitable(invitations.stream()
                             .noneMatch(invitation -> invitation.getUser().getUserId().equals(friendUserId)))
-                            .build();
-                })
-                .toList();
+                    .build();
+        });
 
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information(challengeInvitationResList)
-                .build();
-
-        return ResponseEntity.ok(apiResponse);
+        return challengeInvitationResPage;
     }
+
 
     @Transactional
     public ResponseEntity<?> acceptInvitation(UserPrincipal userPrincipal, Long challengeId) {

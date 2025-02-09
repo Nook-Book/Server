@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -176,17 +177,20 @@ public class ChallengeController {
     }
 
     // 챌린지에 초대할 친구 목록 조회 API
+    // 페이징 처리 필요
     @Operation(summary = "챌린지에 초대할 친구 목록 조회 API", description = "챌린지에 초대할 친구 목록을 조회하는 API입니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "챌린지에 초대할 친구 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(type = "array", implementation = ChallengeInvitationRes.class))}),
             @ApiResponse(responseCode = "400", description = "챌린지에 초대할 친구 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
     @GetMapping("/{challengeId}/invite")
-    public ResponseEntity<?> getInviteFriends(
+    public Page<ChallengeInvitationRes> getInviteFriends(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId,
+            @Parameter(description = "목록의 페이지 번호를 입력해주세요. **Page는 0부터 시작됩니다!**", required = true)
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page
     ) {
-        return challengeService.getInviteFriends(userPrincipal, challengeId);
+        return challengeService.getInviteFriends(userPrincipal, challengeId, page);
     }
 
     // 챌린지 초대 수락 API
