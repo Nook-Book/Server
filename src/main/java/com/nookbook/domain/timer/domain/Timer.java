@@ -26,10 +26,22 @@ public class Timer extends BaseEntity {
 
     private BigInteger readTime;
 
+    @Column(name = "is_reading")
+    private boolean isReading;
+
     @Builder
-    public Timer(UserBook userBook, BigInteger readTime) {
+    public Timer(UserBook userBook, BigInteger readTime, boolean isReading) {
         this.userBook = userBook;
         this.readTime = readTime;
+        this.isReading = isReading;
+    }
+
+    public void updateReadTime(BigInteger readTime) {
+        this.readTime = readTime;
+    }
+
+    public void updateIsReading(boolean isReading) {
+        this.isReading = isReading;
     }
 
 }

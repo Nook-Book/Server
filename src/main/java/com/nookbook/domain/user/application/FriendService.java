@@ -13,6 +13,7 @@ import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,32 +31,43 @@ public class FriendService {
     private final FriendRepository friendRepository;
 
     // 검색
-    public ResponseEntity<?> searchUsers(UserPrincipal userPrincipal, boolean isFriend, String keyword) {
-        // User user = validUserByUserId(userPrincipal.getId());
+    public ResponseEntity<?> searchUsers(UserPrincipal userPrincipal, boolean isFriend, String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         User user = validUserByUserId(1L);
-         List<SearchUserRes> searchUserRes = isFriend ? getFriendsByKeyword(user, keyword) : getAllUsersByKeyword(user, keyword);
+        Page<SearchUserRes> searchUserRes = isFriend
+                ? getFriendsByKeyword(user, keyword, pageable)
+                : getAllUsersByKeyword(user, keyword, pageable);
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
                 .information(searchUserRes)
                 .build());
     }
 
-    private List<SearchUserRes> getAllUsersByKeyword(User user, String keyword) {
-        List<User> findUsers = userRepository.findUsersNotInFriendByKeyword(user, keyword);
-        return findUsers.stream()
-                .map(findUser -> SearchUserRes.builder()
-                        .userId(findUser.getUserId())
-                        .nickname(findUser.getNickname())
-                        .imageUrl(findUser.getImageUrl())
-                        .build())
-                .toList();
+    private Page<SearchUserRes> getAllUsersByKeyword(User user, String keyword, Pageable pageable) {
+        Page<User> findUsers = userRepository.findUsersNotInFriendByKeyword(user, keyword, pageable);
+        return findUsers.map(findUser -> SearchUserRes.builder()
+                .userId(findUser.getUserId())
+                .nickname(findUser.getNickname())
+                .imageUrl(findUser.getImageUrl())
+                .build());
     }
 
-    private List<SearchUserRes> getFriendsByKeyword(User user, String keyword) {
-        List<Friend> findFriends = keyword != null ?
-                friendRepository.findBySenderOrReceiverAndStatusAndNicknameLikeKeyword(user, keyword, FriendRequestStatus.FRIEND_ACCEPT)
-                : friendRepository.findBySenderOrReceiverAndStatus(user, FriendRequestStatus.FRIEND_ACCEPT);
-        return buildSearchUserRes(findFriends, user);
+    private Page<SearchUserRes> getFriendsByKeyword(User user, String keyword, Pageable pageable) {
+        Page<Friend> findFriends = (keyword != null)
+                ? friendRepository.findBySenderOrReceiverAndStatusAndNicknameLikeKeyword(user, keyword, FriendRequestStatus.FRIEND_ACCEPT, pageable)
+                : friendRepository.findBySenderOrReceiverAndStatus(user, FriendRequestStatus.FRIEND_ACCEPT, pageable);
+        return findFriends.map(friend -> {
+            User targetUser = getTargetUser(user, friend);
+            return SearchUserRes.builder()
+                    .userId(targetUser.getUserId())
+                    .nickname(targetUser.getNickname())
+                    .imageUrl(targetUser.getImageUrl())
+                    .build();}
+        );
+    }
+
+    private User getTargetUser(User user, Friend friend) {
+        return user.equals(friend.getSender()) ? friend.getReceiver() : friend.getSender();
     }
 
     @Transactional
@@ -97,7 +109,7 @@ public class FriendService {
     private List<SearchUserRes> buildSearchUserRes(List<Friend> friends, User user) {
         return friends.stream()
                 .map(friend -> {
-                    User targetUser = user == friend.getSender() ? friend.getReceiver() : friend.getSender();
+                    User targetUser = getTargetUser(user, friend);
                     return SearchUserRes.builder()
                             .userId(targetUser.getUserId())
                             .friendId(friend.getFriendId())
