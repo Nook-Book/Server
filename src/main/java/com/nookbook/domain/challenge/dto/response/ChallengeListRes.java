@@ -32,4 +32,12 @@ public class ChallengeListRes {
     @Schema(type = "List", description = "종료된 챌린지 목록")
     private List<ChallengeListDetailRes> endList;
 
+    @Schema(type = "Long", example = "1", description = "초대 수락 대기중인 챌린지 수")
+    // waitingInvitationCount
+    private int waitingInvitationCount;
+
+    @Schema(type = "List", description = "초대 수락 대기중인 챌린지 목록")
+    // waitingInvitationList
+    private List<ChallengeListDetailRes> waitingInvitationList;
+
 }
