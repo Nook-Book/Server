@@ -58,6 +58,10 @@ public class BookDetailRes {
     @Schema(type = "String", example = "소설/시/희곡", description = "도서의 카테고리입니다.")
     private String category;
 
+    @JsonProperty("publisher")
+    @Schema(type = "String", example = "데이원", description = "도서의 출판사")
+    private String publisher;
+
 
     public void setToc(String toc) {
         this.toc = toc;

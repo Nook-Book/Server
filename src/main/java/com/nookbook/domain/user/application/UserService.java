@@ -3,13 +3,16 @@ package com.nookbook.domain.user.application;
 import com.nookbook.domain.collection.domain.Collection;
 import com.nookbook.domain.collection.domain.CollectionStatus;
 import com.nookbook.domain.collection.domain.repository.CollectionRepository;
+import com.nookbook.domain.user.domain.Friend;
+import com.nookbook.domain.user.domain.FriendRequestStatus;
+import com.nookbook.domain.user.domain.repository.FriendRepository;
 import com.nookbook.infrastructure.s3.S3Uploader;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
 import com.nookbook.domain.user.dto.request.NicknameCheckReq;
 import com.nookbook.domain.user.dto.request.UserInfoReq;
-import com.nookbook.domain.user.dto.response.MyInfoRes;
+import com.nookbook.domain.user.dto.response.UserInfoRes;
 import com.nookbook.domain.user.dto.response.NicknameCheckRes;
 import com.nookbook.domain.user.dto.response.NicknameIdCheckRes;
 import com.nookbook.global.DefaultAssert;
@@ -36,6 +39,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final S3Uploader s3Uploader;
     private final CollectionRepository collectionRepository;
+    private final FriendRepository friendRepository;
 
     @Transactional
     public void saveUser(User user) {
@@ -160,26 +164,40 @@ public class UserService {
         return !userRepository.existsByNickname(nickname);
     }
 
-    // 내 정보 조회
-    // 닉네임 아이디 친구 수
-    public ResponseEntity<ApiResponse> getMyInfo(UserPrincipal userPrincipal) {
+    // 정보 조회
+    public ResponseEntity<ApiResponse> getUserInfo(UserPrincipal userPrincipal, Long userId) {
         // User user = validUserByUserId(userPrincipal.getId());
         User user = validUserByUserId(1L);
-        // TODO: 친구 수 구하는 로직
-        int num = 0;
-        MyInfoRes myInfoRes = MyInfoRes.builder()
-                .nicknameId(user.getNicknameId())
-                .nickname(user.getNickname())
-                .imageUrl(user.getImageUrl())
-                .friendsNum(num)
-                .build();
+        User targetUser = userId != null ? validUserByUserId(userId) : user;
 
+        int num = friendRepository.countBySenderOrReceiverAndFriendRequestStatus(targetUser, FriendRequestStatus.FRIEND_ACCEPT);
+        String friendRequestStatus = user != targetUser ? determineFriendStatus(user, targetUser) : null;
+        UserInfoRes userInfoRes = UserInfoRes.builder()
+                .nicknameId(targetUser.getNicknameId())
+                .nickname(targetUser.getNickname())
+                .imageUrl(targetUser.getImageUrl())
+                .friendsNum(num)
+                .requestStatus(friendRequestStatus)
+                .build();
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(myInfoRes)
+                .information(userInfoRes)
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
+
+    private String determineFriendStatus(User user, User targetUser) {
+        Optional<Friend> friendOptional = friendRepository.findBySenderAndReceiver(user, targetUser)
+                .or(() -> friendRepository.findBySenderAndReceiver(targetUser, user));
+        return friendOptional.map(friend -> {
+            if (friend.getFriendRequestStatus() == FriendRequestStatus.FRIEND_REQUEST) {
+                return user.equals(friend.getSender()) ? "REQUEST_SENT" : "REQUEST_RECEIVED";
+            } else {
+                return friend.getStatus().toString();
+            }
+        }).orElse("NONE");
+    }
+
 
     // 프로필 사진 등록
     @Transactional
