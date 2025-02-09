@@ -130,17 +130,31 @@ public class BookController {
         return timerService.getTimerRecords(userPrincipal, bookId);
     }
 
-    @Operation(summary = "타이머 기록 저장", description = "타이머 기록을 저장합니다.")
+    @Operation(summary = "타이머 종료", description = "타이머를 종료하고, 타이머 기록을 저장합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "저장 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = TimerRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "저장 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
-    @PostMapping("/{bookId}/timer")
+    @PostMapping("/{bookId}/timer/{timerId}")
     public ResponseEntity<?> saveTimerRecord(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "도서의 id를 입력해주세요.", required = true) @PathVariable Long bookId,
+            @Parameter(description = "타이머의 id를 입력해주세요.", required = true) @PathVariable Long timerId,
             @Parameter(description = "시간을 입력해주세요.", required = true) @RequestBody CreateTimerReq createTimerReq
             ) {
-        return timerService.saveTimerRecord(userPrincipal, bookId, createTimerReq);
+        return timerService.saveTimerRecord(userPrincipal, bookId, timerId, createTimerReq);
+    }
+
+    @Operation(summary = "타이머 시작", description = "타이머를 시작합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)) } ),
+            @ApiResponse(responseCode = "400", description = "저장 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @PostMapping("/{bookId}/timer")
+    public ResponseEntity<?> startTimerRecord(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "도서의 id를 입력해주세요.", required = true) @PathVariable Long bookId
+    ) {
+        return timerService.updateTimerStatus(userPrincipal, bookId);
     }
 }

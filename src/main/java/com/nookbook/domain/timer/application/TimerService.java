@@ -5,6 +5,7 @@ import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.timer.domain.Timer;
 import com.nookbook.domain.timer.domain.repository.TimerRepository;
 import com.nookbook.domain.timer.dto.request.CreateTimerReq;
+import com.nookbook.domain.timer.dto.response.StartTimerIdRes;
 import com.nookbook.domain.timer.dto.response.TimerRecordRes;
 import com.nookbook.domain.timer.dto.response.TimerRes;
 import com.nookbook.domain.user.domain.User;
@@ -34,9 +35,29 @@ public class TimerService {
     private final BookRepository bookRepository;
     private final TimerRepository timerRepository;
 
+    // 타이머 시작
+    @Transactional
+    public ResponseEntity<?> updateTimerStatus(UserPrincipal userPrincipal, Long bookId) {
+        User user = validUserById(1L);
+        Book book = validBookById(bookId);
+        Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
+        UserBook userBook = userBookOptional.get();
+        Timer timer = Timer.builder()
+                .userBook(userBook)
+                .readTime(null)
+                .isReading(true)
+                .build();
+        timerRepository.save(timer);
+
+        return ResponseEntity.ok(ApiResponse.builder()
+                .check(true)
+                .information(StartTimerIdRes.builder().timerId(timer.getTimerId()).build())
+                .build());
+    }
+
     // 타이머 저장
     @Transactional
-    public ResponseEntity<?> saveTimerRecord(UserPrincipal userPrincipal, Long bookId, CreateTimerReq createTimerReq) {
+    public ResponseEntity<?> saveTimerRecord(UserPrincipal userPrincipal, Long bookId, Long timerId, CreateTimerReq createTimerReq) {
         User user = validUserById(1L);
         Book book = validBookById(bookId);
         Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
@@ -46,11 +67,10 @@ public class TimerService {
             Timer oldestTimer = timerRepository.findTop1ByUserBookOrderByCreatedAtAsc(userBook);
             timerRepository.delete(oldestTimer);
         }
-        Timer timer = Timer.builder()
-                .userBook(userBook)
-                .readTime(createTimerReq.getTime())
-                .build();
-        timerRepository.save(timer);
+        Timer timer = validTimerById(timerId);
+        DefaultAssert.isTrue(timer.isReading(), "타이머를 시작하지 않았습니다.");
+        timer.updateReadTime(createTimerReq.getTime());
+        timer.updateIsReading(false);
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information("타이머가 저장되었습니다.")
@@ -89,7 +109,7 @@ public class TimerService {
         } else {
             userBook = userBookOptional.get();
         }
-        List<Timer> timerList = timerRepository.findByUserBookOrderByCreatedAtDesc(userBook);
+        List<Timer> timerList = timerRepository.findByUserBookAndIsReadingOrderByCreatedAtDesc(userBook, false);
         List<TimerRecordRes> timerRecordRes = timerList.stream()
                 .map(timer -> TimerRecordRes.builder()
                         .timerId(timer.getTimerId())
@@ -98,7 +118,12 @@ public class TimerService {
                         .readTime(convertBigIntegerToString(timer.getReadTime()))
                         .build())
                 .toList();
+        Optional<Timer> timer = timerRepository.findByUserBookAndIsReading(userBook, true);
+        boolean isReading = timer.isPresent();
+        Long timerId = isReading ? timer.get().getTimerId() : null;
         TimerRes timerRes = TimerRes.builder()
+                .reading(isReading)
+                .timerId(timerId)
                 .totalReadTime(convertBigIntegerToString(userBook.getTotalReadTime()))
                 .recordResList(timerRecordRes)
                 .build();
@@ -113,6 +138,12 @@ public class TimerService {
         Optional<Book> bookOptional = bookRepository.findById(bookId);
         DefaultAssert.isTrue(bookOptional.isPresent(), "해당 책이 존재하지 않습니다.");
         return bookOptional.get();
+    }
+
+    private Timer validTimerById(Long timerId) {
+        Optional<Timer> timerOptional = timerRepository.findById(timerId);
+        DefaultAssert.isTrue(timerOptional.isPresent(), "타이머가 존재하지 않습니다.");
+        return timerOptional.get();
     }
 
     private User validUserById(Long userId) {
