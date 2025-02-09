@@ -127,7 +127,7 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/friend/{userId}/note")
+    @GetMapping("/{userId}/note")
     public ResponseEntity<?> findUserAllNotes(
             @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.") @PathVariable Long userId,
@@ -185,6 +185,46 @@ public class MyPageController {
             @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.") @PathVariable Long userId
     ) {
         return friendService.sendFriendRequest(userPrincipal, userId);
+    }
+
+    @Operation(summary = "친구 수락/거절", description = "요청을 수락하거나 거절합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "저장 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PutMapping("/friend/{friendId}")
+    public ResponseEntity<?> acceptOrRejectFriendRequest(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "친구 요청 목록에서 조회한 friendId를 입력해주세요.") @PathVariable Long friendId,
+            @Parameter(description = "요청의 수락 여부입니다. true: 수락, false: 거절") @RequestParam boolean isAccept
+    ) {
+        return friendService.updateFriendRequestStatus(userPrincipal, friendId, isAccept);
+    }
+
+    @Operation(summary = "친구 요청 취소", description = "내가 보낸 친구 요청을 취소합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "취소 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "취소 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @DeleteMapping ("/friend/pending/{friendId}")
+    public ResponseEntity<?> cancelFriendRequest(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "친구 요청 목록에서 조회한 friendId를 입력해주세요.") @PathVariable Long friendId
+    ) {
+        return friendService.deleteFriendRequest(userPrincipal, friendId, false);
+    }
+
+    @Operation(summary = "친구 삭제", description = "친구를 삭제합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "삭제 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "삭제 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @DeleteMapping ("/friend/{friendId}")
+    public ResponseEntity<?> deleteFriendRequest(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "친구 목록에서 조회한 friendId를 입력해주세요.") @PathVariable Long friendId
+    ) {
+        return friendService.deleteFriendRequest(userPrincipal, friendId, true);
     }
 
 }

@@ -28,19 +28,4 @@ public interface UserRepository extends JpaRepository<User, Long>{
             "AND (u.nicknameId LIKE %:keyword% OR u.nickname LIKE %:keyword%)")
     List<User> findUsersNotInFriendByKeyword(@Param("user") User user, @Param("keyword") String keyword);
 
-    @Query("SELECT u " +
-            "FROM User u " +
-            "WHERE (u.nicknameId = :keyword OR u.nickname LIKE %:keyword%) " +
-            "AND (u IN (SELECT f.receiver FROM Friend f WHERE f.sender = :user AND f.friendRequestStatus = :friendRequestStatus) " +
-            "OR u IN (SELECT f.sender FROM Friend f WHERE f.receiver = :user AND f.friendRequestStatus = :friendRequestStatus))")
-    List<User> findUsersInFriendByKeyword(@Param("user") User user, @Param("keyword") String keyword, @Param("friendRequestStatus") FriendRequestStatus friendRequestStatus);
-
-    @Query("SELECT DISTINCT u " +
-            "FROM User u " +
-            "JOIN Friend f ON (f.sender = :user OR f.receiver = :user) " +
-            "WHERE (f.sender = u OR f.receiver = u) " +
-            "AND f.friendRequestStatus = :friendRequestStatus")
-    List<User> findUsersInFriend(@Param("user") User user, @Param("friendRequestStatus") FriendRequestStatus friendRequestStatus);
-
-
 }
