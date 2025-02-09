@@ -148,6 +148,13 @@ public class FriendService {
                 .build());
     }
 
+
+    // 사용자의 친구 목록 조회
+    public List<Friend> getFriends(User user) {
+        // User user = validUserByUserId(userPrincipal.getId());
+        return friendRepository.findAcceptedFriends(user);
+    }
+
     private User validUserByUserId(Long userId) {
         Optional<User> user = userRepository.findById(userId);
         DefaultAssert.isTrue(user.isPresent(), "사용자가 존재하지 않습니다.");

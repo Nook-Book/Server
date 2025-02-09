@@ -3,6 +3,7 @@ package com.nookbook.domain.challenge.presentation;
 import com.nookbook.domain.challenge.application.ChallengeService;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
 import com.nookbook.domain.challenge.dto.response.ChallengeDetailRes;
+import com.nookbook.domain.challenge.dto.response.ChallengeInvitationRes;
 import com.nookbook.domain.challenge.dto.response.ChallengeListRes;
 import com.nookbook.domain.challenge.dto.response.ParticipantListRes;
 import com.nookbook.global.config.security.token.CurrentUser;
@@ -86,7 +87,7 @@ public class ChallengeController {
         return challengeService.deleteParticipant(userPrincipal, challengeId, participantId);
     }
 
-    // 챌린지 참가자 추가 API
+    // 챌린지 참가 요청(초대) API
     @Operation(summary = "챌린지 참가자 초대 요청 API", description = "챌린지에 참가자를 초대하는 API입니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "챌린지 참가자 초대 요청 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
@@ -174,4 +175,45 @@ public class ChallengeController {
         return challengeService.getParticipantList(userPrincipal, challengeId);
     }
 
+    // 챌린지에 초대할 친구 목록 조회 API
+    @Operation(summary = "챌린지에 초대할 친구 목록 조회 API", description = "챌린지에 초대할 친구 목록을 조회하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "챌린지에 초대할 친구 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(type = "array", implementation = ChallengeInvitationRes.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지에 초대할 친구 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @GetMapping("/{challengeId}/invite")
+    public ResponseEntity<?> getInviteFriends(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
+    ) {
+        return challengeService.getInviteFriends(userPrincipal, challengeId);
+    }
+
+    // 챌린지 초대 수락 API
+    @Operation(summary = "챌린지 초대 수락 API", description = "챌린지 초대를 수락하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "챌린지 초대 수락 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지 초대 수락 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PostMapping("/{challengeId}/accept")
+    public ResponseEntity<?> acceptInvitation(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
+    ) {
+        return challengeService.acceptInvitation(userPrincipal, challengeId);
+    }
+
+    // 챌린지 초대 거절 API
+    @Operation(summary = "챌린지 초대 거절 API", description = "챌린지 초대를 거절하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "챌린지 초대 거절 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지 초대 거절 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PostMapping("/{challengeId}/reject")
+    public ResponseEntity<?> rejectInvitation(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
+    ) {
+        return challengeService.rejectInvitation(userPrincipal, challengeId);
+    }
 }
