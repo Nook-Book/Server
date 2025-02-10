@@ -369,6 +369,7 @@ public class ChallengeService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Transactional
     public ResponseEntity<?> changeOwner(UserPrincipal userPrincipal, Long challengeId, Long newOwnerId) {
         User user = validateUser(userPrincipal);
         Challenge challenge = validateChallenge(challengeId);
