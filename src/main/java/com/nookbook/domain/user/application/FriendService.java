@@ -164,9 +164,9 @@ public class FriendService {
 
 
     // 사용자의 친구 목록 조회
-    public Page<Friend> getFriends(User user, Pageable pageable) {
+    public List<Friend> getFriends(User user) {
         // User user = validUserByUserId(userPrincipal.getId());
-        return friendRepository.findAcceptedFriends(user, pageable);
+        return friendRepository.findAcceptedFriends(user);
     }
 
     private User validUserByUserId(Long userId) {
