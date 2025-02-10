@@ -184,13 +184,11 @@ public class ChallengeController {
             @ApiResponse(responseCode = "400", description = "챌린지에 초대할 친구 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
     @GetMapping("/{challengeId}/invite")
-    public Page<ChallengeInvitationRes> getInviteFriends(
+    public ResponseEntity<?> getInviteFriends(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId,
-            @Parameter(description = "목록의 페이지 번호를 입력해주세요. **Page는 0부터 시작됩니다!**", required = true)
-            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
     ) {
-        return challengeService.getInviteFriends(userPrincipal, challengeId, page);
+        return challengeService.getInviteFriends(userPrincipal, challengeId);
     }
 
     // 챌린지 초대 수락 API
