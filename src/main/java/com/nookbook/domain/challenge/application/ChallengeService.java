@@ -105,9 +105,11 @@ public class ChallengeService {
         // 챌리지를 생성한 유저는 participant로 등록
         participantService.saveParticipant(user, challenge);
 
+        Long ChallengeId = challenge.getChallengeId();
+
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information("챌린지 생성이 완료되었습니다.")
+                .information(ChallengeId)
                 .build();
 
         return ResponseEntity.ok(apiResponse);
