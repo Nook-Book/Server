@@ -420,22 +420,18 @@ public class ChallengeService {
 
 
 
-    public Page<ChallengeInvitationRes> getInviteFriends(UserPrincipal userPrincipal, Long challengeId, Integer page) {
+    public ResponseEntity<?> getInviteFriends(UserPrincipal userPrincipal, Long challengeId) {
         User user = validateUser(userPrincipal);
         Challenge challenge = validateChallenge(challengeId);
 
-        // 기본 페이지 번호 설정
-        int pageNumber = (page == null || page < 0) ? 0 : page;
-        Pageable pageable = PageRequest.of(pageNumber, 20);  // 한 페이지에 20개
-
         // 사용자의 친구 목록 페이징 조회
-        Page<Friend> inviteFriendsPage = friendService.getFriends(user, pageable);
+        List<Friend> inviteFriendsPage = friendService.getFriends(user);
 
         // 해당 챌린지의 invitation 목록 조회
         List<Invitation> invitations = invitationRepository.findAllByChallenge(challenge);
 
         // DTO 변환
-        Page<ChallengeInvitationRes> challengeInvitationResPage = inviteFriendsPage.map(friend -> {
+        List<ChallengeInvitationRes> challengeInvitationResPage = inviteFriendsPage.stream().map(friend -> {
             Long friendUserId = friend.getFriendUserId(user);  // 친구의 userId 가져오기
             return ChallengeInvitationRes.builder()
                     .userId(friendUserId)
@@ -443,9 +439,14 @@ public class ChallengeService {
                     .isInvitable(invitations.stream()
                             .noneMatch(invitation -> invitation.getUser().getUserId().equals(friendUserId)))
                     .build();
-        });
+        }).toList();
 
-        return challengeInvitationResPage;
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(challengeInvitationResPage)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
     }
 
 

@@ -36,24 +36,22 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
             "    (f.receiver = :user AND (f.sender.nickname LIKE %:keyword% OR f.sender.nicknameId LIKE %:keyword%)) " +
             ") " +
             "AND f.friendRequestStatus = :friendRequestStatus")
-    Page<Friend> findBySenderOrReceiverAndStatusAndNicknameLikeKeyword(
+    List<Friend> findBySenderOrReceiverAndStatusAndNicknameLikeKeyword(
             @Param("user") User user,
             @Param("keyword") String keyword,
-            @Param("friendRequestStatus") FriendRequestStatus friendRequestStatus,
-            Pageable pageable);
+            @Param("friendRequestStatus") FriendRequestStatus friendRequestStatus);
 
     @Query("SELECT f FROM Friend f " +
             "WHERE (f.sender = :user OR f.receiver = :user) " +
             "AND f.friendRequestStatus = :friendRequestStatus")
-    Page<Friend> findBySenderOrReceiverAndStatus(
+    List<Friend> findBySenderOrReceiverAndStatus(
             @Param("user") User user,
-            @Param("friendRequestStatus") FriendRequestStatus friendRequestStatus,
-            Pageable pageable);
+            @Param("friendRequestStatus") FriendRequestStatus friendRequestStatus);
 
 
     // reciever_id 또는 sender_id가 user이면서, friendRequestStatus가 FRIEND_ACCEPT인 친구 목록 조회
     @Query("SELECT f FROM Friend f " +
             "WHERE (f.sender = :user OR f.receiver = :user) " +
             "AND f.friendRequestStatus = 'FRIEND_ACCEPT'")
-    Page<Friend> findAcceptedFriends(@Param("user") User user, Pageable pageable);
+    List<Friend> findAcceptedFriends(@Param("user") User user);
 }
