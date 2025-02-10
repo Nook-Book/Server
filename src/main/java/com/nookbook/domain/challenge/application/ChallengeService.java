@@ -436,6 +436,7 @@ public class ChallengeService {
             return ChallengeInvitationRes.builder()
                     .userId(friendUserId)
                     .nickname(userService.findById(friendUserId).getNickname())  // userId로 닉네임 조회
+                    .profileImage(userService.findById(friendUserId).getImageUrl())  // userId로 이미지 조회
                     .isInvitable(invitations.stream()
                             .noneMatch(invitation -> invitation.getUser().getUserId().equals(friendUserId)))
                     .build();
