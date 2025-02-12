@@ -218,4 +218,20 @@ public class ChallengeController {
     ) {
         return challengeService.rejectInvitation(userPrincipal, challengeId);
     }
+
+    // 챌린지 나가기 API
+    @Operation(summary = "챌린지 나가기 API", description = "참여 중인 챌린지에서 나가는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "챌린지 나가기 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지 나가기 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @DeleteMapping("/exit/{challengeId}")
+    public ResponseEntity<?> leaveChallenge(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
+    ) {
+        return challengeService.leaveChallenge(userPrincipal, challengeId);
+    }
+
+
 }

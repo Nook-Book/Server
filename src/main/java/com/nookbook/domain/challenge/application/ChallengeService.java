@@ -9,10 +9,7 @@ import com.nookbook.domain.challenge.domain.repository.InvitationRepository;
 import com.nookbook.domain.challenge.domain.repository.ParticipantRepository;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
 import com.nookbook.domain.challenge.dto.response.*;
-import com.nookbook.domain.challenge.exception.ChallengeNotAuthorizedException;
-import com.nookbook.domain.challenge.exception.ChallengeNotFoundException;
-import com.nookbook.domain.challenge.exception.ParticipantNotFoundException;
-import com.nookbook.domain.challenge.exception.ParticipantNotInChallengeException;
+import com.nookbook.domain.challenge.exception.*;
 import com.nookbook.domain.user.application.FriendService;
 import com.nookbook.domain.user.domain.Friend;
 import com.nookbook.infrastructure.s3.S3Uploader;
@@ -195,6 +192,7 @@ public class ChallengeService {
         return ResponseEntity.ok(response);
     }
 
+    // 챌린지 상세 조회
     public ResponseEntity<?> getChallengeDetail(UserPrincipal userPrincipal, Long challengeId) {
         // 사용자 검증
         User user = validateUser(userPrincipal);
@@ -257,6 +255,9 @@ public class ChallengeService {
 
         return participantStatusListRes;
     }
+
+
+    // 챌린지 참가자 삭제
     @Transactional
     public ResponseEntity<?> deleteParticipant(UserPrincipal userPrincipal, Long challengeId, Long participantId) {
         User user = validateUser(userPrincipal);
@@ -277,6 +278,7 @@ public class ChallengeService {
     }
 
 
+    // 챌린지 참가자 초대
     @Transactional
     public ResponseEntity<?> inviteParticipant(UserPrincipal userPrincipal, Long challengeId, Long participantId) {
         User user = validateUser(userPrincipal);
@@ -297,6 +299,7 @@ public class ChallengeService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    // 챌린지 이미지 수정
     @Transactional
     public ResponseEntity<?> updateChallengeImage(UserPrincipal userPrincipal, Long challengeId, MultipartFile challengeCover) {
         User user = validateUser(userPrincipal);
@@ -320,6 +323,7 @@ public class ChallengeService {
     }
 
 
+    // 챌린지 정보 수정
     @Transactional
     public ResponseEntity<?> updateChallengeInfo(UserPrincipal userPrincipal, Long challengeId, ChallengeCreateReq challengeUpdateReq) {
         User user = validateUser(userPrincipal);
@@ -352,6 +356,7 @@ public class ChallengeService {
     }
 
 
+    // 챌린지 삭제
     @Transactional
     public ResponseEntity<?> deleteChallenge(UserPrincipal userPrincipal, Long challengeId) {
         User user = validateUser(userPrincipal);
@@ -369,14 +374,16 @@ public class ChallengeService {
         return ResponseEntity.ok(apiResponse);
     }
 
+
+    // 챌린지 방장 변경
     @Transactional
     public ResponseEntity<?> changeOwner(UserPrincipal userPrincipal, Long challengeId, Long newOwnerId) {
         User user = validateUser(userPrincipal);
         Challenge challenge = validateChallenge(challengeId);
         validateChallengeAuthorization(user, challenge);
 
-        User newOwner = userRepository.findById(newOwnerId)
-                .orElseThrow(UserNotFoundException::new);
+        // newOwnerId는 participantId임
+        Participant newOwner = participantService.getParticipant(newOwnerId);
 
         // 챌린지 방장 변경
         challenge.changeOwner(newOwner);
@@ -390,18 +397,21 @@ public class ChallengeService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    // 챌린지 참가자 목록 조회
     public ResponseEntity<?> getParticipantList(UserPrincipal userPrincipal, Long challengeId) {
         User user = validateUser(userPrincipal);
 
         Challenge challenge = validateChallenge(challengeId);
         List<Participant> participants = challenge.getParticipants();
 
+        User owner = challenge.getOwner();
+
         List<ParticipantRes> participantResList = participants.stream()
                 .map(participant -> ParticipantRes.builder()
                         .participantId(participant.getParticipantId())
                         .participantNickname((participant.getUser().getNickname()))
                         .participantImage(participant.getUser().getImageUrl())
-                        .role(participantService.getParticipantRole(challenge, participant))
+                        .role(participantService.getParticipantRole(participant, owner))
                         .build())
                 .toList();
 
@@ -420,6 +430,7 @@ public class ChallengeService {
 
 
 
+    // 초대 가능한 친구 목록 조회
     public ResponseEntity<?> getInviteFriends(UserPrincipal userPrincipal, Long challengeId) {
         User user = validateUser(userPrincipal);
         Challenge challenge = validateChallenge(challengeId);
@@ -451,6 +462,7 @@ public class ChallengeService {
     }
 
 
+    // 초대 수락
     @Transactional
     public ResponseEntity<?> acceptInvitation(UserPrincipal userPrincipal, Long challengeId) {
         User user = validateUser(userPrincipal);
@@ -480,6 +492,7 @@ public class ChallengeService {
 
     }
 
+    // 초대 거절
     @Transactional
     public ResponseEntity<?> rejectInvitation(UserPrincipal userPrincipal, Long challengeId) {
         User user = validateUser(userPrincipal);
@@ -506,6 +519,40 @@ public class ChallengeService {
     }
 
 
+    // 챌린지 나가기 (방장이 아닌 경우만 가능)
+    @Transactional
+    public ResponseEntity<?> leaveChallenge(UserPrincipal userPrincipal, Long challengeId) {
+        User user = validateUser(userPrincipal);
+        Challenge challenge = validateChallenge(challengeId);
+
+        // 참가자 검증
+        Participant participant = validateParticipant(user, challenge);
+
+        // 방장 여부 확인
+        // 만약 사용자 본인이 방장이라면, 오류 발생
+        validCanLeaveChallenge(user, challenge);
+
+        // 참가자 삭제
+        participantRepository.delete(participant);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information("챌린지 탈퇴가 완료되었습니다.")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+
+
+    }
+
+    // 챌린지 나가기 시 방장 여부 조회
+    private void validCanLeaveChallenge(User user, Challenge challenge) {
+        if (challenge.getOwner().equals(user)) {
+            throw new ChallengeOwnerCantLeaveException();
+        }
+    }
+
+
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
 //        return userService.findByEmail(userPrincipal.getEmail())
@@ -524,6 +571,11 @@ public class ChallengeService {
     private Participant validateParticipant(Long participantId) {
         return participantRepository.findById(participantId)
                 .orElseThrow(ParticipantNotFoundException::new);
+    }
+
+    // 챌린지 내 참가자 검증 메서드
+    private Participant validateParticipant(User user, Challenge challenge) {
+        return participantRepository.findByUserAndChallenge(user, challenge);
     }
 
     // 챌린지 수정 권한 검증
