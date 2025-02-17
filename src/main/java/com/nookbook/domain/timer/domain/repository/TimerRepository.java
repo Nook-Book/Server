@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,4 +26,5 @@ public interface TimerRepository extends JpaRepository<Timer, Long> {
     @Query("UPDATE Timer t SET t.isReading = false WHERE t.userBook = :userBook AND t.isReading = true")
     void turnOffReadingTimers(@Param("userBook") UserBook userBook);
 
+    List<Timer> findByUserBookAndCreatedAtAfter(UserBook userBook, LocalDateTime localDateTime);
 }

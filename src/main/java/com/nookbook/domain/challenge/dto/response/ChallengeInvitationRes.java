@@ -17,6 +17,9 @@ public class ChallengeInvitationRes {
     @Schema(type = "String", example = "야옹아멍멍해바", description = "친구의 닉네임")
     private String nickname;
 
+    @Schema(type = "String", example = "야옹아멍멍해바.jpg", description = "친구의 프로필 이미지")
+    private String profileImage;
+
     @Schema(type = "boolean", example = "true", description = "초대 가능 여부")
     private boolean isInvitable;
 }

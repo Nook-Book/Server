@@ -90,8 +90,8 @@ public class TimerService {
         userBook.updateTotalReadTime(combinedTime);
     }
 
-    private String convertBigIntegerToString(BigInteger time) {
-        if (time == null) {
+    public String convertBigIntegerToString(BigInteger time) {
+         if (time == null) {
             return null;
         }
         long totalSeconds = time.longValue();
@@ -142,6 +142,11 @@ public class TimerService {
                 .information(timerRes)
                 .build();
         return ResponseEntity.ok(apiResponse);
+    }
+
+
+    public List<Timer> getTodayTimers(UserBook userBook) {
+        return timerRepository.findByUserBookAndCreatedAtAfter(userBook, userBook.getCreatedAt().toLocalDate().atStartOfDay());
     }
 
     private Book validBookById(Long bookId) {

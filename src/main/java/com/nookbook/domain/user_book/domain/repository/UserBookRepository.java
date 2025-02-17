@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,4 +33,5 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
     @Query("SELECT ub FROM UserBook ub JOIN ub.book b WHERE ub.user = :user AND b.title LIKE %:keyword%")
     List<UserBook> findByUserAndBookTitleLike(@Param("user") User user, @Param("keyword") String keyword);
 
+    Optional<UserBook> findByUserAndCreatedAtAfter(User user, LocalDateTime localDateTime);
 }
