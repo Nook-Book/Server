@@ -21,8 +21,8 @@ public class ParticipantStatusListRes {
     @Schema(type = "String", example = "밍쥬피쉬증명사진.jpg", description = "참여자 프로필 이미지")
     private String participantImage;
 
-    @Schema(type = "String", example = "PARTICIPATING / RESTING", description = "참여자 진행 현황")
-    private ParticipantStatus participantStatus;
+    @Schema(type = "boolean", example = "true", description = "참여자 실시간 독서 진행 여부")
+    private boolean isReading;
 
     @Schema(type = "String", example = "몰입", description = "참여자가 읽고 있는 도서 제목")
     private String readingBookTitle;
