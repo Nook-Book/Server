@@ -42,13 +42,16 @@ public class TimerService {
         Book book = validBookById(bookId);
         Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
         UserBook userBook = userBookOptional.get();
+        if (timerRepository.countByUserBook(userBook) >= 10) {
+            deleteOldestTimer(userBook);
+        }
+        timerRepository.turnOffReadingTimers(userBook);
         Timer timer = Timer.builder()
                 .userBook(userBook)
                 .readTime(null)
                 .isReading(true)
                 .build();
         timerRepository.save(timer);
-
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
                 .information(StartTimerIdRes.builder().timerId(timer.getTimerId()).build())
@@ -64,8 +67,7 @@ public class TimerService {
         UserBook userBook = userBookOptional.get();
         plusTotalReadTime(userBook, userBook.getTotalReadTime(), createTimerReq.getTime());
         if (timerRepository.countByUserBook(userBook) >= 10) {
-            Timer oldestTimer = timerRepository.findTop1ByUserBookOrderByCreatedAtAsc(userBook);
-            timerRepository.delete(oldestTimer);
+            deleteOldestTimer(userBook);
         }
         Timer timer = validTimerById(timerId);
         DefaultAssert.isTrue(timer.isReading(), "타이머를 시작하지 않았습니다.");
@@ -78,12 +80,20 @@ public class TimerService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    private void deleteOldestTimer(UserBook userBook) {
+        Timer oldestTimer = timerRepository.findTop1ByUserBookOrderByCreatedAtAsc(userBook);
+        timerRepository.delete(oldestTimer);
+    }
+
     private void plusTotalReadTime(UserBook userBook, BigInteger totalTime, BigInteger additionalTime) {
         BigInteger combinedTime = totalTime.add(additionalTime);
         userBook.updateTotalReadTime(combinedTime);
     }
 
     public String convertBigIntegerToString(BigInteger time) {
+         if (time == null) {
+            return null;
+        }
         long totalSeconds = time.longValue();
         long hours = totalSeconds / 3600;
         long minutes = (totalSeconds % 3600) / 60;
@@ -157,6 +167,5 @@ public class TimerService {
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
         return userOptional.get();
     }
-
 
 }

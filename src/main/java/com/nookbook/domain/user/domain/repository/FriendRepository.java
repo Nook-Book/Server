@@ -3,8 +3,6 @@ package com.nookbook.domain.user.domain.repository;
 import com.nookbook.domain.user.domain.Friend;
 import com.nookbook.domain.user.domain.FriendRequestStatus;
 import com.nookbook.domain.user.domain.User;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

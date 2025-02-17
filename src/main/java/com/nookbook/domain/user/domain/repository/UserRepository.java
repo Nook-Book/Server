@@ -28,6 +28,6 @@ public interface UserRepository extends JpaRepository<User, Long>{
             "    WHERE (f.sender = :user AND f.receiver = u) OR (f.receiver = :user AND f.sender = u)" +
             ") " +
             "AND (u.nicknameId LIKE %:keyword% OR u.nickname LIKE %:keyword%)")
-    List<User> findUsersNotInFriendByKeyword(@Param("user") User user, @Param("keyword") String keyword);
+    Page<User> findUsersNotInFriendByKeyword(@Param("user") User user, @Param("keyword") String keyword, Pageable pageable);
 
 }

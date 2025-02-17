@@ -144,22 +144,23 @@ public class MyPageController {
     @GetMapping("/friend/all")
     public ResponseEntity<?> searchAllUsers(
             @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "검색하고자 하는 단어를 입력해주세요.") @RequestParam String keyword
+            @Parameter(description = "검색하고자 하는 단어를 입력해주세요.") @RequestParam String keyword,
+            @Parameter(description = "페이지의 숫자입니다. 페이지는 0부터 시작합니다.") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 내 요소의 개수입니다.") @RequestParam(defaultValue = "20") int size
     ) {
-        return friendService.searchUsers(userPrincipal, false, keyword);
+        return friendService.searchUsers(userPrincipal, keyword, page, size);
     }
 
-    @Operation(summary = "친구 목록 - 조회 및 검색", description = "친구 목록을 조회하거나 검색하여 조회합니다.")
+    @Operation(summary = "친구 목록 - 조회", description = "친구 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = SearchUserRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping("/friend")
-    public ResponseEntity<?> searchFriends(
-            @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "검색하고자 하는 단어를 입력해주세요. 없다면 입력하지 않습니다.") @RequestParam(required = false) String keyword
+    public ResponseEntity<?> getFriends(
+            @CurrentUser UserPrincipal userPrincipal
     ) {
-        return friendService.searchUsers(userPrincipal, true, keyword);
+        return friendService.getFriends(userPrincipal, null);
     }
 
     @Operation(summary = "친구 추가 - 내가 보낸/받은 요청 목록 조회", description = "내가 보낸/받은 요청 목록을 조회합니다.")
