@@ -162,7 +162,7 @@ public class ChallengeController {
         return challengeService.changeOwner(userPrincipal, challengeId, newOwnerId);
     }
 
-    // TODO: 참가자 목록 조회 (방장인지/일반인지에 대한 여부 정보 포함)
+    // 챌린지 참가자 목록 조회 (방장인지/일반인지에 대한 여부 정보 포함)
     @Operation(summary = "챌린지 참가자 목록 조회 API", description = "챌린지 참가자 목록을 조회하는 API입니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "챌린지 참가자 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ParticipantListRes.class))}),

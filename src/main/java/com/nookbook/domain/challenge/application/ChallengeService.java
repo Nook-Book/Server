@@ -10,6 +10,9 @@ import com.nookbook.domain.challenge.domain.repository.ParticipantRepository;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
 import com.nookbook.domain.challenge.dto.response.*;
 import com.nookbook.domain.challenge.exception.*;
+import com.nookbook.domain.common.BaseEntity;
+import com.nookbook.domain.timer.application.TimerService;
+import com.nookbook.domain.timer.domain.Timer;
 import com.nookbook.domain.user.application.FriendService;
 import com.nookbook.domain.user.domain.Friend;
 import com.nookbook.infrastructure.s3.S3Uploader;
@@ -30,9 +33,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -51,6 +56,7 @@ public class ChallengeService {
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
     private final FriendService friendService;
+    private final TimerService timerService;
 
     // 챌린지 생성
     @Transactional
@@ -235,25 +241,62 @@ public class ChallengeService {
     }
 
 
-    // 참여자 목록 조회
+    // 참여자 정보 조회
     public List<ParticipantStatusListRes> getParticipantStatusList(User user, Challenge challenge) {
         List<Participant> participants = participantRepository.findAllByChallenge(challenge);
-        // 가장 최근 읽고 있는 / 읽었던 책 정보
-        UserBook userBook = userBookRepository.findFirstByUserOrderByUpdatedAtDesc(user);
+        // 오늘 생성된 userBook 기록 조회
+        UserBook userBook = userBookRepository.findByUserAndCreatedAtAfter(user, LocalDate.now().atStartOfDay())
+                .orElse(null);
+
+        if(userBook == null) {
+            return EmptyTodayUserBook(participants);
+        }
+
         Book book = validateBook(userBook.getBook().getBookId());
-        // 참여자 목록 조회
-        List<ParticipantStatusListRes> participantStatusListRes = participants.stream()
+
+        // 오늘 타이머 기록 조회
+        List<Timer> todayTimers = timerService.getTodayTimers(userBook);
+
+        // 가장 최근의 타이머 조회
+        Timer timer = todayTimers.stream()
+                .max(Comparator.comparing(BaseEntity::getCreatedAt))
+                .orElse(null);
+
+        // 읽고 있는지 여부, 읽은 시간
+        boolean isReading = timer != null && timer.isReading();
+        BigInteger readTime = timer != null ? timer.getReadTime() : BigInteger.ZERO;
+
+        // 읽은 시간을 문자열로 변환
+        String readTimeString = timerService.convertBigIntegerToString(readTime);
+
+        // 참여자 목록 조회 응답 객체 build & return
+
+        return participants.stream()
                 .map(participant -> ParticipantStatusListRes.builder()
-                        .participantId(participant.getUser().getUserId())
-                        .nickname(participant.getUser().getNickname())
-                        .readingBookTitle(book.getTitle())
-                        .readingBookImage(book.getTitle())
-                        .participantImage(participant.getUser().getImageUrl())
-                        .participantStatus(participant.getParticipantStatus())
+                        .participantId(participant.getParticipantId()) // 참가자 ID
+                        .nickname(participant.getUser().getNickname()) // 참가자 닉네임
+                        .readingBookTitle(book.getTitle()) // 읽고 있는 책 제목
+                        .readingBookImage(book.getImage()) // 읽고 있는 책 이미지
+                        .participantImage(participant.getUser().getImageUrl()) // 참가자 이미지
+                        .isReading(isReading) // 실시간 독서 진행 여부
+                        .dailyReadingTime(readTimeString) // 가장 최근의 독서 시간
                         .build())
                 .toList();
+    }
 
-        return participantStatusListRes;
+    // 오늘 userBook 기록이 없는 경우의 응답
+    private List<ParticipantStatusListRes> EmptyTodayUserBook(List<Participant> participants) {
+        return participants.stream()
+                .map(participant -> ParticipantStatusListRes.builder()
+                        .participantId(participant.getParticipantId()) // 참가자 ID
+                        .nickname(participant.getUser().getNickname()) // 참가자 닉네임
+                        .readingBookTitle("") // 읽고 있는 책 제목
+                        .readingBookImage("") // 읽고 있는 책 이미지
+                        .participantImage(participant.getUser().getImageUrl()) // 참가자 이미지
+                        .isReading(false) // 실시간 독서 진행 여부
+                        .dailyReadingTime("00:00:00") // 가장 최근의 독서 시간
+                        .build())
+                .toList();
     }
 
 

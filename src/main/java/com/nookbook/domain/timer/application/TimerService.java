@@ -83,7 +83,7 @@ public class TimerService {
         userBook.updateTotalReadTime(combinedTime);
     }
 
-    private String convertBigIntegerToString(BigInteger time) {
+    public String convertBigIntegerToString(BigInteger time) {
         long totalSeconds = time.longValue();
         long hours = totalSeconds / 3600;
         long minutes = (totalSeconds % 3600) / 60;
@@ -134,6 +134,11 @@ public class TimerService {
         return ResponseEntity.ok(apiResponse);
     }
 
+
+    public List<Timer> getTodayTimers(UserBook userBook) {
+        return timerRepository.findByUserBookAndCreatedAtAfter(userBook, userBook.getCreatedAt().toLocalDate().atStartOfDay());
+    }
+
     private Book validBookById(Long bookId) {
         Optional<Book> bookOptional = bookRepository.findById(bookId);
         DefaultAssert.isTrue(bookOptional.isPresent(), "해당 책이 존재하지 않습니다.");
@@ -152,5 +157,6 @@ public class TimerService {
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
         return userOptional.get();
     }
+
 
 }
