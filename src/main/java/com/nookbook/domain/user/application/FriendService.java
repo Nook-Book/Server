@@ -31,28 +31,32 @@ public class FriendService {
     private final FriendRepository friendRepository;
 
     // 검색
-    public ResponseEntity<?> searchUsers(UserPrincipal userPrincipal, boolean isFriend, String keyword) {
+    public ResponseEntity<?> searchUsers(UserPrincipal userPrincipal, String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         User user = validUserByUserId(1L);
-        List<SearchUserRes> searchUserRes = isFriend
-                ? getFriendsByKeyword(user, keyword)
-                : getAllUsersByKeyword(user, keyword);
+        Page<SearchUserRes> searchUserRes = getAllUsersByKeyword(user, keyword, pageable);
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
                 .information(searchUserRes)
                 .build());
     }
 
-    private List<SearchUserRes> getAllUsersByKeyword(User user, String keyword) {
-        List<User> findUsers = userRepository.findUsersNotInFriendByKeyword(user, keyword);
-        return findUsers.stream()
-                .map(findUser -> SearchUserRes.builder()
-                        .userId(findUser.getUserId())
-                        .nickname(findUser.getNickname())
-                        .imageUrl(findUser.getImageUrl())
-                        .build())
-                .collect(Collectors.toList());
+    public ResponseEntity<?> getFriends(UserPrincipal userPrincipal, String keyword) {
+        User user = validUserByUserId(1L);
+        List<SearchUserRes> searchUserRes = getFriendsByKeyword(user, keyword);
+        return ResponseEntity.ok(ApiResponse.builder()
+                .check(true)
+                .information(searchUserRes)
+                .build());
+    }
 
-
+    private Page<SearchUserRes> getAllUsersByKeyword(User user, String keyword, Pageable pageable) {
+        Page<User> findUsers = userRepository.findUsersNotInFriendByKeyword(user, keyword, pageable);
+        return findUsers.map(findUser -> SearchUserRes.builder()
+                .userId(findUser.getUserId())
+                .nickname(findUser.getNickname())
+                .imageUrl(findUser.getImageUrl())
+                .build());
     }
 
     private List<SearchUserRes> getFriendsByKeyword(User user, String keyword) {
