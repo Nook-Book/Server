@@ -170,9 +170,9 @@ public class NoteService {
     }
 
     public ResponseEntity<?> uploadImage(MultipartFile image) {
-        String imageName = s3Uploader.uploadImage(image);
+        String imageUrl = s3Uploader.uploadImage(image);
         ImageUrlRes imageUrlRes = ImageUrlRes.builder()
-                .imageUrl(s3Uploader.getFullPath(imageName))
+                .imageUrl(imageUrl)
                 .build();
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
