@@ -1,6 +1,7 @@
 package com.nookbook.domain.timer.domain.repository;
 
 import com.nookbook.domain.timer.domain.Timer;
+import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user_book.domain.UserBook;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -27,4 +29,7 @@ public interface TimerRepository extends JpaRepository<Timer, Long> {
     void turnOffReadingTimers(@Param("userBook") UserBook userBook);
 
     List<Timer> findByUserBookAndCreatedAtAfter(UserBook userBook, LocalDateTime localDateTime);
+
+    @Query("SELECT t FROM Timer t WHERE t.userBook.user = :user AND FUNCTION('DATE', t.createdAt) = :localDate")
+    List<Timer> findByUserAndCreatedAt(User user, LocalDate localDate);
 }
