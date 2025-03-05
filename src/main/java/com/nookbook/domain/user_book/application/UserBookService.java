@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,18 +48,32 @@ public class UserBookService {
     }
 
     private ResponseEntity<?> distinctDateFormat(User user, String date) {
-        switch (date.length()) {
-            case 7:
-                log.info("YYYY-MM 형식");
-                List<MonthlyUserBookCalendarRes> monthlyData = getUserBookInfoByMonth(user, date);
-                return ResponseEntity.ok(monthlyData);
-            case 10:
-                log.info("YYYY-MM-DD 형식");
-                DailyUserBookCalendarRes dailyData = getUserBookInfoByDate(user, date);
-                return ResponseEntity.ok(dailyData);
-            default:
-                log.warn("날짜 형식이 올바르지 않습니다.");
-                return ResponseEntity.badRequest().body("Invalid date format. Use YYYY-MM or YYYY-MM-DD.");
+        if (isValidDateFormat(date, "yyyy-MM")) {
+            log.info("YYYY-MM 형식");
+            List<MonthlyUserBookCalendarRes> monthlyData = getUserBookInfoByMonth(user, date);
+            return ResponseEntity.ok(monthlyData);
+        } else if (isValidDateFormat(date, "yyyy-MM-dd")) {
+            log.info("YYYY-MM-DD 형식");
+            DailyUserBookCalendarRes dailyData = getUserBookInfoByDate(user, date);
+            return ResponseEntity.ok(dailyData);
+        } else {
+            log.warn("날짜 형식이 올바르지 않습니다: {}", date);
+            return ResponseEntity.badRequest().body("Invalid date format. Use YYYY-MM or YYYY-MM-DD.");
+        }
+    }
+
+    // 날짜 형식 검증 메서드
+    private boolean isValidDateFormat(String date, String pattern) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+        try {
+            if (pattern.equals("yyyy-MM")) {
+                YearMonth.parse(date, formatter); // YYYY-MM 형식 검증
+            } else {
+                LocalDate.parse(date, formatter); // YYYY-MM-DD 형식 검증
+            }
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
         }
     }
 
