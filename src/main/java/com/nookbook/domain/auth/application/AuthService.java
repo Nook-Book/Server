@@ -40,6 +40,7 @@ public class AuthService {
     }
 
 
+    @Transactional
     public ResponseEntity<?> loginWithIdToken(String idToken, String email) {
         String username = verifyIdTokenAndExtractUsername(idToken, email);
         if (username != null) {
@@ -83,6 +84,8 @@ public class AuthService {
 
 
     }
+
+    @Transactional
     public ResponseEntity<?> logout(UserPrincipal userPrincipal) {
         User user = (User) userDetailsService.loadUserByUsername(userPrincipal.getUsername());
         String email = user.getEmail();
@@ -98,6 +101,7 @@ public class AuthService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Transactional
     public ResponseEntity<?> exit(UserPrincipal userPrincipal) {
         User user = (User) userDetailsService.loadUserByUsername(userPrincipal.getUsername());
         String email = user.getEmail();
@@ -119,6 +123,7 @@ public class AuthService {
 
         return ResponseEntity.ok(apiResponse);
     }
+
 
 
     private void deleteToken(String email) {
