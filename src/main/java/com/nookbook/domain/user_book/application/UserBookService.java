@@ -1,5 +1,7 @@
 package com.nookbook.domain.user_book.application;
 
+import com.nookbook.domain.challenge.application.ParticipantService;
+import com.nookbook.domain.challenge.domain.Participant;
 import com.nookbook.domain.timer.application.TimerService;
 import com.nookbook.domain.timer.domain.Timer;
 import com.nookbook.domain.user.application.UserService;
@@ -38,7 +40,9 @@ public class UserBookService {
     private final TimerService timerService;
 
     private final UserRepository userRepository;
+    private final ParticipantService participantService;
 
+    // 사용자의 독서 기록(캘린더) 조회
     public ResponseEntity<?> getUserBookCalendar(UserPrincipal userPrincipal, String date) {
         User user = validateUser(userPrincipal);
         // 날짜 형식 판단 메소드
@@ -46,6 +50,19 @@ public class UserBookService {
         return distinctDateFormat(user, date);
 
     }
+
+    // 특정 챌린지 참가자의 독서 기록(캘린더) 조회
+    public ResponseEntity<?> getUserBookCalendar(UserPrincipal userPrincipal,Long participantId, String date) {
+        validateUser(userPrincipal);
+        Participant participant = participantService.getParticipant(participantId);
+        User participantUser = participant.getUser();
+        // 날짜 형식 판단 메소드
+        // YYYY-MM-DD 형식 / YYYY-MM 형식
+        return distinctDateFormat(participantUser, date);
+
+    }
+
+
 
     private ResponseEntity<?> distinctDateFormat(User user, String date) {
         if (isValidDateFormat(date, "yyyy-MM")) {
@@ -102,7 +119,6 @@ public class UserBookService {
                 .endTime(getEndReadTime(timers))
                 .bookList(getBookListByDate(user, date))
                 .build();
-
 
     }
 

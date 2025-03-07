@@ -6,6 +6,8 @@ import com.nookbook.domain.challenge.dto.response.ChallengeDetailRes;
 import com.nookbook.domain.challenge.dto.response.ChallengeInvitationRes;
 import com.nookbook.domain.challenge.dto.response.ChallengeListRes;
 import com.nookbook.domain.challenge.dto.response.ParticipantListRes;
+import com.nookbook.domain.user_book.application.UserBookService;
+import com.nookbook.domain.user_book.dto.response.DailyUserBookCalendarRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;
@@ -30,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ChallengeController {
 
     private final ChallengeService challengeService;
+    private final UserBookService userBookService;
 
     // 새 챌린지 생성 API
     @Operation(summary = "새 챌린지 생성 API", description = "새 챌린지를 생성하는 API입니다.")
@@ -231,6 +234,23 @@ public class ChallengeController {
             @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
     ) {
         return challengeService.leaveChallenge(userPrincipal, challengeId);
+    }
+
+
+    // 챌린지 참가자의 독서 기록 정보 조회 API
+    // 날짜 형식: 2021-11-01 또는 2021-11
+    @Operation(summary = "챌린지 참가자의 날짜별 독서 기록 조회", description = "챌린지 참가자의 날짜별 독서 기록을 조회합니다.")
+    @GetMapping("{participantId}/calendar/{date}")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "독서 캘린더 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = DailyUserBookCalendarRes.class)) } ),
+            @ApiResponse(responseCode = "400", description = "독서 캘린더 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    public ResponseEntity<?> getUserBookCalendar(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "참가자 ID를 입력해주세요.", required = true) @PathVariable Long participantId,
+            @Parameter(description = "조회할 날짜를 입력해주세요.", example = "2021-11-01", required = true) @PathVariable String date
+    ) {
+        return userBookService.getUserBookCalendar(userPrincipal, participantId, date);
     }
 
 
