@@ -122,18 +122,31 @@ public class MyPageController {
         return userService.getUserInfo(userPrincipal, userId);
     }
 
-    @Operation(summary = "[마이페이지] 기록 전체보기 목록 조회 및 검색", description = "친구페이지의 기록 전체보기 목록 조회 또는 검색하여 조회합니다.")
+    @Operation(summary = "[마이페이지] 기록 전체보기 목록 조회 및 검색", description = "마이페이지(사용자 본인)의 기록 전체보기 목록 조회 또는 검색하여 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/note")
+    public ResponseEntity<?> findUserAllNotes(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "검색하고자 하는 단어를 입력해주세요. 없다면 입력하지 않습니다.") @RequestParam(required = false) String keyword
+    ) {
+        return noteService.getMyNoteList(userPrincipal, keyword);
+    }
+
+    @Operation(summary = "[마이페이지] 친구 기록 전체보기 목록 조회 및 검색", description = "마이페이지(친구)의 기록 전체보기 목록 조회 또는 검색하여 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping("/{userId}/note")
-    public ResponseEntity<?> findUserAllNotes(
+    public ResponseEntity<?> findFriendAllNotes(
             @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.") @PathVariable Long userId,
             @Parameter(description = "검색하고자 하는 단어를 입력해주세요. 없다면 입력하지 않습니다.") @RequestParam(required = false) String keyword
     ) {
-        return noteService.getNoteList(userPrincipal, userId, keyword);
+        return noteService.getFriendNoteList(userPrincipal, userId, keyword);
     }
 
     @Operation(summary = "친구 추가 - 검색", description = "사용자 전체를 대상으로 단어를 검색하여 조회합니다.")
