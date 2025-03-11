@@ -44,7 +44,6 @@ public class NoteService {
         // User user = validUserById(userPrincipal.getId());
         User user = validUserById(1L);
         Book book = validBookById(createNoteReq.getBookId());
-
         UserBook userBook;
         // user_book에 없으면 생성
         Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
@@ -60,14 +59,13 @@ public class NoteService {
             int noteLimit = noteRepository.countByUserBook(userBook);
             DefaultAssert.isTrue(noteLimit < 10, "한 책당 생성할 수 있는 노트의 최대 개수는 10개입니다.");
         }
-
         Note note = Note.builder()
                 .title(createNoteReq.getTitle())
                 .content(createNoteReq.getContent())
                 .userBook(userBook)
+                .locked(createNoteReq.isLocked())
                 .build();
         noteRepository.save(note);
-
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(Message.builder().message("기록이 저장되었습니다.")
@@ -83,9 +81,11 @@ public class NoteService {
         User user = validUserById(1L);
         Note note = validNoteById(noteId);
         DefaultAssert.isTrue(note.getUserBook().getUser() == user, "유효한 접근이 아닙니다.");
-
-        note.updateNote(updateNoteReq.getTitle(), updateNoteReq.getContent());
-
+        if (updateNoteReq.getTitle() != null || updateNoteReq.getContent() != null) {
+            note.updateNote(updateNoteReq.getTitle(), updateNoteReq.getContent());
+        } else if (updateNoteReq.getLocked() != null) {
+            note.updateLocked(updateNoteReq.getLocked());
+        }
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(Message.builder()
@@ -154,14 +154,15 @@ public class NoteService {
         // User user = validUserById(userPrincipal.getId());
         User user = validUserById(1L);
         Note note = validNoteById(noteId);
-        DefaultAssert.isTrue(note.getUserBook().getUser() == user, "유효한 접근이 아닙니다.");
-
+        // DefaultAssert.isTrue(note.getUserBook().getUser() == user, "유효한 접근이 아닙니다.");
+        User owner = note.getUserBook().getUser();
+        DefaultAssert.isTrue(owner==user || !note.isLocked(), "유효한 접근이 아닙니다.");
         NoteDetailRes noteDetailRes = NoteDetailRes.builder()
                 .title(note.getTitle())
                 .content(note.getContent())
                 .createdDate(note.getCreatedAt().toLocalDate().toString())
+                .locked(note.isLocked())
                 .build();
-
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(noteDetailRes)
@@ -190,18 +191,17 @@ public class NoteService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    public ResponseEntity<?> getNoteList(UserPrincipal userPrincipal, Long userId, String keyword) {
+    // 마이페이지 기록 전체보기
+    public ResponseEntity<?> getMyNoteList(UserPrincipal userPrincipal, String keyword) {
         // User user = validUserById(userPrincipal.getId());
         User user = validUserById(1L);
-        User targetUser = validUserById(userId);
         List<UserBook> userBooks;
         if (keyword == null) {
-            userBooks = userBookRepository.findByUser(targetUser);
+            userBooks = userBookRepository.findByUser(user);
         } else {
-            userBooks = userBookRepository.findByUserAndBookTitleLike(targetUser, keyword);
+            userBooks = userBookRepository.findByUserAndBookTitleLike(user, keyword);
         }
         List<Note> notes = noteRepository.findByUserBookInOrderByCreatedAtDesc(userBooks);
-
         List<OtherUserNoteListRes> noteListRes = notes.stream()
                 .map(note -> {
                     Book book = note.getUserBook().getBook();
@@ -218,6 +218,35 @@ public class NoteService {
                         .check(true)
                         .information(noteListRes)
                         .build());
+    }
+
+    public ResponseEntity<?> getFriendNoteList(UserPrincipal userPrincipal, Long userId, String keyword) {
+        // User user = validUserById(userPrincipal.getId());
+        User user = validUserById(1L);
+        User targetUser = validUserById(userId);
+        List<UserBook> userBooks;
+        if (keyword == null) {
+            userBooks = userBookRepository.findByUser(targetUser);
+        } else {
+            userBooks = userBookRepository.findByUserAndBookTitleLike(targetUser, keyword);
+        }
+        List<Note> notes = noteRepository.findByUserBookInAndLockedOrderByCreatedAtDesc(userBooks, false);
+        List<OtherUserNoteListRes> noteListRes = notes.stream()
+                .map(note -> {
+                    Book book = note.getUserBook().getBook();
+                    return OtherUserNoteListRes.builder()
+                            .bookId(book.getBookId())
+                            .cover(book.getImage())
+                            .title(book.getTitle())
+                            .author(book.getAuthor())
+                            .publisher(book.getPublisher())
+                            .build();
+                })
+                .toList();
+        return ResponseEntity.ok(ApiResponse.builder()
+                .check(true)
+                .information(noteListRes)
+                .build());
     }
 
     private User validUserById(Long userId) {

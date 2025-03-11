@@ -43,7 +43,7 @@ public class NoteController {
         return noteService.saveNewNote(userPrincipal, createNoteReq);
     }
 
-    @Operation(summary = "독서 노트 수정", description = "독서 노트를 수정합니다.")
+    @Operation(summary = "독서 노트 수정", description = "독서 노트의 제목과 내용, 공개 여부를 수정합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "수정 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "수정 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),

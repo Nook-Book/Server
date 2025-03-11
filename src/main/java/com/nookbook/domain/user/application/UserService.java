@@ -117,8 +117,6 @@ public class UserService {
         return ResponseEntity.ok(apiResponse);
     }
 
-
-    // 아이디 수정
     @Transactional
     public ResponseEntity<?> updateNicknameId(UserPrincipal userPrincipal, NicknameIdCheckReq nicknameIdCheckReq) {
         // User user = validUserByUserId(userPrincipal.getId());
@@ -127,9 +125,7 @@ public class UserService {
         boolean isAvailable = checkDuplicateNicknameId(nicknameId);
 
         DefaultAssert.isTrue(isAvailable, "이미 사용중인 아이디입니다.");
-
         user.updateNicknameId(nicknameId);
-
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(Message.builder().message("아이디가 변경되었습니다.").build())
@@ -137,7 +133,6 @@ public class UserService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    // 닉네임 수정
     @Transactional
     public ResponseEntity<?> updateNickname(UserPrincipal userPrincipal, NicknameCheckReq nicknameCheckReq) {
         // User user = validUserByUserId(userPrincipal.getId());
@@ -146,9 +141,7 @@ public class UserService {
         boolean isAvailable = checkDuplicateNickname(nickname);
 
         DefaultAssert.isTrue(isAvailable, "이미 사용중인 닉네임입니다.");
-
         user.updateNickname(nickname);
-
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(Message.builder().message("닉네임이 변경되었습니다.").build())
@@ -164,7 +157,6 @@ public class UserService {
         return !userRepository.existsByNickname(nickname);
     }
 
-    // 정보 조회
     public ResponseEntity<ApiResponse> getUserInfo(UserPrincipal userPrincipal, Long userId) {
         // User user = validUserByUserId(userPrincipal.getId());
         User user = validUserByUserId(1L);
@@ -198,8 +190,6 @@ public class UserService {
         }).orElse("NONE");
     }
 
-
-    // 프로필 사진 등록
     @Transactional
     public ResponseEntity<?> updateImage(UserPrincipal userPrincipal, Boolean isDefaultImage, Optional<MultipartFile> image) {
         // User user = validUserByUserId(userPrincipal.getId());
@@ -207,7 +197,6 @@ public class UserService {
         if (!Objects.equals(user.getImageName(), "default.png")) {
             s3Uploader.deleteFile(user.getImageName());
         }
-
         String imageName;
         String imageUrl;
         if (isDefaultImage && image.isEmpty()) {
@@ -218,7 +207,6 @@ public class UserService {
             imageUrl = s3Uploader.getFullPath(imageName);
         }
         user.updateImage(imageName, imageUrl);
-
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(Message.builder().message("프로필 이미지가 변경되었습니다.").build())
