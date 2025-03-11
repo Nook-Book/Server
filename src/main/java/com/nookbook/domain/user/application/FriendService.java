@@ -30,7 +30,6 @@ public class FriendService {
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
 
-    // 검색
     public ResponseEntity<?> searchUsers(UserPrincipal userPrincipal, String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         User user = validUserByUserId(1L);
@@ -162,8 +161,7 @@ public class FriendService {
                 .build());
     }
 
-
-    // 사용자의 친구 목록 조회
+    // 친구 목록 조회
     public List<Friend> getFriends(User user) {
         // User user = validUserByUserId(userPrincipal.getId());
         return friendRepository.findAcceptedFriends(user);

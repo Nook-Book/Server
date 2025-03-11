@@ -394,8 +394,6 @@ public class BookService {
         return ResponseEntity.ok(response);
     }
 
-    // 독서 캘린더
-
     private User validUserById(Long userId) {
         // Optional<User> userOptional = userRepository.findById(userId);
         Optional<User> userOptional = userRepository.findById(userId);

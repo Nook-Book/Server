@@ -122,7 +122,7 @@ public class MyPageController {
         return userService.getUserInfo(userPrincipal, userId);
     }
 
-    @Operation(summary = "[마이페이지] 기록 전체보기 목록 조회 및 검색", description = "마이페이지(사용자 본인)의 기록 전체보기 목록 조회 또는 검색하여 조회합니다.")
+    @Operation(summary = "[마이페이지] 내 기록 전체보기 목록 조회 및 검색", description = "마이페이지(사용자 본인)의 기록 전체보기 목록 조회 또는 검색하여 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
