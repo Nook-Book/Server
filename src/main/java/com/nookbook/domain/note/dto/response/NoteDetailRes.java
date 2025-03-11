@@ -18,10 +18,14 @@ public class NoteDetailRes {
     @Schema(type = "String", example = "2024-08-30", description = "독서 기록의 작성일")
     private String createdDate;
 
+    @Schema(type = "boolean", example = "true", description = "독서 기록의 비공개 여부. true: 비공개 / false: 공개")
+    private boolean locked;
+
     @Builder
-    public NoteDetailRes(String title, String content, String createdDate) {
+    public NoteDetailRes(String title, String content, String createdDate, boolean locked) {
         this.title = title;
         this.content = content;
         this.createdDate = createdDate;
+        this.locked = locked;
     }
 }

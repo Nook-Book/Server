@@ -16,4 +16,7 @@ public class CreateNoteReq {
 
     @Schema(type = "String", example = "책에서 말하길 몰입을 잘하려면 첫번째로", description = "독서 기록의 내용")
     private String content;
+
+    @Schema(type = "boolean", example = "true", description = "독서 기록의 비공개 여부. true: 비공개 / false: 공개")
+    private boolean locked;
 }
