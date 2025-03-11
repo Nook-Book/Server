@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -166,6 +168,22 @@ public class TimerService {
         Optional<User> userOptional = userRepository.findById(1L);
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
         return userOptional.get();
+    }
+
+    public List<Timer> getTimerListByDate(User user, LocalDate localDate) {
+        return timerRepository.findByUserAndCreatedAt(user, localDate);
+    }
+
+    public String sumTotalReadTime(List<Timer> timerList) {
+        if (timerList == null || timerList.isEmpty()) {
+            return "00:00:00"; // 기본값 반환
+        }
+
+        BigInteger totalTime = timerList.stream()
+                .map(timer -> Optional.ofNullable(timer.getReadTime()).orElse(BigInteger.ZERO)) // null 값 방지
+                .reduce(BigInteger.ZERO, BigInteger::add);
+
+        return convertBigIntegerToString(totalTime);
     }
 
 }
