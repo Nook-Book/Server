@@ -27,15 +27,22 @@ public class Note extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    private boolean locked;
+
     @Builder
-    public Note(UserBook userBook, String title, String content) {
+    public Note(UserBook userBook, String title, String content, boolean locked) {
         this.userBook = userBook;
         this.title = title;
         this.content = content;
+        this.locked = locked;
     }
 
     public void updateNote(String title, String content) {
         this.title = title;
         this.content = content;
+    }
+
+    public void updateLocked(boolean locked) {
+        this.locked = locked;
     }
 }
