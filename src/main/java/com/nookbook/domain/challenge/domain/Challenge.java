@@ -51,13 +51,16 @@ public class Challenge extends BaseEntity {
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants;
 
+    @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Invitation> invitations;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
 
     @Builder
-    public Challenge(String title, String challengeCover, LocalDate startDate, LocalDate endDate, Integer dailyGoal, LocalTime startTime, LocalTime endTime, ChallengeStatus challengeStatus, List<Participant> participants, User owner) {
+    public Challenge(String title, String challengeCover, LocalDate startDate, LocalDate endDate, Integer dailyGoal, LocalTime startTime, LocalTime endTime, ChallengeStatus challengeStatus, User owner) {
         this.title = title;
         this.challengeCover = challengeCover;
         this.startDate = startDate;
@@ -67,6 +70,7 @@ public class Challenge extends BaseEntity {
         this.endTime = endTime;
         this.challengeStatus = challengeStatus;
         this.participants = new ArrayList<>();
+        this.invitations = new ArrayList<>();
         this.owner = owner;
     }
 
