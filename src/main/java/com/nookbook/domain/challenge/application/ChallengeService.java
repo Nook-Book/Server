@@ -94,7 +94,6 @@ public class ChallengeService {
                 .startTime(challengeCreateReq.getStartTime())
                 .endTime(challengeCreateReq.getEndTime())
                 .challengeStatus(challengeStatus)
-                .participants(new ArrayList<>())
                 .owner(user)
                 .build();
 
