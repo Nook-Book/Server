@@ -1,6 +1,7 @@
 package com.nookbook.domain.user_book.domain.repository;
 
 import com.nookbook.domain.book.domain.Book;
+import com.nookbook.domain.timer.domain.Timer;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user_book.domain.BookStatus;
 import com.nookbook.domain.user_book.domain.UserBook;
@@ -9,11 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Repository
