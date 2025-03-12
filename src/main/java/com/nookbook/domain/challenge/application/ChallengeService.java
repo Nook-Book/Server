@@ -10,8 +10,6 @@ import com.nookbook.domain.challenge.domain.repository.ParticipantRepository;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
 import com.nookbook.domain.challenge.dto.response.*;
 import com.nookbook.domain.challenge.exception.*;
-import com.nookbook.domain.common.BaseEntity;
-import com.nookbook.domain.timer.application.TimerService;
 import com.nookbook.domain.timer.domain.Timer;
 import com.nookbook.domain.timer.domain.repository.TimerRepository;
 import com.nookbook.domain.user.application.FriendService;
@@ -21,15 +19,10 @@ import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user.exception.UserNotFoundException;
-import com.nookbook.domain.user_book.domain.UserBook;
-import com.nookbook.domain.user_book.domain.repository.UserBookRepository;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -287,7 +280,7 @@ public class ChallengeService {
         // 읽고 있는지 여부, 읽은 시간
         boolean isReading = timer.isReading();
         // 오늘 타이머 목록의 시간 합
-        String readTime = timerRepository.sumTotalReadTime(todayTimers);
+        String readTime = convertStringToHHMMSS(timerRepository.sumTotalReadTime(todayTimers));
 
         return ParticipantStatusListRes.builder()
                 .participantId(participant.getParticipantId()) // 참가자 ID
@@ -655,5 +648,17 @@ public class ChallengeService {
                 .orElseThrow(BookNotFoundException::new);
     }
 
+    private String convertStringToHHMMSS(String time) {
+        // "120" -> "00:02:00"
+        if (time == null) {
+            return "00:00:00";
+        }
+        long totalSeconds = Long.parseLong(time);
+        long hours = totalSeconds / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+        // "HH:mm:ss" 형식으로 반환
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
 
+    }
 }
