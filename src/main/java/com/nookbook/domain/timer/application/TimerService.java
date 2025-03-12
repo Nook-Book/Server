@@ -147,9 +147,6 @@ public class TimerService {
     }
 
 
-    public List<Timer> getTodayTimers(UserBook userBook) {
-        return timerRepository.findByUserBookAndCreatedAtAfter(userBook, userBook.getCreatedAt().toLocalDate().atStartOfDay());
-    }
 
     private Book validBookById(Long bookId) {
         Optional<Book> bookOptional = bookRepository.findById(bookId);
