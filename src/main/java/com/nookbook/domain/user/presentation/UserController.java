@@ -6,6 +6,7 @@ import com.nookbook.domain.user.dto.request.NicknameCheckReq;
 import com.nookbook.domain.user.dto.request.UserInfoReq;
 import com.nookbook.domain.user.dto.response.NicknameCheckRes;
 import com.nookbook.domain.user.dto.response.NicknameIdCheckRes;
+import com.nookbook.domain.user.dto.response.UserExistsRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;
@@ -22,6 +23,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+import java.util.Map;
+
 @Tag(name = "User", description = "User API")
 @RestController
 @RequiredArgsConstructor
@@ -29,6 +33,16 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+
+    @Operation(summary = "기존 사용자 여부 확인", description = "기존에 가입된 사용자인지 확인합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "사용자 존재 여부 확인 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = UserExistsRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "사용자 존재 여부 확인 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/exists")
+    public ResponseEntity<?> checkUserExists(@CurrentUser UserPrincipal userPrincipal) {
+        return userService.checkUserExists(userPrincipal);
+    }
 
     // 회원가입 과정 (초기에만 이루어지므로, 기본 컬렉션 로직 포함)
     @Operation(summary = "사용자 정보 등록", description = "사용자가 설정한 정보를 등록합니다.")
