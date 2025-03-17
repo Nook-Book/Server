@@ -216,7 +216,8 @@ public class UserService {
     }
 
     public ResponseEntity<?> checkUserExists(UserPrincipal userPrincipal) {
-        Boolean isRegistered = userRepository.existsByEmail(userPrincipal.getEmail());
+        // UserPrincipal이 null이면 회원가입이 안된 상태
+        boolean isRegistered = userPrincipal != null;
 
         UserExistsRes userExistsRes = UserExistsRes.builder()
                 .isRegistered(isRegistered)
