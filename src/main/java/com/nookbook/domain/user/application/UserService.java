@@ -6,6 +6,7 @@ import com.nookbook.domain.collection.domain.repository.CollectionRepository;
 import com.nookbook.domain.user.domain.Friend;
 import com.nookbook.domain.user.domain.FriendRequestStatus;
 import com.nookbook.domain.user.domain.repository.FriendRepository;
+import com.nookbook.domain.user.dto.response.UserExistsRes;
 import com.nookbook.infrastructure.s3.S3Uploader;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
@@ -214,6 +215,21 @@ public class UserService {
         return ResponseEntity.ok(apiResponse);
     }
 
+    public ResponseEntity<?> checkUserExists(UserPrincipal userPrincipal) {
+        Boolean isRegistered = userRepository.existsByEmail(userPrincipal.getEmail());
+
+        UserExistsRes userExistsRes = UserExistsRes.builder()
+                .isRegistered(isRegistered)
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(userExistsRes)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
     private User validUserByUserId(Long userId) {
         Optional<User> user = userRepository.findById(userId);
         DefaultAssert.isTrue(user.isPresent(), "사용자가 존재하지 않습니다.");
@@ -223,4 +239,5 @@ public class UserService {
     public User findById(long l) {
         return userRepository.findById(l).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
     }
+
 }
