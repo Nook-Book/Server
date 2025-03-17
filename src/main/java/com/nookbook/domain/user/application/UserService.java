@@ -216,8 +216,7 @@ public class UserService {
     }
 
     public ResponseEntity<?> checkUserExists(UserPrincipal userPrincipal) {
-        // Boolean isRegistered = userRepository.existsByEmail(userPrincipal.getEmail());
-        Boolean isRegistered = userRepository.existsByEmail("user01@gmail.com");
+        Boolean isRegistered = userRepository.existsByEmail(userPrincipal.getEmail());
 
         UserExistsRes userExistsRes = UserExistsRes.builder()
                 .isRegistered(isRegistered)
