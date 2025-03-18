@@ -1,5 +1,6 @@
 package com.nookbook.domain.timer.domain.repository;
 
+import com.nookbook.domain.challenge.domain.Participant;
 import com.nookbook.domain.timer.domain.Timer;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user_book.domain.UserBook;
@@ -32,4 +33,11 @@ public interface TimerRepository extends JpaRepository<Timer, Long> {
 
     @Query("SELECT t FROM Timer t WHERE t.userBook.user = :user AND FUNCTION('DATE', t.createdAt) = :localDate")
     List<Timer> findByUserAndCreatedAt(User user, LocalDate localDate);
+
+    @Query("SELECT t FROM Timer t WHERE t IN :todayTimers ORDER BY t.createdAt DESC LIMIT 1")
+    Timer findRecentTimer(@Param("todayTimers") List<Timer> todayTimers);
+
+    @Query("SELECT SUM(t.readTime) FROM Timer t WHERE t IN :todayTimers")
+    String sumTotalReadTime(@Param("todayTimers") List<Timer> todayTimers);
+
 }

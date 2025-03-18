@@ -10,9 +10,8 @@ import com.nookbook.domain.challenge.domain.repository.ParticipantRepository;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
 import com.nookbook.domain.challenge.dto.response.*;
 import com.nookbook.domain.challenge.exception.*;
-import com.nookbook.domain.common.BaseEntity;
-import com.nookbook.domain.timer.application.TimerService;
 import com.nookbook.domain.timer.domain.Timer;
+import com.nookbook.domain.timer.domain.repository.TimerRepository;
 import com.nookbook.domain.user.application.FriendService;
 import com.nookbook.domain.user.domain.Friend;
 import com.nookbook.infrastructure.s3.S3Uploader;
@@ -20,14 +19,10 @@ import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user.exception.UserNotFoundException;
-import com.nookbook.domain.user_book.domain.UserBook;
-import com.nookbook.domain.user_book.domain.repository.UserBookRepository;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -52,11 +48,10 @@ public class ChallengeService {
     private final InvitationRepository invitationRepository;
     private final InvitationService invitationService;
     private final S3Uploader s3Uploader;
-    private final UserBookRepository userBookRepository;
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
     private final FriendService friendService;
-    private final TimerService timerService;
+    private final TimerRepository timerRepository;
 
     // 챌린지 생성
     @Transactional
@@ -99,7 +94,6 @@ public class ChallengeService {
                 .startTime(challengeCreateReq.getStartTime())
                 .endTime(challengeCreateReq.getEndTime())
                 .challengeStatus(challengeStatus)
-                .participants(new ArrayList<>())
                 .owner(user)
                 .build();
 
@@ -206,7 +200,7 @@ public class ChallengeService {
         Challenge challenge = validateChallenge(challengeId);
 
         Boolean isEditable = challenge.getOwner().equals(user);
-        List<ParticipantStatusListRes> participants = getParticipantStatusList(user, challenge);
+        List<ParticipantStatusListRes> participants = getParticipantStatusList(challenge);
 
         // 챌린지 총 시간 계산
         int totalDate  = (int) (challenge.getEndDate().toEpochDay() - challenge.getStartDate().toEpochDay());
@@ -242,61 +236,73 @@ public class ChallengeService {
 
 
     // 참여자 정보 조회
-    public List<ParticipantStatusListRes> getParticipantStatusList(User user, Challenge challenge) {
+    public List<ParticipantStatusListRes> getParticipantStatusList(Challenge challenge) {
+        // 챌린지에 참가하고 있는 참가자 목록
         List<Participant> participants = participantRepository.findAllByChallenge(challenge);
-        // 오늘 생성된 userBook 기록 조회
-        UserBook userBook = userBookRepository.findByUserAndCreatedAtAfter(user, LocalDate.now().atStartOfDay())
-                .orElse(null);
+        log.info("participants: {}", participants);
+        List<ParticipantStatusListRes> participantStatusListRes = new ArrayList<>();
+        // 각 참가자에 대한 오늘 생성된 userBook 기록 조회
+        for(Participant participant : participants) {
 
-        if(userBook == null) {
-            return EmptyTodayUserBook(participants);
+            User participantUser = participant.getUser();
+            log.info ("participantUser: {}", participantUser.getUserId());
+
+//            List<UserBook> userBooks = userBookRepository.findUserBookListByDate(participantUser, LocalDate.now());
+//            log.info("userBooks: {}", userBooks);
+
+
+            participantStatusListRes.add(getParticipantStatus(participant));
+            log.info("participantStatusListRes: {}", participantStatusListRes);
+
         }
 
-        Book book = validateBook(userBook.getBook().getBookId());
+        return participantStatusListRes;
 
-        // 오늘 타이머 기록 조회
-        List<Timer> todayTimers = timerService.getTodayTimers(userBook);
-
-        // 가장 최근의 타이머 조회
-        Timer timer = todayTimers.stream()
-                .max(Comparator.comparing(BaseEntity::getCreatedAt))
-                .orElse(null);
-
-        // 읽고 있는지 여부, 읽은 시간
-        boolean isReading = timer != null && timer.isReading();
-        BigInteger readTime = timer != null ? timer.getReadTime() : BigInteger.ZERO;
-
-        // 읽은 시간을 문자열로 변환
-        String readTimeString = timerService.convertBigIntegerToString(readTime);
-
-        // 참여자 목록 조회 응답 객체 build & return
-
-        return participants.stream()
-                .map(participant -> ParticipantStatusListRes.builder()
-                        .participantId(participant.getParticipantId()) // 참가자 ID
-                        .nickname(participant.getUser().getNickname()) // 참가자 닉네임
-                        .readingBookTitle(book.getTitle()) // 읽고 있는 책 제목
-                        .readingBookImage(book.getImage()) // 읽고 있는 책 이미지
-                        .participantImage(participant.getUser().getImageUrl()) // 참가자 이미지
-                        .isReading(isReading) // 실시간 독서 진행 여부
-                        .dailyReadingTime(readTimeString) // 가장 최근의 독서 시간
-                        .build())
-                .toList();
     }
 
-    // 오늘 userBook 기록이 없는 경우의 응답
-    private List<ParticipantStatusListRes> EmptyTodayUserBook(List<Participant> participants) {
-        return participants.stream()
-                .map(participant -> ParticipantStatusListRes.builder()
-                        .participantId(participant.getParticipantId()) // 참가자 ID
-                        .nickname(participant.getUser().getNickname()) // 참가자 닉네임
-                        .readingBookTitle("") // 읽고 있는 책 제목
-                        .readingBookImage("") // 읽고 있는 책 이미지
-                        .participantImage(participant.getUser().getImageUrl()) // 참가자 이미지
-                        .isReading(false) // 실시간 독서 진행 여부
-                        .dailyReadingTime("00:00:00") // 가장 최근의 독서 시간
-                        .build())
-                .toList();
+    // UserBook: 사용자가 오늘 기록한 책
+    private ParticipantStatusListRes getParticipantStatus(Participant participant) {
+
+        // 해당 참가자의 오늘 타이머 목록 조회
+        List<Timer> todayTimers = timerRepository.findByUserAndCreatedAt(participant.getUser(), LocalDate.now());
+        log.info("todayTimers: {}", todayTimers);
+        // 오늘 타이머 기록이 없는 경우
+        if(todayTimers.isEmpty()) {
+            log.info("오늘 기준의 타이머 기록이 존재하지 않습니다.");
+            return EmptyTodayTimer(participant);
+        }
+
+        // 가장 최근의 타이머 조회
+        Timer timer = timerRepository.findRecentTimer(todayTimers);
+        // 가장 최근의 타이머의 UserBook 조회
+        Book recentBook = timer.getUserBook().getBook();
+        // 읽고 있는지 여부, 읽은 시간
+        boolean isReading = timer.isReading();
+        // 오늘 타이머 목록의 시간 합
+        String readTime = convertStringToHHMMSS(timerRepository.sumTotalReadTime(todayTimers));
+
+        return ParticipantStatusListRes.builder()
+                .participantId(participant.getParticipantId()) // 참가자 ID
+                .nickname(participant.getUser().getNickname()) // 참가자 닉네임
+                .readingBookTitle(recentBook.getTitle()) // 읽고 있는 책 제목
+                .readingBookImage(recentBook.getImage()) // 읽고 있는 책 이미지
+                .participantImage(participant.getUser().getImageUrl()) // 참가자 이미지
+                .isReading(isReading) // 실시간 독서 진행 여부
+                .dailyReadingTime(readTime) // 가장 최근의 독서 시간
+                .build();
+    }
+
+    // 오늘 타이머 기록이 없는 경우의 응답
+    private ParticipantStatusListRes EmptyTodayTimer(Participant participant) {
+        return ParticipantStatusListRes.builder()
+                .participantId(participant.getParticipantId()) // 참가자 ID
+                .nickname(participant.getUser().getNickname()) // 참가자 닉네임
+                .readingBookTitle("") // 읽고 있는 책 제목
+                .readingBookImage("") // 읽고 있는 책 이미지
+                .participantImage(participant.getUser().getImageUrl()) // 참가자 이미지
+                .isReading(false) // 실시간 독서 진행 여부
+                .dailyReadingTime("00:00:00") // 가장 최근의 독서 시간
+                .build();
     }
 
 
@@ -451,15 +457,15 @@ public class ChallengeService {
 
         List<ParticipantRes> participantResList = participants.stream()
                 .map(participant -> ParticipantRes.builder()
-                        .participantId(participant.getParticipantId())
-                        .participantNickname((participant.getUser().getNickname()))
-                        .participantImage(participant.getUser().getImageUrl())
-                        .role(participantService.getParticipantRole(participant, owner))
+                        .participantId(participant.getParticipantId()) // 참가자 ID
+                        .participantNickname((participant.getUser().getNickname())) // 참가자 닉네임
+                        .participantImage(participant.getUser().getImageUrl()) // 참가자 프로필 이미지
+                        .role(participantService.getParticipantRole(participant, owner)) // 참가자의 방장 여부
                         .build())
                 .toList();
 
         ParticipantListRes participantListRes = ParticipantListRes.builder()
-                .isOwner(challenge.getOwner().equals(user))
+                .isOwner(challenge.getOwner().equals(user)) // 요청자의 방장 여부
                 .participantList(participantResList)
                 .build();
 
@@ -641,5 +647,17 @@ public class ChallengeService {
                 .orElseThrow(BookNotFoundException::new);
     }
 
+    private String convertStringToHHMMSS(String time) {
+        // "120" -> "00:02:00"
+        if (time == null) {
+            return "00:00:00";
+        }
+        long totalSeconds = Long.parseLong(time);
+        long hours = totalSeconds / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+        // "HH:mm:ss" 형식으로 반환
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
 
+    }
 }
