@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,7 +49,7 @@ public class TimerService {
         timerRepository.turnOffReadingTimers(userBook);
         Timer timer = Timer.builder()
                 .userBook(userBook)
-                .readTime(null)
+                .readTime(BigInteger.valueOf(0))
                 .isReading(true)
                 .build();
         timerRepository.save(timer);
@@ -67,7 +66,7 @@ public class TimerService {
         Book book = validBookById(bookId);
         Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
         UserBook userBook = userBookOptional.get();
-        plusTotalReadTime(userBook, userBook.getTotalReadTime(), createTimerReq.getTime());
+        plusTotalReadTime(userBook, createTimerReq.getTime());
         if (timerRepository.countByUserBook(userBook) >= 10) {
             deleteOldestTimer(userBook);
         }
@@ -87,9 +86,8 @@ public class TimerService {
         timerRepository.delete(oldestTimer);
     }
 
-    private void plusTotalReadTime(UserBook userBook, BigInteger totalTime, BigInteger additionalTime) {
-        BigInteger combinedTime = totalTime.add(additionalTime);
-        userBook.updateTotalReadTime(combinedTime);
+    public void plusTotalReadTime(UserBook userBook, BigInteger additionalTime) {
+        userBook.addTotalReadTime(additionalTime);
     }
 
     public String convertBigIntegerToString(BigInteger time) {
@@ -182,5 +180,4 @@ public class TimerService {
 
         return convertBigIntegerToString(totalTime);
     }
-
 }
