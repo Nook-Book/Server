@@ -52,5 +52,5 @@ public class UserBook extends BaseEntity {
 
     public void updateBookStatus(BookStatus bookStatus) { this.bookStatus = bookStatus; }
 
-    public void updateTotalReadTime(BigInteger totalReadTime) { this.totalReadTime = totalReadTime; }
+    public void addTotalReadTime(BigInteger totalReadTime) { this.totalReadTime = this.totalReadTime.add(totalReadTime); }
 }
