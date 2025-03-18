@@ -16,8 +16,7 @@ public class TimerBatchJobLauncher {
     private final JobLauncher jobLauncher;
     private final Job updateTimerJob;
 
-    //@Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
-    @Scheduled(cron = "0 0/1 * * * ?") // 매분 0초에 실행
+    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
     public void runBatchJob() {
         try {
             JobParameters jobParameters = new JobParametersBuilder()
