@@ -15,9 +15,9 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-
-
-# 오류 처리
+  batch:
+    jdbc:
+      initialize-schema: always
 server:
   error:
     include-exception: true
