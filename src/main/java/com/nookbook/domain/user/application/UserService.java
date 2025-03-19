@@ -54,8 +54,7 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> saveUserInfo(UserPrincipal userPrincipal, UserInfoReq userInfoReq) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(2L);
+        User user = validUserByUserId(userPrincipal.getId());
         user.saveUserInfo(userInfoReq.getNicknameId(), userInfoReq.getNickname());
         createDefaultCollection(user);
 
@@ -84,8 +83,7 @@ public class UserService {
 
 
     public ResponseEntity<?> checkNicknameId(UserPrincipal userPrincipal, NicknameIdCheckReq nicknameIdCheckReq) {
-        // validUserByUserId(userPrincipal.getId());
-        validUserByUserId(1L);
+        validUserByUserId(userPrincipal.getId());
         boolean isUnique = checkDuplicateNicknameId(nicknameIdCheckReq.getNicknameId());
 
         NicknameIdCheckRes nicknameIdCheckRes = NicknameIdCheckRes.builder()
@@ -102,8 +100,7 @@ public class UserService {
     }
 
     public ResponseEntity<?> checkNickname(UserPrincipal userPrincipal, NicknameCheckReq nicknameCheckReq) {
-        // validUserByUserId(userPrincipal.getId());
-        validUserByUserId(1L);
+        validUserByUserId(userPrincipal.getId());
         boolean isUnique = checkDuplicateNickname(nicknameCheckReq.getNickname());
 
         NicknameCheckRes nicknameCheckRes = NicknameCheckRes.builder()
@@ -120,8 +117,7 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> updateNicknameId(UserPrincipal userPrincipal, NicknameIdCheckReq nicknameIdCheckReq) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         String nicknameId = nicknameIdCheckReq.getNicknameId();
         boolean isAvailable = checkDuplicateNicknameId(nicknameId);
 
@@ -136,8 +132,7 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> updateNickname(UserPrincipal userPrincipal, NicknameCheckReq nicknameCheckReq) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         String nickname = nicknameCheckReq.getNickname();
         boolean isAvailable = checkDuplicateNickname(nickname);
 
@@ -159,8 +154,7 @@ public class UserService {
     }
 
     public ResponseEntity<ApiResponse> getUserInfo(UserPrincipal userPrincipal, Long userId) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         User targetUser = userId != null ? validUserByUserId(userId) : user;
 
         int num = friendRepository.countBySenderOrReceiverAndFriendRequestStatus(targetUser, FriendRequestStatus.FRIEND_ACCEPT);
@@ -193,8 +187,7 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> updateImage(UserPrincipal userPrincipal, Boolean isDefaultImage, Optional<MultipartFile> image) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         if (!Objects.equals(user.getImageName(), "default.png")) {
             s3Uploader.deleteFile(user.getImageName());
         }
