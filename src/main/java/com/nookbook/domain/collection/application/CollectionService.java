@@ -45,6 +45,7 @@ public class CollectionService {
     public ResponseEntity<?> createCollection(UserPrincipal userPrincipal, CollectionCreateReq collectionCreateReq) {
         User user = validateUser(userPrincipal);
         // 사용자의 마지막 컬렉션 순서를 가져와서 새로운 순서를 지정
+        // 컬렉션 순서는 1부터 시작
         long maxOrderIndex = collectionRepository.findMaxOrderIndexByUser(user).orElse(1L);
 
         Collection collection = Collection.builder()
@@ -341,9 +342,7 @@ public class CollectionService {
 
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
-//        return userService.findByEmail(userPrincipal.getEmail())
-//                .orElseThrow(UserNotFoundException::new);
-        // userId=2L로 고정
-        return userService.findById(1L);
+        return userService.findByEmail(userPrincipal.getEmail())
+                .orElseThrow(UserNotFoundException::new);
     }
 }
