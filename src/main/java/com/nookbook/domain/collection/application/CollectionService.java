@@ -71,6 +71,17 @@ public class CollectionService {
         User user = validateUser(userPrincipal);
         List<Collection> collections = collectionRepository.findAllByUser(user);
 
+        if(collections.isEmpty()){
+            ApiResponse response = ApiResponse.builder()
+                    .check(true)
+                    .information(CollectionListRes.builder()
+                            .totalCollections(0L)
+                            .collectionListDetailRes(new ArrayList<>())
+                            .build())
+                    .build();
+            return ResponseEntity.ok(response);
+        }
+
         List<CollectionListDetailRes> collectionListDetailRes = collections.stream()
                 .map(collection -> {
                     // 컬렉션에 속한 도서 중 최근 추가된 4권의 표지 이미지 리스트
@@ -288,6 +299,19 @@ public class CollectionService {
 
         // 유저의 컬렉션 중 CollectionStatus.MAIN인 컬렉션을 찾아 도서 목록 조회
         List<Collection> mainCollections = collectionRepository.findAllByUserAndCollectionStatus(user, CollectionStatus.MAIN);
+
+        // MAIN 컬렉션이 없다면 빈 컬렉션 리스트 반환
+
+        if(mainCollections.isEmpty()){
+            ApiResponse response = ApiResponse.builder()
+                    .check(true)
+                    .information(MainCollectionListRes.builder()
+                            .totalCollections(0)
+                            .mainCollectionListDetailRes(new ArrayList<>())
+                            .build())
+                    .build();
+            return ResponseEntity.ok(response);
+        }
 
         // 순서대로 정렬
         mainCollections.sort((a, b) -> (int) (a.getOrderIndex() - b.getOrderIndex()));
