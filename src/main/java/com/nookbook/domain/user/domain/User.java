@@ -62,7 +62,7 @@ public class User extends BaseEntity {
         this.nickname = nickname;
         this.provider = provider;
         this.providerId = providerId;
-        this.role = role;
+        this.role = Role.USER;
     }
 
     public void saveUserInfo(String nicknameId, String nickname) {

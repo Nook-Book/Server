@@ -3,6 +3,7 @@ package com.nookbook.global.config.security.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +30,8 @@ public class JwtTokenUtil {
 
     private SecretKey getSigningKey() {
         // Secret Key를 바이트 배열로 변환하고 HMAC SHA-256 키 생성
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(Map<String, Object> claims, String email) {

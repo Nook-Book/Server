@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
@@ -31,14 +32,14 @@ public class CustomTokenProviderService {
         Date accessTokenExpiresIn = new Date(now.getTime() + oAuth2Config.getAuth().getAccessTokenExpirationMsec());
 
         String secretKey = oAuth2Config.getAuth().getTokenSecret();
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        Key key = Keys.hmacShaKeyFor(keyBytes);
+        Key key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+
 
         String accessToken = Jwts.builder()
                 .setSubject(userPrincipal.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(accessTokenExpiresIn)
-                .signWith(key, SignatureAlgorithm.HS512)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
         return TokenMapping.builder()
@@ -56,20 +57,20 @@ public class CustomTokenProviderService {
         Date accessTokenExpiresIn = new Date(now.getTime() + oAuth2Config.getAuth().getAccessTokenExpirationMsec());
         Date refreshTokenExpiresIn = new Date(now.getTime() + oAuth2Config.getAuth().getRefreshTokenExpirationMsec());
 
-        String secretKey = oAuth2Config.getAuth().getTokenSecret();
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        String base64SecretKey = oAuth2Config.getAuth().getTokenSecret();
+        byte[] keyBytes = Decoders.BASE64.decode(base64SecretKey);
         Key key = Keys.hmacShaKeyFor(keyBytes);
 
         String accessToken = Jwts.builder()
                 .setSubject(userPrincipal.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(accessTokenExpiresIn)
-                .signWith(key, SignatureAlgorithm.HS512)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
         String refreshToken = Jwts.builder()
                 .setExpiration(refreshTokenExpiresIn)
-                .signWith(key, SignatureAlgorithm.HS512)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
         return TokenMapping.builder()
@@ -114,7 +115,20 @@ public class CustomTokenProviderService {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(oAuth2Config.getAuth().getTokenSecret()).build().parseClaimsJws(token);
+            log.info("Validating token: {}", token);
+
+            String base64SecretKey = oAuth2Config.getAuth().getTokenSecret();
+            byte[] keyBytes = Decoders.BASE64.decode(base64SecretKey);
+            Key key = Keys.hmacShaKeyFor(keyBytes);
+
+            log.info("Key: {}", key);
+
+            Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
+
+            log.info("Token validated successfully!");
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException ex) {
             log.error("잘못된 JWT 서명입니다.");
