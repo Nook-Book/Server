@@ -32,7 +32,7 @@ public class FriendService {
 
     public ResponseEntity<?> searchUsers(UserPrincipal userPrincipal, String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         Page<SearchUserRes> searchUserRes = getAllUsersByKeyword(user, keyword, pageable);
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
@@ -41,7 +41,7 @@ public class FriendService {
     }
 
     public ResponseEntity<?> getFriends(UserPrincipal userPrincipal, String keyword) {
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         List<SearchUserRes> searchUserRes = getFriendsByKeyword(user, keyword);
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
@@ -71,8 +71,7 @@ public class FriendService {
 
     @Transactional
     public ResponseEntity<?> sendFriendRequest(UserPrincipal userPrincipal, Long userId) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         User targetUser = validUserByUserId(userId);
         DefaultAssert.isTrue(targetUser != user, "본인에게 친구 요청을 보낼 수 없습니다.");
 
@@ -91,8 +90,7 @@ public class FriendService {
     }
 
     public ResponseEntity<?> getFriendRequestList(UserPrincipal userPrincipal) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         List<Friend> sentRequests = friendRepository.findBySenderAndFriendRequestStatus(user, FriendRequestStatus.FRIEND_REQUEST);
         List<Friend> receivedRequests = friendRepository.findByReceiverAndFriendRequestStatus(user, FriendRequestStatus.FRIEND_REQUEST);
         FriendsRequestRes friendsRequestRes = FriendsRequestRes.builder()
@@ -122,8 +120,7 @@ public class FriendService {
     // 보낸 요청 취소
     @Transactional
     public ResponseEntity<?> deleteFriendRequest(UserPrincipal userPrincipal, Long friendId, boolean isFriendAccept) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         Friend friend = validFriendByFriendId(friendId);
         String msg;
         if (!isFriendAccept) {
@@ -142,8 +139,7 @@ public class FriendService {
     // 친구 요청 삭제/수락
     @Transactional
     public ResponseEntity<?> updateFriendRequestStatus(UserPrincipal userPrincipal, Long friendId, boolean isAccept) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         Friend friend = validFriendByFriendId(friendId);
         DefaultAssert.isTrue(friend.getReceiver() == user, "내가 받은 친구 요청이 아닙니다.");
 

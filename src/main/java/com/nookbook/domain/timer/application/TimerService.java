@@ -39,7 +39,7 @@ public class TimerService {
     // 타이머 시작
     @Transactional
     public ResponseEntity<?> updateTimerStatus(UserPrincipal userPrincipal, Long bookId) {
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         Book book = validBookById(bookId);
         Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
         UserBook userBook = userBookOptional.get();
@@ -62,7 +62,7 @@ public class TimerService {
     // 타이머 저장
     @Transactional
     public ResponseEntity<?> saveTimerRecord(UserPrincipal userPrincipal, Long bookId, Long timerId, CreateTimerReq createTimerReq) {
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         Book book = validBookById(bookId);
         Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
         UserBook userBook = userBookOptional.get();
@@ -105,7 +105,7 @@ public class TimerService {
     // 타이머 조회
     @Transactional
     public ResponseEntity<?> getTimerRecords(UserPrincipal userPrincipal, Long bookId) {
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         Book book = validBookById(bookId);
         Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
         UserBook userBook;
@@ -159,8 +159,7 @@ public class TimerService {
     }
 
     private User validUserById(Long userId) {
-        // Optional<User> userOptional = userRepository.findById(userId);
-        Optional<User> userOptional = userRepository.findById(1L);
+        Optional<User> userOptional = userRepository.findById(userId);
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
         return userOptional.get();
     }
