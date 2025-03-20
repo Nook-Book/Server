@@ -75,20 +75,20 @@ public class User extends BaseEntity {
     private void initializeDefaultCollections() {
         Collection reading = Collection.builder()
                 .title("읽는 중")
+                .orderIndex(1L)
                 .user(this)
-                .orderIndex(0L)
                 .collectionStatus(CollectionStatus.MAIN)
                 .build();
         Collection read = Collection.builder()
                 .title("읽음")
+                .orderIndex(2L)
                 .user(this)
-                .orderIndex(1L)
                 .collectionStatus(CollectionStatus.MAIN)
                 .build();
         Collection wish = Collection.builder()
                 .title("읽고 싶은")
+                .orderIndex(3L)
                 .user(this)
-                .orderIndex(2L)
                 .collectionStatus(CollectionStatus.MAIN)
                 .build();
 
