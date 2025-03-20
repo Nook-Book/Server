@@ -21,7 +21,10 @@ import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import com.nookbook.global.payload.Message;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,6 +40,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
     private final S3Uploader s3Uploader;
     private final CollectionRepository collectionRepository;
@@ -56,7 +60,7 @@ public class UserService {
     public ResponseEntity<?> saveUserInfo(UserPrincipal userPrincipal, UserInfoReq userInfoReq) {
         User user = validUserByUserId(userPrincipal.getId());
         user.saveUserInfo(userInfoReq.getNicknameId(), userInfoReq.getNickname());
-        createDefaultCollection(user);
+
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -64,21 +68,6 @@ public class UserService {
                 .build();
 
         return ResponseEntity.ok(apiResponse);
-    }
-
-    @Transactional
-    public void createDefaultCollection(User user) {
-        List<String> titles = Arrays.asList("읽고 싶은", "읽는 중", "읽음");
-
-        List<Collection> collections = titles.stream()
-                .map(title -> Collection.builder()
-                        .title(title)
-                        .user(user)
-                        .collectionStatus(CollectionStatus.MAIN)
-                        .build())
-                .collect(Collectors.toList());
-
-        collectionRepository.saveAll(collections);
     }
 
 
@@ -209,8 +198,26 @@ public class UserService {
     }
 
     public ResponseEntity<?> checkUserExists(UserPrincipal userPrincipal) {
+        boolean isRegistered;
         // UserPrincipal이 null이면 회원가입이 안된 상태
-        boolean isRegistered = userPrincipal != null;
+        if (userPrincipal == null) {
+            log.warn("UserPrincipal is null. Returning false.");
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .check(true)
+                    .information(UserExistsRes.builder().isRegistered(false).build())
+                    .build());
+        }
+
+        try {
+            validUserByUserId(userPrincipal.getId());
+            isRegistered = true;
+        } catch (UsernameNotFoundException e) {
+            log.warn("User not found: {}", userPrincipal.getId());
+            isRegistered = false;
+        } catch (Exception e) {  // 다른 예외도 잡도록 추가
+            log.error("Unexpected error during user validation: {}", e.getMessage());
+            isRegistered = false;
+        }
 
         UserExistsRes userExistsRes = UserExistsRes.builder()
                 .isRegistered(isRegistered)
