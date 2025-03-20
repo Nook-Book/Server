@@ -12,6 +12,7 @@ import com.nookbook.domain.collection.dto.request.CollectionOrderReq;
 import com.nookbook.domain.collection.dto.request.DeleteBookReq;
 import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
 import com.nookbook.domain.collection.dto.response.*;
+import com.nookbook.domain.collection.exception.CollectionAccessDeniedException;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.exception.UserNotFoundException;
@@ -364,9 +365,41 @@ public class CollectionService {
 
     }
 
+    @Transactional
+    public ResponseEntity<?> deleteCollection(UserPrincipal userPrincipal, Long collectionId) {
+        User user = validateUser(userPrincipal);
+        Collection collection = existCollection(collectionId);
+        isCollectionOwner(user, collection);
+
+        collectionRepository.delete(collection);
+        // 컬렉션 삭제 시 컬렉션들의 orderIndex 재정렬
+        Collection.reorderCollectionOrderIdx(collectionRepository.findAllByUser(user));
+
+        ApiResponse response = ApiResponse.builder()
+                .check(true)
+                .information("컬렉션 삭제 완료")
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
         return userService.findByEmail(userPrincipal.getEmail())
                 .orElseThrow(UserNotFoundException::new);
     }
+
+    // 컬렉션 검증
+    private Collection existCollection(Long collectionId) {
+        return collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("컬렉션을 찾을 수 없습니다."));
+    }
+
+    // 컬렉션 소유 검증
+    private void isCollectionOwner(User user, Collection collection) {
+        if (!collection.getUser().equals(user)) {
+            throw new CollectionAccessDeniedException();
+        }
+    }
+
 }
