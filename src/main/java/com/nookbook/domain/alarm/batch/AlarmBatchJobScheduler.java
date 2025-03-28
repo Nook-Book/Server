@@ -25,9 +25,9 @@ public class AlarmBatchJobScheduler {
                     .addLong("timestamp", System.currentTimeMillis()) // 파라미터로 timestamp를 넘겨줌
                     .toJobParameters();
             jobLauncher.run(alarmCleanupJob, jobParameters);
-            log.info("알림 정리 Job 실행 완료");
+            log.info("오래된 알림 삭제 Job 실행 완료");
         } catch (Exception e) {
-            log.error("알림 정리 Job 실행 실패", e);
+            log.error("오래된 알림 삭제 Job 실행 실패", e);
         }
     }
 }
