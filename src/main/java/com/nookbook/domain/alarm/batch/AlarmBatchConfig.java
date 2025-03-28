@@ -23,7 +23,7 @@ import java.util.Map;
 
 @Configuration
 @RequiredArgsConstructor
-public class AlarmCleanupJobConfig {
+public class AlarmBatchConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
