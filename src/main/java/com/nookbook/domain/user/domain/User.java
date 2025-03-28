@@ -1,5 +1,6 @@
 package com.nookbook.domain.user.domain;
 
+import com.nookbook.domain.alarm.domain.Alarm;
 import com.nookbook.domain.challenge.domain.Invitation;
 import com.nookbook.domain.challenge.domain.Participant;
 import com.nookbook.domain.collection.domain.Collection;
@@ -53,6 +54,9 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Collection> collections = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Alarm> alarms = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private Role role;
