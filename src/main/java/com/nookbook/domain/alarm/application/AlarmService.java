@@ -14,13 +14,19 @@ import com.nookbook.domain.user.exception.UserNotFoundException;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.nookbook.global.payload.ApiResponse;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -35,18 +41,25 @@ public class AlarmService {
 
 
     // 알림 목록 조회
-    public ResponseEntity<?> getAllAlarms(UserPrincipal userPrincipal) {
+    public ResponseEntity<?> getAllAlarms(UserPrincipal userPrincipal, int page, int size) {
         User user = getUser(userPrincipal);
+        LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);
 
-        // 최근 7일간의 알림만 조회
-        List<Alarm> alarms = filterRecentAlarms(user.getAlarms());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Alarm> alarmsPage = alarmRepository.findByUserAndCreatedAtAfter(user, weekAgo, pageable);
 
-        // 알림 응답 변환 (renderer 주입)
-        List<AlarmRes> alarmListRes = AlarmRes.fromEntities(alarms, alarmRenderer);
+        List<AlarmRes> alarmListRes = AlarmRes.fromEntities(alarmsPage.getContent(), alarmRenderer);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("alarms", alarmListRes);
+        result.put("totalElements", alarmsPage.getTotalElements());
+        result.put("totalPages", alarmsPage.getTotalPages());
+        result.put("currentPage", alarmsPage.getNumber());
+        result.put("isLast", alarmsPage.isLast());
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
-                .information(alarmListRes)
+                .information(result)
                 .build();
 
         return ResponseEntity.ok(apiResponse);
@@ -138,13 +151,6 @@ public class AlarmService {
         );
 
         alarmRepository.save(alarm);
-    }
-
-    // 최근 7일간의 알림만 필터링
-    public List<Alarm> filterRecentAlarms(List<Alarm> alarms) {
-        return alarms.stream()
-                .filter(alarm -> alarm.getCreatedAt().isAfter(LocalDateTime.now().minusDays(7)))
-                .toList();
     }
 
     private User getUser(UserPrincipal userPrincipal) {

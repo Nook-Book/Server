@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -33,9 +34,11 @@ public class AlarmController {
     })
     @GetMapping()
     public ResponseEntity<?> getAllAlarms(
-            @Parameter @CurrentUser UserPrincipal userPrincipal
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "page의 size입니다. 기본 값은 30입니다.", required = true) @RequestParam(defaultValue = "30") int size,
+            @Parameter(description = "알림 목록을 페이지별로 조회합니다. **Page는 0부터 시작합니다!**", required = true) @RequestParam(defaultValue = "0") int page
 
     ) {
-        return alarmService.getAllAlarms(userPrincipal);
+        return alarmService.getAllAlarms(userPrincipal, page, size);
     }
 }
