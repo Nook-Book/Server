@@ -1,5 +1,6 @@
 package com.nookbook.domain.user.application;
 
+import com.nookbook.domain.alarm.application.AlarmService;
 import com.nookbook.domain.user.domain.Friend;
 import com.nookbook.domain.user.domain.FriendRequestStatus;
 import com.nookbook.domain.user.domain.User;
@@ -29,6 +30,7 @@ public class FriendService {
 
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
+    private final AlarmService alarmService;
 
     public ResponseEntity<?> searchUsers(UserPrincipal userPrincipal, String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -83,6 +85,9 @@ public class FriendService {
                 .receiver(targetUser)
                 .build();
         friendRepository.save(friend);
+        // 친구 요청 알림 생성
+        alarmService.sendFriendRequestAlarm(user, targetUser);
+
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
                 .information("친구 신청이 완료되었습니다.")
@@ -126,6 +131,8 @@ public class FriendService {
         if (!isFriendAccept) {
             DefaultAssert.isTrue(friend.getSender() == user, "내가 보낸 친구 요청이 아닙니다.");
             msg = "친구 요청이 취소되었습니다.";
+            // 전송된 친구 요청 알림 삭제
+            alarmService.deleteFriendRequestAlarm(friend.getReceiver(), friend.getSender().getUserId());
         } else {
             msg = "친구가 삭제되었습니다.";
         }
@@ -146,6 +153,8 @@ public class FriendService {
         String msg;
         if (isAccept) {
             friend.updateFriendRequestStatus(FriendRequestStatus.FRIEND_ACCEPT);
+            // 친구 수락 알림 생성
+            alarmService.sendFriendAcceptedAlarm(user, friend.getSender());
             msg = "친구 요청을 수락했습니다.";
         } else {
             friendRepository.delete(friend);

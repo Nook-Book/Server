@@ -1,6 +1,5 @@
-package com.nookbook.infrastructure.batch.config;
+package com.nookbook.domain.timer.batch;
 
-import com.nookbook.domain.timer.application.TimerService;
 import com.nookbook.domain.timer.domain.Timer;
 import com.nookbook.domain.timer.domain.repository.TimerRepository;
 import com.nookbook.domain.user_book.domain.UserBook;
@@ -19,7 +18,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
