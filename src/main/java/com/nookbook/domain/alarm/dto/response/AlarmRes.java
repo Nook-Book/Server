@@ -2,6 +2,7 @@ package com.nookbook.domain.alarm.dto.response;
 
 import com.nookbook.domain.alarm.domain.Alarm;
 import com.nookbook.domain.alarm.domain.AlarmType;
+import com.nookbook.domain.alarm.message.AlarmRenderer;
 import com.nookbook.global.util.TimeFormatter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -43,27 +44,23 @@ public class AlarmRes {
     private int timeValue;
 
 
-    public static AlarmRes fromEntity(Alarm entity) {
-        // 알림 발생 시간을 ~시간 전 / ~일 전으로 변환
+    public static AlarmRes fromEntity(Alarm entity, AlarmRenderer renderer) {
         TimeFormatter.TimeResult result = TimeFormatter.formatToTimeAgo(entity.getCreatedAt());
 
-        {
-            return AlarmRes.builder()
-                    .alarmId(entity.getAlarmId())  // 알람 ID
-                    .message(entity.getMessage())  // 알람 내용
-                    .alarmType(entity.getAlarmType())  // 알람 타입
-                    .targetId(entity.getTargetId())  // 알람 대상 ID
-                    .timeType(result.type().name())  // 알림 발생 시간 타입 ("HOUR" 또는 "DAY")
-                    .timeValue(result.value())  // 알림 발생 시간 값
-                    .build();
-        }
+        return AlarmRes.builder()
+                .alarmId(entity.getAlarmId())
+                .message(renderer.render(entity))
+                .alarmType(entity.getAlarmType())
+                .targetId(entity.getTargetId())
+                .timeType(result.type().name())  // "HOUR" 또는 "DAY"
+                .timeValue(result.value())       // 시간 또는 일 단위 값
+                .build();
     }
 
     // 알림 목록 조회
-    public static List<AlarmRes> fromEntities(List<Alarm> entities) {
+    public static List<AlarmRes> fromEntities(List<Alarm> entities, AlarmRenderer renderer) {
         return entities.stream()
-                .map(AlarmRes::fromEntity)
+                .map(entity -> fromEntity(entity, renderer))
                 .collect(Collectors.toList());
     }
-
 }
