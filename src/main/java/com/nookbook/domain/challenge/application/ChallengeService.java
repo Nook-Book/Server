@@ -1,5 +1,7 @@
 package com.nookbook.domain.challenge.application;
 
+import com.nookbook.domain.alarm.application.AlarmService;
+import com.nookbook.domain.alarm.message.AlarmMessageInfo;
 import com.nookbook.domain.book.BookNotFoundException;
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
@@ -52,6 +54,7 @@ public class ChallengeService {
     private final UserRepository userRepository;
     private final FriendService friendService;
     private final TimerRepository timerRepository;
+    private final AlarmService alarmService;
 
     // 챌린지 생성
     @Transactional
@@ -339,6 +342,8 @@ public class ChallengeService {
         validateChallengeAuthorization(user, challenge); // 챌린지 owner만 참가자 초대 가능
         // 챌린지 참가자 초대
         invitationService.inviteParticipant(challenge, participant);
+        // 챌린지 초대 알림 (초대받은 사용자에게)
+        alarmService.sendChallengeInviteAlarm(user, participant, challenge);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -532,6 +537,9 @@ public class ChallengeService {
         // 챌린지 참가자(participant)로 등록
         participantService.saveParticipant(user, challenge);
 
+        // 챌린지 초대 수락 알림 (방장에게)
+        alarmService.sendChallengeAcceptedAlarm(user, challenge.getOwner(), challenge);
+
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information("챌린지 참가가 완료되었습니다.")
@@ -592,6 +600,30 @@ public class ChallengeService {
         return ResponseEntity.ok(apiResponse);
 
 
+    }
+
+    // 챌린지 내 참가자 깨우기
+    @Transactional
+    public ResponseEntity<?> wakeUpParticipant(UserPrincipal userPrincipal, Long challengeId, Long participantId) {
+
+        Challenge challenge = validateChallenge(challengeId);
+        // sender 정보
+        User sender = validateUser(userPrincipal);
+        // 대상 유저(receiver)
+        Participant participant = validateParticipant(participantId);
+        // 챌린지 내 참가자 검증
+        validateParticipantInChallenge(participant, challenge);
+        validateParticipant(sender, challenge);
+        User receiver = participant.getUser();
+
+        alarmService.sendChallengeParticipantWakeUpAlarm(sender, receiver, challenge);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information("챌린지 참가자 깨우기 알림이 전송되었습니다.")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
     }
 
     // 챌린지 나가기 시 방장 여부 조회
