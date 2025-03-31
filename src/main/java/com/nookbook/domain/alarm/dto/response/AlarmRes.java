@@ -27,8 +27,8 @@ public class AlarmRes {
 
     @Schema(
             type = "String",
-            allowableValues = { "WAKE_UP", "FRIEND", "CHALLENGE" },
-            example = "WAKE_UP", description = "알람의 타입입니다."
+            allowableValues = { "FRIEND", "CHALLENGE" },
+            example = "FRIEND", description = "알람의 타입입니다."
     )
     private AlarmType alarmType;
 
