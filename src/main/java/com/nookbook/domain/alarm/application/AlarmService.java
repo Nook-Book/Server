@@ -11,6 +11,7 @@ import com.nookbook.domain.challenge.domain.Challenge;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.exception.UserNotFoundException;
+import com.nookbook.global.DefaultAssert;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -156,5 +157,13 @@ public class AlarmService {
     private User getUser(UserPrincipal userPrincipal) {
         return userService.findByEmail(userPrincipal.getEmail())
                 .orElseThrow(UserNotFoundException::new);
+    }
+
+    public void deleteFriendRequestAlarm(User receiver, Long userId) {
+        // receiver의 모든 알림 중에서 AlarmType이 FRIEND이고 senderId가 userId인 알림을 삭제
+        // 오래된 알림은 자동으로 삭제되므로, 알림이 존재하는 경우에만 삭제
+        List<Alarm> alarms = alarmRepository.findByUserAndAlarmTypeAndSenderId(receiver, AlarmType.FRIEND, userId);
+        DefaultAssert.isTrue(!alarms.isEmpty(), "삭제할 알림이 없습니다.");
+        alarmRepository.deleteAll(alarms);
     }
 }

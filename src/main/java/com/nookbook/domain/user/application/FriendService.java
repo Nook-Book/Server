@@ -131,6 +131,8 @@ public class FriendService {
         if (!isFriendAccept) {
             DefaultAssert.isTrue(friend.getSender() == user, "내가 보낸 친구 요청이 아닙니다.");
             msg = "친구 요청이 취소되었습니다.";
+            // 전송된 친구 요청 알림 삭제
+            alarmService.deleteFriendRequestAlarm(friend.getReceiver(), friend.getSender().getUserId());
         } else {
             msg = "친구가 삭제되었습니다.";
         }
