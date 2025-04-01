@@ -1,11 +1,9 @@
 package com.nookbook.domain.user.application;
 
-import com.nookbook.domain.collection.domain.Collection;
-import com.nookbook.domain.collection.domain.CollectionStatus;
-import com.nookbook.domain.collection.domain.repository.CollectionRepository;
 import com.nookbook.domain.user.domain.Friend;
 import com.nookbook.domain.user.domain.FriendRequestStatus;
 import com.nookbook.domain.user.domain.repository.FriendRepository;
+import com.nookbook.domain.user.dto.request.ExpoPushTokenReq;
 import com.nookbook.domain.user.dto.response.UserExistsRes;
 import com.nookbook.infrastructure.s3.S3Uploader;
 import com.nookbook.domain.user.domain.User;
@@ -43,7 +41,6 @@ public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
     private final S3Uploader s3Uploader;
-    private final CollectionRepository collectionRepository;
     private final FriendRepository friendRepository;
 
     @Transactional
@@ -228,6 +225,19 @@ public class UserService {
                 .information(userExistsRes)
                 .build();
 
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    //saveExpoPushToken
+    @Transactional
+    public ResponseEntity<?> saveExpoPushToken(UserPrincipal userPrincipal, ExpoPushTokenReq expoPushToken) {
+        User user = validUserByUserId(userPrincipal.getId());
+        user.updateExpoPushToken(expoPushToken.getExpoPushToken());
+        // 푸시 토큰 저장 성공 메시지
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder().message("Expo push token 저장 성공").build())
+                .build();
         return ResponseEntity.ok(apiResponse);
     }
 
