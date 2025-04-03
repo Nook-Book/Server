@@ -1,6 +1,7 @@
 package com.nookbook.domain.user.presentation;
 
 import com.nookbook.domain.user.application.UserService;
+import com.nookbook.domain.user.dto.request.ExpoPushTokenReq;
 import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
 import com.nookbook.domain.user.dto.request.NicknameCheckReq;
 import com.nookbook.domain.user.dto.request.UserInfoReq;
@@ -22,9 +23,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Collections;
-import java.util.Map;
 
 @Tag(name = "User", description = "User API")
 @RestController
@@ -86,6 +84,19 @@ public class UserController {
             @Valid @RequestBody NicknameCheckReq nicknameCheckReq
     ) {
         return userService.checkNickname(userPrincipal, nicknameCheckReq);
+    }
+
+    @Operation(summary = "Expo push token 저장", description = "사용자의 Expo push token을 저장합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Expo push token 저장 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "Expo push token 저장 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PostMapping("/expo-push-token")
+    public ResponseEntity<?> saveExpoPushToken(
+            @CurrentUser UserPrincipal userPrincipal,
+            @RequestBody ExpoPushTokenReq expoPushTokenReq
+    ) {
+        return userService.saveExpoPushToken(userPrincipal, expoPushTokenReq);
     }
 
 

@@ -45,6 +45,10 @@ public class User extends BaseEntity {
 
     private String imageName = "default.png";
 
+    @Column(name = "expo_push_token")
+    private String expoPushToken;
+
+
     // Participant와 Invitation 연관관계 추가
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
@@ -112,6 +116,10 @@ public class User extends BaseEntity {
     public void updateImage(String imageName, String imageUrl) {
         this.imageName = imageName;
         this.imageUrl = imageUrl;
+    }
+
+    public void updateExpoPushToken(String expoPushToken) {
+        this.expoPushToken = expoPushToken;
     }
 
 }

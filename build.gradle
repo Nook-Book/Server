@@ -58,6 +58,11 @@ dependencies {
     // AWS S3
     implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
 
+    // expo-notification
+    implementation 'io.github.jav:expo-server-sdk:1.1.0'
+
+
+
 }
 
 tasks.named('test') {

@@ -29,8 +29,6 @@ public class AuthService {
     private final IdTokenVerifier idTokenVerifier;
     private final UserDetailsService userDetailsService;
 
-    private final String GOOGLE_TOKEN_INFO_URL = "https://oauth2.googleapis.com/tokeninfo";
-
 
     public String verifyIdTokenAndExtractUsername(String idToken, String email) {
         if (idToken == null || idToken.trim().isEmpty()) {
@@ -92,6 +90,9 @@ public class AuthService {
 
         // 토큰 정보 삭제
         deleteToken(email);
+
+        // expoToken 삭제 (null로 update)
+        user.updateExpoPushToken(null);
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)

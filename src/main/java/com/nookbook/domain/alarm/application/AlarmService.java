@@ -39,6 +39,7 @@ public class AlarmService {
     private final AlarmRepository alarmRepository;
     private final AlarmMessageFactory alarmMessageFactory;
     private final AlarmRenderer alarmRenderer;
+    private final AlarmPushService alarmPushService;
 
 
     // 알림 목록 조회
@@ -72,7 +73,7 @@ public class AlarmService {
     @Transactional
     public void sendFriendRequestAlarm(User sender, User receiver) {
         AlarmMessageInfo info = alarmMessageFactory.createFriendRequest(sender.getUserId());
-
+        // 알림 생성/저장
         Alarm alarm = Alarm.create(
                 receiver,
                 sender.getUserId(),
@@ -81,8 +82,8 @@ public class AlarmService {
                 info.args(),
                 sender.getUserId() // targetId: sender를 클릭 시 이동하도록
         );
-
         alarmRepository.save(alarm);
+        alarmPushService.send(receiver, alarm);
     }
 
     // 친구 수락 알림 전송/저장
@@ -98,8 +99,8 @@ public class AlarmService {
                 info.args(),
                 sender.getUserId()
         );
-
         alarmRepository.save(alarm);
+        alarmPushService.send(receiver, alarm);
     }
 
     // 챌린지 참가자 깨우기 알림 전송/저장
@@ -115,8 +116,8 @@ public class AlarmService {
                 info.args(),
                 challenge.getChallengeId()
         );
-
         alarmRepository.save(alarm);
+        alarmPushService.send(receiver, alarm);
     }
 
     // 챌린지 초대 알림 전송/저장
@@ -132,8 +133,8 @@ public class AlarmService {
                 info.args(),
                 challenge.getChallengeId()
         );
-
         alarmRepository.save(alarm);
+        alarmPushService.send(receiver, alarm);
     }
 
     // 챌린지 초대 수락 알림 전송/저장
@@ -150,8 +151,8 @@ public class AlarmService {
                 info.args(),
                 challenge.getChallengeId()
         );
-
         alarmRepository.save(alarm);
+        alarmPushService.send(receiver, alarm);
     }
 
     private User getUser(UserPrincipal userPrincipal) {

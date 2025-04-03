@@ -1,6 +1,6 @@
 package com.nookbook.domain.alarm.message;
 
-import com.nookbook.domain.user.domain.User;
+
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
