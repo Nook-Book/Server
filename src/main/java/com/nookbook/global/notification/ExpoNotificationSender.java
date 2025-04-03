@@ -36,6 +36,8 @@ public class ExpoNotificationSender {
      * @param data 클릭 시 전달할 데이터 (예: alarmId, type 등)
      */
     public void send(String expoPushToken, String title, String body, Map<String, Object> data) {
+
+        // 저장된 expoPushToken이 유효한지 확인
         if (!PushClient.isExponentPushToken(expoPushToken)) {
             log.warn("유효하지 않은 Expo Push Token: {}", expoPushToken);
             return;
@@ -47,6 +49,7 @@ public class ExpoNotificationSender {
         message.setBody(body);
         message.setData(data);
 
+        // 푸시 알림 메시지 설정
         List<ExpoPushMessage> messages = Collections.singletonList(message);
 
         try {
