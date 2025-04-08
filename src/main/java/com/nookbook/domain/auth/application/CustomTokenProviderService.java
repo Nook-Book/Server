@@ -121,7 +121,6 @@ public class CustomTokenProviderService {
             byte[] keyBytes = Decoders.BASE64.decode(base64SecretKey);
             Key key = Keys.hmacShaKeyFor(keyBytes);
 
-            log.info("Key: {}", key);
 
             Jwts.parserBuilder()
                     .setSigningKey(key)
