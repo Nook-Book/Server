@@ -183,7 +183,7 @@ public class UserBookService {
         }
         else{
             // HH:SS 형식으로 변환
-            return timerList.get(timerList.size() - 1).getCreatedAt().toLocalTime().toString();
+            return timerList.get(timerList.size() - 1).getUpdatedAt().toLocalTime().toString();
         }
     }
 
