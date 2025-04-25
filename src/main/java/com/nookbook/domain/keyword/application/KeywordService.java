@@ -54,8 +54,7 @@ public class KeywordService {
 
     // 키워드 조회
     public ResponseEntity<?> getKeywords(UserPrincipal userPrincipal) {
-        // User user = validUserById(userPrincipal.getId());
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         List<Keyword> findKeywords = keywordRepository.findByUser(user);
         findKeywords.sort(Comparator.comparing(Keyword::getCreatedAt));
 
@@ -73,8 +72,7 @@ public class KeywordService {
     // 키워드 삭제
     @Transactional
     public ResponseEntity<?> deleteKeyword(UserPrincipal userPrincipal, Long keywordId) {
-        // User user = validUserById(userPrincipal.getId());
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         Keyword findKeyword = keywordRepository.findByUserAndKeywordId(user, keywordId);
 
         DefaultAssert.isTrue(user == findKeyword.getUser(), "해당 검색어에 대한 권한이 없습니다.");
@@ -88,8 +86,7 @@ public class KeywordService {
     }
 
     private User validUserById(Long userId) {
-        // Optional<User> userOptional = userRepository.findById(userId);
-        Optional<User> userOptional = userRepository.findById(1L);
+        Optional<User> userOptional = userRepository.findById(userId);
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
         return userOptional.get();
 

@@ -7,6 +7,7 @@ import com.nookbook.domain.timer.domain.Timer;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
+import com.nookbook.domain.user.exception.UserNotFoundException;
 import com.nookbook.domain.user_book.domain.UserBook;
 import com.nookbook.domain.user_book.domain.repository.UserBookRepository;
 import com.nookbook.domain.user_book.dto.response.DailyUserBookCalendarRes;
@@ -182,15 +183,13 @@ public class UserBookService {
         }
         else{
             // HH:SS 형식으로 변환
-            return timerList.get(timerList.size() - 1).getCreatedAt().toLocalTime().toString();
+            return timerList.get(timerList.size() - 1).getUpdatedAt().toLocalTime().toString();
         }
     }
 
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
-//        return userService.findByEmail(userPrincipal.getEmail())
-//                .orElseThrow(UserNotFoundException::new);
-        // userId=1L로 고정
-        return userService.findById(1L);
+        return userService.findByEmail(userPrincipal.getEmail())
+                .orElseThrow(UserNotFoundException::new);
     }
 }

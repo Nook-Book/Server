@@ -1,6 +1,7 @@
 package com.nookbook.domain.challenge.presentation;
 
 import com.nookbook.domain.challenge.application.ChallengeService;
+import com.nookbook.domain.challenge.application.ParticipantService;
 import com.nookbook.domain.challenge.dto.request.ChallengeCreateReq;
 import com.nookbook.domain.challenge.dto.response.ChallengeDetailRes;
 import com.nookbook.domain.challenge.dto.response.ChallengeInvitationRes;
@@ -20,7 +21,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +33,7 @@ public class ChallengeController {
 
     private final ChallengeService challengeService;
     private final UserBookService userBookService;
+    private final ParticipantService participantService;
 
     // 새 챌린지 생성 API
     @Operation(summary = "새 챌린지 생성 API", description = "새 챌린지를 생성하는 API입니다.")
@@ -252,6 +253,23 @@ public class ChallengeController {
     ) {
         return userBookService.getUserBookCalendar(userPrincipal, participantId, date);
     }
+
+    // 챌린지 멤버 깨우기
+    @Operation(summary = "챌린지 멤버 깨우기 API", description = "챌린지 멤버에게 깨우기 알림을 보내는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "챌린지 멤버 깨우기 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "챌린지 멤버 깨우기 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PostMapping("/{challengeId}/participants/{participantId}/wake-up")
+    public ResponseEntity<?> wakeUpParticipant(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "챌린지 ID") @PathVariable Long challengeId,
+            @Parameter(description = "참가자 ID") @PathVariable Long participantId
+    ) {
+        return challengeService.wakeUpParticipant(userPrincipal, challengeId, participantId);
+    }
+
+
 
 
 }

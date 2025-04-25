@@ -1,11 +1,9 @@
 package com.nookbook.domain.user.application;
 
-import com.nookbook.domain.collection.domain.Collection;
-import com.nookbook.domain.collection.domain.CollectionStatus;
-import com.nookbook.domain.collection.domain.repository.CollectionRepository;
 import com.nookbook.domain.user.domain.Friend;
 import com.nookbook.domain.user.domain.FriendRequestStatus;
 import com.nookbook.domain.user.domain.repository.FriendRepository;
+import com.nookbook.domain.user.dto.request.ExpoPushTokenReq;
 import com.nookbook.domain.user.dto.response.UserExistsRes;
 import com.nookbook.infrastructure.s3.S3Uploader;
 import com.nookbook.domain.user.domain.User;
@@ -21,7 +19,10 @@ import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import com.nookbook.global.payload.Message;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,9 +38,9 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
     private final S3Uploader s3Uploader;
-    private final CollectionRepository collectionRepository;
     private final FriendRepository friendRepository;
 
     @Transactional
@@ -54,10 +55,9 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> saveUserInfo(UserPrincipal userPrincipal, UserInfoReq userInfoReq) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(2L);
+        User user = validUserByUserId(userPrincipal.getId());
         user.saveUserInfo(userInfoReq.getNicknameId(), userInfoReq.getNickname());
-        createDefaultCollection(user);
+
 
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -67,25 +67,9 @@ public class UserService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @Transactional
-    public void createDefaultCollection(User user) {
-        List<String> titles = Arrays.asList("읽고 싶은", "읽는 중", "읽음");
-
-        List<Collection> collections = titles.stream()
-                .map(title -> Collection.builder()
-                        .title(title)
-                        .user(user)
-                        .collectionStatus(CollectionStatus.MAIN)
-                        .build())
-                .collect(Collectors.toList());
-
-        collectionRepository.saveAll(collections);
-    }
-
 
     public ResponseEntity<?> checkNicknameId(UserPrincipal userPrincipal, NicknameIdCheckReq nicknameIdCheckReq) {
-        // validUserByUserId(userPrincipal.getId());
-        validUserByUserId(1L);
+        validUserByUserId(userPrincipal.getId());
         boolean isUnique = checkDuplicateNicknameId(nicknameIdCheckReq.getNicknameId());
 
         NicknameIdCheckRes nicknameIdCheckRes = NicknameIdCheckRes.builder()
@@ -102,8 +86,7 @@ public class UserService {
     }
 
     public ResponseEntity<?> checkNickname(UserPrincipal userPrincipal, NicknameCheckReq nicknameCheckReq) {
-        // validUserByUserId(userPrincipal.getId());
-        validUserByUserId(1L);
+        validUserByUserId(userPrincipal.getId());
         boolean isUnique = checkDuplicateNickname(nicknameCheckReq.getNickname());
 
         NicknameCheckRes nicknameCheckRes = NicknameCheckRes.builder()
@@ -120,8 +103,7 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> updateNicknameId(UserPrincipal userPrincipal, NicknameIdCheckReq nicknameIdCheckReq) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         String nicknameId = nicknameIdCheckReq.getNicknameId();
         boolean isAvailable = checkDuplicateNicknameId(nicknameId);
 
@@ -136,8 +118,7 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> updateNickname(UserPrincipal userPrincipal, NicknameCheckReq nicknameCheckReq) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         String nickname = nicknameCheckReq.getNickname();
         boolean isAvailable = checkDuplicateNickname(nickname);
 
@@ -159,8 +140,7 @@ public class UserService {
     }
 
     public ResponseEntity<ApiResponse> getUserInfo(UserPrincipal userPrincipal, Long userId) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         User targetUser = validUserByUserId(userId);
 
         int num = friendRepository.countBySenderOrReceiverAndFriendRequestStatus(targetUser, FriendRequestStatus.FRIEND_ACCEPT);
@@ -193,8 +173,7 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> updateImage(UserPrincipal userPrincipal, Boolean isDefaultImage, Optional<MultipartFile> image) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         if (!Objects.equals(user.getImageName(), "default.png")) {
             s3Uploader.deleteFile(user.getImageName());
         }
@@ -216,8 +195,26 @@ public class UserService {
     }
 
     public ResponseEntity<?> checkUserExists(UserPrincipal userPrincipal) {
+        boolean isRegistered;
         // UserPrincipal이 null이면 회원가입이 안된 상태
-        boolean isRegistered = userPrincipal != null;
+        if (userPrincipal == null) {
+            log.warn("UserPrincipal is null. Returning false.");
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .check(true)
+                    .information(UserExistsRes.builder().isRegistered(false).build())
+                    .build());
+        }
+
+        try {
+            validUserByUserId(userPrincipal.getId());
+            isRegistered = true;
+        } catch (UsernameNotFoundException e) {
+            log.warn("User not found: {}", userPrincipal.getId());
+            isRegistered = false;
+        } catch (Exception e) {  // 다른 예외도 잡도록 추가
+            log.error("Unexpected error during user validation: {}", e.getMessage());
+            isRegistered = false;
+        }
 
         UserExistsRes userExistsRes = UserExistsRes.builder()
                 .isRegistered(isRegistered)
@@ -228,6 +225,19 @@ public class UserService {
                 .information(userExistsRes)
                 .build();
 
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    //saveExpoPushToken
+    @Transactional
+    public ResponseEntity<?> saveExpoPushToken(UserPrincipal userPrincipal, ExpoPushTokenReq expoPushToken) {
+        User user = validUserByUserId(userPrincipal.getId());
+        user.updateExpoPushToken(expoPushToken.getExpoPushToken());
+        // 푸시 토큰 저장 성공 메시지
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(Message.builder().message("Expo push token 저장 성공").build())
+                .build();
         return ResponseEntity.ok(apiResponse);
     }
 

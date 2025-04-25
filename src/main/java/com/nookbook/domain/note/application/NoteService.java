@@ -43,8 +43,7 @@ public class NoteService {
     // 노트 저장
     @Transactional
     public ResponseEntity<?> saveNewNote(UserPrincipal userPrincipal, CreateNoteReq createNoteReq) {
-        // User user = validUserById(userPrincipal.getId());
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         Book book = validBookById(createNoteReq.getBookId());
         UserBook userBook;
         // user_book에 없으면 생성
@@ -79,8 +78,7 @@ public class NoteService {
     // 노트 수정
     @Transactional
     public ResponseEntity<?> updateNote(UserPrincipal userPrincipal, Long noteId, UpdateNoteReq updateNoteReq) {
-        // User user = validUserById(userPrincipal.getId());
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         Note note = validNoteById(noteId);
         DefaultAssert.isTrue(note.getUserBook().getUser() == user, "유효한 접근이 아닙니다.");
         if (updateNoteReq.getTitle() != null || updateNoteReq.getContent() != null) {
@@ -100,8 +98,7 @@ public class NoteService {
     // 노트 삭제
     @Transactional
     public ResponseEntity<?> deleteNote(UserPrincipal userPrincipal, Long noteId) {
-        // User user = validUserById(userPrincipal.getId());
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         Note note = validNoteById(noteId);
         DefaultAssert.isTrue(note.getUserBook().getUser() == user, "유효한 접근이 아닙니다.");
 
@@ -118,8 +115,7 @@ public class NoteService {
 
     // 책 정보 조회(제목, 이미지) && 노트 목록 조회
     public ResponseEntity<?> getNoteListByBookId(UserPrincipal userPrincipal, Long bookId) {
-        // User user = validUserById(userPrincipal.getId());
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         Book book = validBookById(bookId);
 
         Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
@@ -150,8 +146,7 @@ public class NoteService {
 
     // 노트 상세 조회
     public ResponseEntity<?> getNoteDetail(UserPrincipal userPrincipal, Long noteId) {
-        // User user = validUserById(userPrincipal.getId());
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         Note note = validNoteById(noteId);
         // DefaultAssert.isTrue(note.getUserBook().getUser() == user, "유효한 접근이 아닙니다.");
         User owner = note.getUserBook().getUser();
@@ -192,8 +187,7 @@ public class NoteService {
 
     // 마이페이지 기록 전체보기
     public ResponseEntity<?> getMyPageNoteList(UserPrincipal userPrincipal, Long userId, String keyword) {
-        // User user = validUserById(userPrincipal.getId());
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         User targetUser = (userId == null) ? user : validUserById(userId);
         List<UserBook> userBooks;
         if (keyword == null) {
@@ -235,8 +229,7 @@ public class NoteService {
 
     // [마이페이지] 도서 정보 조회 및 노트 목록 조회
     public ResponseEntity<?> getMyPageNoteListByBookId(UserPrincipal userPrincipal, Long userId, Long bookId) {
-        // User user = validUserById(userPrincipal.getId());
-        User user = validUserById(1L);
+        User user = validUserById(userPrincipal.getId());
         User targetUser = validUserById(userId);
         Book book = validBookById(bookId);
 
@@ -272,7 +265,6 @@ public class NoteService {
     }
 
     private User validUserById(Long userId) {
-        // Optional<User> userOptional = userRepository.findById(userId);
         Optional<User> userOptional = userRepository.findById(userId);
         DefaultAssert.isTrue(userOptional.isPresent(), "유효한 사용자가 아닙니다.");
         return userOptional.get();

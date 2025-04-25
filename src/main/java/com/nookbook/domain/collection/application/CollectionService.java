@@ -12,6 +12,7 @@ import com.nookbook.domain.collection.dto.request.CollectionOrderReq;
 import com.nookbook.domain.collection.dto.request.DeleteBookReq;
 import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
 import com.nookbook.domain.collection.dto.response.*;
+import com.nookbook.domain.collection.exception.CollectionAccessDeniedException;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.exception.UserNotFoundException;
@@ -45,6 +46,7 @@ public class CollectionService {
     public ResponseEntity<?> createCollection(UserPrincipal userPrincipal, CollectionCreateReq collectionCreateReq) {
         User user = validateUser(userPrincipal);
         // 사용자의 마지막 컬렉션 순서를 가져와서 새로운 순서를 지정
+        // 컬렉션 순서는 1부터 시작
         long maxOrderIndex = collectionRepository.findMaxOrderIndexByUser(user).orElse(1L);
 
         Collection collection = Collection.builder()
@@ -69,6 +71,17 @@ public class CollectionService {
     public ResponseEntity<?> getCollectionList(UserPrincipal userPrincipal) {
         User user = validateUser(userPrincipal);
         List<Collection> collections = collectionRepository.findAllByUser(user);
+
+        if(collections.isEmpty()){
+            ApiResponse response = ApiResponse.builder()
+                    .check(true)
+                    .information(CollectionListRes.builder()
+                            .totalCollections(0L)
+                            .collectionListDetailRes(new ArrayList<>())
+                            .build())
+                    .build();
+            return ResponseEntity.ok(response);
+        }
 
         List<CollectionListDetailRes> collectionListDetailRes = collections.stream()
                 .map(collection -> {
@@ -288,6 +301,19 @@ public class CollectionService {
         // 유저의 컬렉션 중 CollectionStatus.MAIN인 컬렉션을 찾아 도서 목록 조회
         List<Collection> mainCollections = collectionRepository.findAllByUserAndCollectionStatus(user, CollectionStatus.MAIN);
 
+        // MAIN 컬렉션이 없다면 빈 컬렉션 리스트 반환
+
+        if(mainCollections.isEmpty()){
+            ApiResponse response = ApiResponse.builder()
+                    .check(true)
+                    .information(MainCollectionListRes.builder()
+                            .totalCollections(0)
+                            .mainCollectionListDetailRes(new ArrayList<>())
+                            .build())
+                    .build();
+            return ResponseEntity.ok(response);
+        }
+
         // 순서대로 정렬
         mainCollections.sort((a, b) -> (int) (a.getOrderIndex() - b.getOrderIndex()));
 
@@ -339,11 +365,41 @@ public class CollectionService {
 
     }
 
+    @Transactional
+    public ResponseEntity<?> deleteCollection(UserPrincipal userPrincipal, Long collectionId) {
+        User user = validateUser(userPrincipal);
+        Collection collection = existCollection(collectionId);
+        isCollectionOwner(user, collection);
+
+        collectionRepository.delete(collection);
+        // 컬렉션 삭제 시 컬렉션들의 orderIndex 재정렬
+        Collection.reorderCollectionOrderIdx(collectionRepository.findAllByUser(user));
+
+        ApiResponse response = ApiResponse.builder()
+                .check(true)
+                .information("컬렉션 삭제 완료")
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
-//        return userService.findByEmail(userPrincipal.getEmail())
-//                .orElseThrow(UserNotFoundException::new);
-        // userId=2L로 고정
-        return userService.findById(1L);
+        return userService.findByEmail(userPrincipal.getEmail())
+                .orElseThrow(UserNotFoundException::new);
     }
+
+    // 컬렉션 검증
+    private Collection existCollection(Long collectionId) {
+        return collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("컬렉션을 찾을 수 없습니다."));
+    }
+
+    // 컬렉션 소유 검증
+    private void isCollectionOwner(User user, Collection collection) {
+        if (!collection.getUser().equals(user)) {
+            throw new CollectionAccessDeniedException();
+        }
+    }
+
 }

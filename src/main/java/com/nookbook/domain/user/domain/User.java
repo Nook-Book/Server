@@ -1,7 +1,10 @@
 package com.nookbook.domain.user.domain;
 
+import com.nookbook.domain.alarm.domain.Alarm;
 import com.nookbook.domain.challenge.domain.Invitation;
 import com.nookbook.domain.challenge.domain.Participant;
+import com.nookbook.domain.collection.domain.Collection;
+import com.nookbook.domain.collection.domain.CollectionStatus;
 import com.nookbook.domain.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -42,13 +45,22 @@ public class User extends BaseEntity {
 
     private String imageName = "default.png";
 
+    @Column(name = "expo_push_token")
+    private String expoPushToken;
+
+
     // Participant와 Invitation 연관관계 추가
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Invitation> invitations = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Collection> collections = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Alarm> alarms = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private Role role;
@@ -62,7 +74,35 @@ public class User extends BaseEntity {
         this.nickname = nickname;
         this.provider = provider;
         this.providerId = providerId;
-        this.role = role;
+        this.role = Role.USER;
+        this.collections = new ArrayList<>();
+        initializeDefaultCollections();
+    }
+
+    // 읽고 싶은, 읽는 중, 읽음 기본 컬렉션 생성
+    private void initializeDefaultCollections() {
+        Collection reading = Collection.builder()
+                .title("읽는 중")
+                .orderIndex(1L)
+                .user(this)
+                .collectionStatus(CollectionStatus.MAIN)
+                .build();
+        Collection read = Collection.builder()
+                .title("읽음")
+                .orderIndex(2L)
+                .user(this)
+                .collectionStatus(CollectionStatus.MAIN)
+                .build();
+        Collection wish = Collection.builder()
+                .title("읽고 싶은")
+                .orderIndex(3L)
+                .user(this)
+                .collectionStatus(CollectionStatus.MAIN)
+                .build();
+
+        this.collections.add(reading);
+        this.collections.add(read);
+        this.collections.add(wish);
     }
 
     public void saveUserInfo(String nicknameId, String nickname) {
@@ -76,6 +116,10 @@ public class User extends BaseEntity {
     public void updateImage(String imageName, String imageUrl) {
         this.imageName = imageName;
         this.imageUrl = imageUrl;
+    }
+
+    public void updateExpoPushToken(String expoPushToken) {
+        this.expoPushToken = expoPushToken;
     }
 
 }

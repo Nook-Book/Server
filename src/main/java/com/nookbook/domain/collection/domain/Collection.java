@@ -57,4 +57,13 @@ public class Collection extends BaseEntity {
     public void updateStatus(CollectionStatus collectionStatus) {
         this.collectionStatus = collectionStatus;
     }
+
+    // 컬렉션들의 orderIndex 재정렬
+    // 컬렉션 삭제 시 호출 (idx는 1부터 시작)
+    public static void reorderCollectionOrderIdx(List<Collection> collections) {
+        for (int i = 1; i < collections.size(); i++) {
+            collections.get(i).updateOrderIndex((long) i);
+        }
+    }
+
 }

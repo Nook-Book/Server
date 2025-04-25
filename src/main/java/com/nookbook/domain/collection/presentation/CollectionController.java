@@ -141,4 +141,20 @@ public class CollectionController {
         return collectionService.getCurrentCollectionBooks(userPrincipal);
     }
 
+    @Operation(summary = "컬렉션 삭제 API", description = "특정 컬렉션을 삭제하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "컬렉션 삭제 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "컬렉션 삭제 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @DeleteMapping("/{collectionId}")
+    public ResponseEntity<?> deleteCollection(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @PathVariable Long collectionId
+    ) {
+        return collectionService.deleteCollection(userPrincipal, collectionId);
+    }
+
+
+
+
 }

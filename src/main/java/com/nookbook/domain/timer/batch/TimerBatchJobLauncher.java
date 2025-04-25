@@ -1,4 +1,4 @@
-package com.nookbook.infrastructure.batch;
+package com.nookbook.domain.timer.batch;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;

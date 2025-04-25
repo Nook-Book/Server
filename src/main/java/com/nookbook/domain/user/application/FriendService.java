@@ -1,5 +1,6 @@
 package com.nookbook.domain.user.application;
 
+import com.nookbook.domain.alarm.application.AlarmService;
 import com.nookbook.domain.user.domain.Friend;
 import com.nookbook.domain.user.domain.FriendRequestStatus;
 import com.nookbook.domain.user.domain.User;
@@ -29,10 +30,11 @@ public class FriendService {
 
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
+    private final AlarmService alarmService;
 
     public ResponseEntity<?> searchUsers(UserPrincipal userPrincipal, String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         Page<SearchUserRes> searchUserRes = getAllUsersByKeyword(user, keyword, pageable);
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
@@ -41,7 +43,7 @@ public class FriendService {
     }
 
     public ResponseEntity<?> getFriends(UserPrincipal userPrincipal, String keyword) {
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         List<SearchUserRes> searchUserRes = getFriendsByKeyword(user, keyword);
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
@@ -71,8 +73,7 @@ public class FriendService {
 
     @Transactional
     public ResponseEntity<?> sendFriendRequest(UserPrincipal userPrincipal, Long userId) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         User targetUser = validUserByUserId(userId);
         DefaultAssert.isTrue(targetUser != user, "본인에게 친구 요청을 보낼 수 없습니다.");
 
@@ -84,6 +85,9 @@ public class FriendService {
                 .receiver(targetUser)
                 .build();
         friendRepository.save(friend);
+        // 친구 요청 알림 생성
+        alarmService.sendFriendRequestAlarm(user, targetUser);
+
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
                 .information("친구 신청이 완료되었습니다.")
@@ -91,8 +95,7 @@ public class FriendService {
     }
 
     public ResponseEntity<?> getFriendRequestList(UserPrincipal userPrincipal) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         List<Friend> sentRequests = friendRepository.findBySenderAndFriendRequestStatus(user, FriendRequestStatus.FRIEND_REQUEST);
         List<Friend> receivedRequests = friendRepository.findByReceiverAndFriendRequestStatus(user, FriendRequestStatus.FRIEND_REQUEST);
         FriendsRequestRes friendsRequestRes = FriendsRequestRes.builder()
@@ -122,13 +125,14 @@ public class FriendService {
     // 보낸 요청 취소
     @Transactional
     public ResponseEntity<?> deleteFriendRequest(UserPrincipal userPrincipal, Long friendId, boolean isFriendAccept) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         Friend friend = validFriendByFriendId(friendId);
         String msg;
         if (!isFriendAccept) {
             DefaultAssert.isTrue(friend.getSender() == user, "내가 보낸 친구 요청이 아닙니다.");
             msg = "친구 요청이 취소되었습니다.";
+            // 전송된 친구 요청 알림 삭제
+            alarmService.deleteFriendRequestAlarm(friend.getReceiver(), friend.getSender().getUserId());
         } else {
             msg = "친구가 삭제되었습니다.";
         }
@@ -142,8 +146,7 @@ public class FriendService {
     // 친구 요청 삭제/수락
     @Transactional
     public ResponseEntity<?> updateFriendRequestStatus(UserPrincipal userPrincipal, Long friendId, boolean isAccept) {
-        // User user = validUserByUserId(userPrincipal.getId());
-        User user = validUserByUserId(1L);
+        User user = validUserByUserId(userPrincipal.getId());
         Friend friend = validFriendByFriendId(friendId);
         DefaultAssert.isTrue(friend.getReceiver() == user, "내가 받은 친구 요청이 아닙니다.");
 
@@ -153,6 +156,8 @@ public class FriendService {
             otherFriend.ifPresent(friendRepository::delete);
             // 서로에게 보낸 요청이 있을 경우(=friend가 중복으로 존재할 경우) 한 명이 수락할 시 다른 쪽의 데이터 삭제
             friend.updateFriendRequestStatus(FriendRequestStatus.FRIEND_ACCEPT);
+            // 친구 수락 알림 생성
+            alarmService.sendFriendAcceptedAlarm(user, friend.getSender());
             msg = "친구 요청을 수락했습니다.";
         } else {
             friendRepository.delete(friend);
