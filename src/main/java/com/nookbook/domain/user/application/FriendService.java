@@ -149,6 +149,9 @@ public class FriendService {
 
         String msg;
         if (isAccept) {
+            Optional<Friend> otherFriend = validFriendBySenderAndReceiver(friend.getSender(), user);
+            otherFriend.ifPresent(friendRepository::delete);
+            // 서로에게 보낸 요청이 있을 경우(=friends가 중복으로 존재할 경우) 한 명이 수락할 시 다른 쪽의 데이터 삭제
             friend.updateFriendRequestStatus(FriendRequestStatus.FRIEND_ACCEPT);
             msg = "친구 요청을 수락했습니다.";
         } else {
@@ -177,5 +180,10 @@ public class FriendService {
         Optional<Friend> friendOptional = friendRepository.findById(friendId);
         DefaultAssert.isTrue(friendOptional.isPresent(), "친구 요청이 존재하지 않습니다.");
         return friendOptional.get();
+    }
+
+    private Optional<Friend> validFriendBySenderAndReceiver(User sender, User receiver) {
+        Optional<Friend> friendOptional = friendRepository.findBySenderAndReceiver(sender, receiver);
+        return friendOptional;
     }
 }

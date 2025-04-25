@@ -52,4 +52,8 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
             "WHERE (f.sender = :user OR f.receiver = :user) " +
             "AND f.friendRequestStatus = 'FRIEND_ACCEPT'")
     List<Friend> findAcceptedFriends(@Param("user") User user);
+
+    @Query("SELECT f FROM Friend f " +
+            "WHERE f.sender.userId = :senderId AND f.receiver.userId = :receiverId")
+    Optional<Friend> findBySenderIdAndReceiverId(Long senderId, Long receiverId);
 }
