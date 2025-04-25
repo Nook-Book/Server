@@ -18,4 +18,6 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     List<Note> findByUserBookInOrderByCreatedAtDesc(List<UserBook> userBooks);
 
     List<Note> findByUserBookInAndLockedOrderByCreatedAtDesc(List<UserBook> userBooks, boolean locked);
+
+    List<Note> findByUserBookAndLockedOrderByCreatedAtDesc(UserBook userBook, boolean locked);
 }
