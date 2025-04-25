@@ -24,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -124,9 +126,8 @@ public class NoteService {
         DefaultAssert.isTrue(userBookOptional.isPresent(), "기록이 존재하지 않습니다.");
         UserBook userBook = userBookOptional.get();
 
-        int count = noteRepository.countByUserBook(userBook);
-
-        List<Note> notes = noteRepository.findByUserBookOrderByCreatedAtDesc(userBook);
+        int count =  noteRepository.countByUserBook(userBook);;
+        List<Note> notes =  noteRepository.findByUserBookOrderByCreatedAtDesc(userBook);
         List<NoteListRes> noteListRes = notes.stream()
                 .map(note -> NoteListRes.builder()
                         .noteId(note.getNoteId())
@@ -134,14 +135,12 @@ public class NoteService {
                         .createdDate(note.getCreatedAt().toLocalDate().toString())
                         .build())
                 .toList();
-
         NoteRes noteRes = NoteRes.builder()
                 .bookTitle(book.getTitle())
                 .bookImage(book.getImage())
                 .noteCount(count)
                 .noteListRes(noteListRes)
                 .build();
-
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information(noteRes)
@@ -192,45 +191,22 @@ public class NoteService {
     }
 
     // 마이페이지 기록 전체보기
-    public ResponseEntity<?> getMyNoteList(UserPrincipal userPrincipal, String keyword) {
+    public ResponseEntity<?> getMyPageNoteList(UserPrincipal userPrincipal, Long userId, String keyword) {
         // User user = validUserById(userPrincipal.getId());
         User user = validUserById(1L);
-        List<UserBook> userBooks;
-        if (keyword == null) {
-            userBooks = userBookRepository.findByUser(user);
-        } else {
-            userBooks = userBookRepository.findByUserAndBookTitleLike(user, keyword);
-        }
-        List<Note> notes = noteRepository.findByUserBookInOrderByCreatedAtDesc(userBooks);
-        List<OtherUserNoteListRes> noteListRes = notes.stream()
-                .map(note -> {
-                    Book book = note.getUserBook().getBook();
-                    return OtherUserNoteListRes.builder()
-                            .bookId(book.getBookId())
-                            .cover(book.getImage())
-                            .title(book.getTitle())
-                            .author(book.getAuthor())
-                            .publisher(book.getPublisher())
-                            .build();
-                })
-                .toList();
-        return ResponseEntity.ok(ApiResponse.builder()
-                        .check(true)
-                        .information(noteListRes)
-                        .build());
-    }
-
-    public ResponseEntity<?> getFriendNoteList(UserPrincipal userPrincipal, Long userId, String keyword) {
-        // User user = validUserById(userPrincipal.getId());
-        User user = validUserById(1L);
-        User targetUser = validUserById(userId);
+        User targetUser = (userId == null) ? user : validUserById(userId);
         List<UserBook> userBooks;
         if (keyword == null) {
             userBooks = userBookRepository.findByUser(targetUser);
         } else {
             userBooks = userBookRepository.findByUserAndBookTitleLike(targetUser, keyword);
         }
-        List<Note> notes = noteRepository.findByUserBookInAndLockedOrderByCreatedAtDesc(userBooks, false);
+        List<Note> notes;
+        if (user == targetUser) {
+            notes = noteRepository.findByUserBookInOrderByCreatedAtDesc(userBooks);
+        } else {
+            notes = noteRepository.findByUserBookInAndLockedOrderByCreatedAtDesc(userBooks, false);
+        }
         List<OtherUserNoteListRes> noteListRes = notes.stream()
                 .map(note -> {
                     Book book = note.getUserBook().getBook();
@@ -242,11 +218,57 @@ public class NoteService {
                             .publisher(book.getPublisher())
                             .build();
                 })
+                .collect(Collectors.toMap(
+                        OtherUserNoteListRes::getBookId,
+                        res -> res,
+                        (existing, duplicate) -> existing,
+                        LinkedHashMap::new
+                ))
+                .values()
+                .stream()
                 .toList();
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
                 .information(noteListRes)
                 .build());
+    }
+
+    // [마이페이지] 도서 정보 조회 및 노트 목록 조회
+    public ResponseEntity<?> getMyPageNoteListByBookId(UserPrincipal userPrincipal, Long userId, Long bookId) {
+        // User user = validUserById(userPrincipal.getId());
+        User user = validUserById(1L);
+        User targetUser = validUserById(userId);
+        Book book = validBookById(bookId);
+
+        Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(targetUser, book);
+        DefaultAssert.isTrue(userBookOptional.isPresent(), "기록이 존재하지 않습니다.");
+        UserBook userBook = userBookOptional.get();
+
+        List<Note> notes;
+        if (targetUser == user) {
+            notes = noteRepository.findByUserBookOrderByCreatedAtDesc(userBook);
+        } else {
+            notes = noteRepository.findByUserBookAndLockedOrderByCreatedAtDesc(userBook, false);
+        }
+        int count = notes.size();
+        List<NoteListRes> noteListRes = notes.stream()
+                .map(note -> NoteListRes.builder()
+                        .noteId(note.getNoteId())
+                        .title(note.getTitle())
+                        .createdDate(note.getCreatedAt().toLocalDate().toString())
+                        .build())
+                .toList();
+        NoteRes noteRes = NoteRes.builder()
+                .bookTitle(book.getTitle())
+                .bookImage(book.getImage())
+                .noteCount(count)
+                .noteListRes(noteListRes)
+                .build();
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(noteRes)
+                .build();
+        return ResponseEntity.ok(apiResponse);
     }
 
     private User validUserById(Long userId) {

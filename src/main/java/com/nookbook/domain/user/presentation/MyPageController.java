@@ -87,10 +87,10 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = MostReadCategoriesRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/report/category")
+    @GetMapping("/{userId}/report/category")
     public ResponseEntity<?> findReadingReportByCategory(
             @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "독서 통계(카테고리별)을 조회하고자 하는 사용자의 id를 입력해주세요. 내 통계인 경우 userId는 null로 전달합니다.") @RequestParam(required = false) Long userId
+            @Parameter(description = "독서 통계(카테고리별)을 조회하고자 하는 사용자의 id를 입력해주세요. 내 통계인 경우에도 userId를 전달합니다.") @PathVariable Long userId
     ) {
         return bookService.countReadBooksByCategory(userPrincipal, userId);
     }
@@ -100,10 +100,10 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = BookStatisticsRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/report")
+    @GetMapping("/{userId}/report")
     public ResponseEntity<?> findReadingReportByYear(
             @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "독서 통계(연도 및 월별)을 조회하고자 하는 사용자의 id를 입력해주세요. 내 통계인 경우 userId는 null로 전달합니다.") @RequestParam(required = false) Long userId,
+            @Parameter(description = "독서 통계(연도 및 월별)을 조회하고자 하는 사용자의 id를 입력해주세요. 내 통계인 경우에도 userId를 전달합니다.") @PathVariable Long userId,
             @Parameter(description = "독서 통계를 확인하려는 연도를 입력해주세요", required = true) @RequestParam int year
     ) {
         return bookService.countReadBooksByYear(userPrincipal, userId, year);
@@ -114,39 +114,40 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = UserInfoRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("")
+    @GetMapping("/{userId}")
     public ResponseEntity<?> findUserInformation(
             @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요. 나의 프로필인 경우 userId는 null로 전달합니다.") @RequestParam(required = false) Long userId
+            @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요. 나의 프로필인 경우에도 userId를 전달합니다.") @PathVariable Long userId
     ) {
         return userService.getUserInfo(userPrincipal, userId);
     }
 
-    @Operation(summary = "[마이페이지] 내 기록 전체보기 목록 조회 및 검색", description = "마이페이지(사용자 본인)의 기록 전체보기 목록 조회 또는 검색하여 조회합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
-            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
-    })
-    @GetMapping("/note")
-    public ResponseEntity<?> findUserAllNotes(
-            @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "검색하고자 하는 단어를 입력해주세요. 없다면 입력하지 않습니다.") @RequestParam(required = false) String keyword
-    ) {
-        return noteService.getMyNoteList(userPrincipal, keyword);
-    }
-
-    @Operation(summary = "[마이페이지] 친구 기록 전체보기 목록 조회 및 검색", description = "마이페이지(친구)의 기록 전체보기 목록 조회 또는 검색하여 조회합니다.")
+    @Operation(summary = "[마이페이지] 기록 전체보기 목록 조회 및 검색", description = "마이페이지 또는 친구페이지의 기록 전체보기 목록 조회 또는 검색하여 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @GetMapping("/{userId}/note")
-    public ResponseEntity<?> findFriendAllNotes(
+    public ResponseEntity<?> findUserAllNotes(
             @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.") @PathVariable Long userId,
+            @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요. 나의 프로필인 경우에도 userId를 전달합니다.") @PathVariable Long userId,
             @Parameter(description = "검색하고자 하는 단어를 입력해주세요. 없다면 입력하지 않습니다.") @RequestParam(required = false) String keyword
     ) {
-        return noteService.getFriendNoteList(userPrincipal, userId, keyword);
+        return noteService.getMyPageNoteList(userPrincipal, userId, keyword);
+    }
+
+    @Operation(summary = "[마이페이지] 기록 전체보기 상세 조회", description = "마이페이지 또는 친구페이지의 기록 전체보기에서 도서를 선택하여 상세 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/{userId}/note/{bookId}")
+    public ResponseEntity<?> findUserAllNotesDetail(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.") @PathVariable Long userId,
+            @Parameter(description = "조회하고자 하는 노트의 **도서 id**를 입력해주세요.") @PathVariable Long bookId
+    ) {
+        return noteService.getMyPageNoteListByBookId(userPrincipal, userId, bookId);
     }
 
     @Operation(summary = "친구 추가 - 검색", description = "사용자 전체를 대상으로 단어를 검색하여 조회합니다.")

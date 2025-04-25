@@ -161,7 +161,7 @@ public class UserService {
     public ResponseEntity<ApiResponse> getUserInfo(UserPrincipal userPrincipal, Long userId) {
         // User user = validUserByUserId(userPrincipal.getId());
         User user = validUserByUserId(1L);
-        User targetUser = userId != null ? validUserByUserId(userId) : user;
+        User targetUser = validUserByUserId(userId);
 
         int num = friendRepository.countBySenderOrReceiverAndFriendRequestStatus(targetUser, FriendRequestStatus.FRIEND_ACCEPT);
         String friendRequestStatus = user != targetUser ? determineFriendStatus(user, targetUser) : null;
