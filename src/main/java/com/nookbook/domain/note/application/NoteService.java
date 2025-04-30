@@ -83,7 +83,8 @@ public class NoteService {
         DefaultAssert.isTrue(note.getUserBook().getUser() == user, "유효한 접근이 아닙니다.");
         if (updateNoteReq.getTitle() != null || updateNoteReq.getContent() != null) {
             note.updateNote(updateNoteReq.getTitle(), updateNoteReq.getContent());
-        } else if (updateNoteReq.getLocked() != null) {
+        }
+        if (updateNoteReq.getLocked() != null) {
             note.updateLocked(updateNoteReq.getLocked());
         }
         ApiResponse apiResponse = ApiResponse.builder()
