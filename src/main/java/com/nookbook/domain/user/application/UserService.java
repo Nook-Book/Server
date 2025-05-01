@@ -140,11 +140,12 @@ public class UserService {
     }
 
     public ResponseEntity<ApiResponse> getUserInfo(UserPrincipal userPrincipal, Long userId) {
+        boolean isSame = userId == userPrincipal.getId();
         User user = validUserByUserId(userPrincipal.getId());
-        User targetUser = validUserByUserId(userId);
+        User targetUser = isSame ? user : validUserByUserId(userId);
 
         int num = friendRepository.countBySenderOrReceiverAndFriendRequestStatus(targetUser, FriendRequestStatus.FRIEND_ACCEPT);
-        String friendRequestStatus = user != targetUser ? determineFriendStatus(user, targetUser) : null;
+        String friendRequestStatus = isSame ? null : determineFriendStatus(user, targetUser);
         UserInfoRes userInfoRes = UserInfoRes.builder()
                 .nicknameId(targetUser.getNicknameId())
                 .nickname(targetUser.getNickname())
@@ -166,7 +167,7 @@ public class UserService {
             if (friend.getFriendRequestStatus() == FriendRequestStatus.FRIEND_REQUEST) {
                 return user.equals(friend.getSender()) ? "REQUEST_SENT" : "REQUEST_RECEIVED";
             } else {
-                return friend.getStatus().toString();
+                return friend.getFriendRequestStatus().toString();
             }
         }).orElse("NONE");
     }

@@ -329,21 +329,14 @@ public class BookService {
 
     // 독서 리포트 - 카테고리
     public ResponseEntity<ApiResponse> countReadBooksByCategory(UserPrincipal userPrincipal, Long userId) {
-        User user = validUserById(userPrincipal.getId());
-
-        User targetUser = userId != null ? validUserById(userId) : user;
-        // groupby에 따라서 카테고리에 맞는 점수 배정
-        // 읽은 책 조회
+        User targetUser = validUserById(userId);
         List<UserBook> userBooks = userBookRepository.findByUserAndBookStatus(targetUser, BookStatus.READ);
-
-        // 카테고리별로 그룹화하여 카운트 (카테고리명과 그에 대한 책 수를 매핑)
+        // 카테고리별로 그룹화하여 카운트
         Map<String, Long> categoryCountMap = userBooks.stream()
                 .collect(Collectors.groupingBy(
                         userBook -> userBook.getBook().getCategory(),
-                        Collectors.counting()
-                ));
+                        Collectors.counting()));
 
-        // 카테고리별 결과를 응답 객체로 변환
         List<MostReadCategoriesRes> readCategoriesRes = categoryCountMap.entrySet().stream()
                 .map(entry -> MostReadCategoriesRes.builder()
                         .category(entry.getKey()) // 카테고리명
@@ -351,31 +344,24 @@ public class BookService {
                         .build())
                 .sorted(Comparator.comparing(MostReadCategoriesRes::getCategory))
                 .collect(Collectors.toList());
-
-        // ApiResponse로 변환하여 반환
         ApiResponse response = ApiResponse.builder()
                 .check(true)
                 .information(readCategoriesRes)
                 .build();
-
         return ResponseEntity.ok(response);
     }
 
-    // 독서 리포트 - 독서 통계
-    public ResponseEntity<ApiResponse> countReadBooksByYear(UserPrincipal userPrincipal, Long userId,  int year) {
-        User user = validUserById(userPrincipal.getId());
-
-        User targetUser = userId != null ? validUserById(userId) : user;
-        List<UserBook> userBooks = userBookRepository.findUserBooksByStatusAndYear(targetUser, BookStatus.READ, year);
-
+    // 독서 리포트 - 연도별
+    public ResponseEntity<ApiResponse> countReadBooksByYear(UserPrincipal userPrincipal, Long userId,  Optional<Integer> yearOptional) {
+        User targetUser = validUserById(userId);
+        int targetYear = yearOptional.get();
+        List<UserBook> userBooks = userBookRepository.findUserBooksByStatusAndYear(targetUser, BookStatus.READ, targetYear);
         // 월별로 그룹화하여 카운트
         Map<Integer, Long> monthCountMap = userBooks.stream()
                 .collect(Collectors.groupingBy(
                         userBook -> Integer.valueOf(userBook.getUpdatedAt().format(DateTimeFormatter.ofPattern("MM"))),
-                        Collectors.counting()
-                ));
+                        Collectors.counting()));
 
-        // 카테고리별 결과를 응답 객체로 변환
         List<BookStatisticsRes> bookStatisticsRes = monthCountMap.entrySet().stream()
                 .map(entry -> BookStatisticsRes.builder()
                         .month(entry.getKey()) // 카테고리명
@@ -383,13 +369,10 @@ public class BookService {
                         .build())
                 .sorted(Comparator.comparingInt(BookStatisticsRes::getMonth))
                 .collect(Collectors.toList());
-
-        // ApiResponse로 변환하여 반환
         ApiResponse response = ApiResponse.builder()
                 .check(true)
                 .information(bookStatisticsRes)
                 .build();
-
         return ResponseEntity.ok(response);
     }
 
