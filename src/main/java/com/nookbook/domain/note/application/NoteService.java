@@ -123,7 +123,6 @@ public class NoteService {
         DefaultAssert.isTrue(userBookOptional.isPresent(), "기록이 존재하지 않습니다.");
         UserBook userBook = userBookOptional.get();
 
-        int count =  noteRepository.countByUserBook(userBook);;
         List<Note> notes =  noteRepository.findByUserBookOrderByCreatedAtDesc(userBook);
         List<NoteListRes> noteListRes = notes.stream()
                 .map(note -> NoteListRes.builder()
@@ -135,7 +134,7 @@ public class NoteService {
         NoteRes noteRes = NoteRes.builder()
                 .bookTitle(book.getTitle())
                 .bookImage(book.getImage())
-                .noteCount(count)
+                .noteCount(notes.size())
                 .noteListRes(noteListRes)
                 .build();
         ApiResponse apiResponse = ApiResponse.builder()
@@ -186,10 +185,10 @@ public class NoteService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    // 마이페이지 기록 전체보기
-    public ResponseEntity<?> getMyPageNoteList(UserPrincipal userPrincipal, Long userId, String keyword) {
-        User user = validUserById(userPrincipal.getId());
-        User targetUser = (userId == null) ? user : validUserById(userId);
+    // 기록 전체보기
+    public ResponseEntity<?> getUserPageNoteList(UserPrincipal userPrincipal, Long userId, String keyword) {
+        //User user = validUserById(userPrincipal.getId());
+        User targetUser = validUserById(userId);
         List<UserBook> userBooks;
         if (keyword == null) {
             userBooks = userBookRepository.findByUser(targetUser);
@@ -197,7 +196,7 @@ public class NoteService {
             userBooks = userBookRepository.findByUserAndBookTitleLike(targetUser, keyword);
         }
         List<Note> notes;
-        if (user == targetUser) {
+        if (userPrincipal.getId() == userId) {
             notes = noteRepository.findByUserBookInOrderByCreatedAtDesc(userBooks);
         } else {
             notes = noteRepository.findByUserBookInAndLockedOrderByCreatedAtDesc(userBooks, false);
@@ -228,9 +227,9 @@ public class NoteService {
                 .build());
     }
 
-    // [마이페이지] 도서 정보 조회 및 노트 목록 조회
-    public ResponseEntity<?> getMyPageNoteListByBookId(UserPrincipal userPrincipal, Long userId, Long bookId) {
-        User user = validUserById(userPrincipal.getId());
+    // 도서 정보 조회 및 노트 목록 조회
+    public ResponseEntity<?> getUserPageNoteListByBookId(UserPrincipal userPrincipal, Long userId, Long bookId) {
+        // User user = validUserById(userPrincipal.getId());
         User targetUser = validUserById(userId);
         Book book = validBookById(bookId);
 
@@ -239,12 +238,11 @@ public class NoteService {
         UserBook userBook = userBookOptional.get();
 
         List<Note> notes;
-        if (targetUser == user) {
+        if (userPrincipal.getId() == userId) {
             notes = noteRepository.findByUserBookOrderByCreatedAtDesc(userBook);
         } else {
             notes = noteRepository.findByUserBookAndLockedOrderByCreatedAtDesc(userBook, false);
         }
-        int count = notes.size();
         List<NoteListRes> noteListRes = notes.stream()
                 .map(note -> NoteListRes.builder()
                         .noteId(note.getNoteId())
@@ -255,7 +253,7 @@ public class NoteService {
         NoteRes noteRes = NoteRes.builder()
                 .bookTitle(book.getTitle())
                 .bookImage(book.getImage())
-                .noteCount(count)
+                .noteCount(notes.size())
                 .noteListRes(noteListRes)
                 .build();
         ApiResponse apiResponse = ApiResponse.builder()
