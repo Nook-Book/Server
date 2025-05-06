@@ -2,6 +2,7 @@ package com.nookbook.domain.user_book.domain;
 
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.common.BaseEntity;
+import com.nookbook.domain.note.domain.Note;
 import com.nookbook.domain.timer.domain.Timer;
 import com.nookbook.domain.user.domain.User;
 import jakarta.persistence.*;
@@ -34,8 +35,12 @@ public class UserBook extends BaseEntity {
     @JoinColumn(name = "book_id")
     private Book book;
 
-    @OneToMany
-    private List<Timer> timers;
+    @OneToMany(mappedBy = "userBook", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Timer> timers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "userBook", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Note> notes = new ArrayList<>();
+
 
     // 누적 독서 시간
     private BigInteger totalReadTime = BigInteger.ZERO;

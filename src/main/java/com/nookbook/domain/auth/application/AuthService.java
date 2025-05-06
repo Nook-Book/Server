@@ -3,14 +3,17 @@ package com.nookbook.domain.auth.application;
 import com.nookbook.domain.auth.domain.Token;
 import com.nookbook.domain.auth.domain.repository.TokenRepository;
 import com.nookbook.domain.auth.dto.response.LoginResponse;
+import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.Provider;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
+import com.nookbook.domain.user.exception.UserNotFoundException;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.config.security.util.JwtTokenUtil;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,7 @@ public class AuthService {
     private final JwtTokenUtil jwtTokenUtil;
     private final IdTokenVerifier idTokenVerifier;
     private final UserDetailsService userDetailsService;
+    private final UserService userService;
 
 
     public String verifyIdTokenAndExtractUsername(String idToken, String email) {
@@ -85,7 +89,9 @@ public class AuthService {
 
     @Transactional
     public ResponseEntity<?> logout(UserPrincipal userPrincipal) {
-        User user = (User) userDetailsService.loadUserByUsername(userPrincipal.getUsername());
+
+        // 사용자 검증
+        User user = validateUser(userPrincipal);
         String email = user.getEmail();
 
         // 토큰 정보 삭제
@@ -104,7 +110,7 @@ public class AuthService {
 
     @Transactional
     public ResponseEntity<?> exit(UserPrincipal userPrincipal) {
-        User user = (User) userDetailsService.loadUserByUsername(userPrincipal.getUsername());
+        User user = validateUser(userPrincipal);
         String email = user.getEmail();
 
         // 사용자 토큰 정보 삭제
@@ -134,4 +140,14 @@ public class AuthService {
         }
     }
 
+    // 사용자 검증 메서드
+    private User validateUser(UserPrincipal userPrincipal) {
+        UserDetails userDetails = userDetailsService.loadUserByUsername(userPrincipal.getUsername());
+        if (userDetails instanceof UserPrincipal) {
+            return userService.findByEmail(userDetails.getUsername())
+                    .orElseThrow(UserNotFoundException::new);
+        } else {
+            throw new UserNotFoundException();
+        }
+    }
 }

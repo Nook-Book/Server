@@ -1,11 +1,14 @@
 package com.nookbook.domain.user.domain;
 
 import com.nookbook.domain.alarm.domain.Alarm;
+import com.nookbook.domain.challenge.domain.Challenge;
 import com.nookbook.domain.challenge.domain.Invitation;
 import com.nookbook.domain.challenge.domain.Participant;
 import com.nookbook.domain.collection.domain.Collection;
 import com.nookbook.domain.collection.domain.CollectionStatus;
 import com.nookbook.domain.common.BaseEntity;
+import com.nookbook.domain.keyword.domain.Keyword;
+import com.nookbook.domain.user_book.domain.UserBook;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -59,8 +62,24 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Collection> collections = new ArrayList<>();
 
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Challenge> challenges = new ArrayList<>();
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Alarm> alarms = new ArrayList<>();
+
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Friend> sentFriends = new ArrayList<>();
+
+    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Friend> receivedFriends = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserBook> userBooks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Keyword> keywords = new ArrayList<>();
+
 
     @Enumerated(EnumType.STRING)
     private Role role;
