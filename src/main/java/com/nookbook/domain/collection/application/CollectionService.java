@@ -154,6 +154,7 @@ public class CollectionService {
                         .bookId(book.getBookId())
                         .isbn(book.getIsbn())
                         .title(book.getTitle())
+                        .author(book.getAuthor())
                         .cover(book.getImage())
                         .build())
                 .toList();
