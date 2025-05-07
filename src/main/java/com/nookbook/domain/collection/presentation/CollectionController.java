@@ -2,10 +2,7 @@ package com.nookbook.domain.collection.presentation;
 
 
 import com.nookbook.domain.collection.application.CollectionService;
-import com.nookbook.domain.collection.dto.request.CollectionCreateReq;
-import com.nookbook.domain.collection.dto.request.CollectionOrderReq;
-import com.nookbook.domain.collection.dto.request.DeleteBookReq;
-import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
+import com.nookbook.domain.collection.dto.request.*;
 import com.nookbook.domain.collection.dto.response.CollectionBooksListRes;
 import com.nookbook.domain.collection.dto.response.CollectionListRes;
 import com.nookbook.domain.collection.dto.response.MainCollectionListRes;
@@ -152,6 +149,21 @@ public class CollectionController {
             @PathVariable Long collectionId
     ) {
         return collectionService.deleteCollection(userPrincipal, collectionId);
+    }
+
+    @Operation(summary = "컬렉션 내 도서 이동 API", description = "컬렉션 내 도서를 다른 컬렉션으로 이동하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "컬렉션 내 도서 이동 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
+            @ApiResponse(responseCode = "400", description = "컬렉션 내 도서 이동 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @PatchMapping("/{collectionId}/books/{bookId}")
+    public ResponseEntity<?> moveBookToAnotherCollection(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @PathVariable Long collectionId,
+            @PathVariable Long bookId,
+            @RequestBody TargetCollectionReq targetCollectionReq
+    ) {
+        return collectionService.moveBookToAnotherCollection(userPrincipal, collectionId, bookId, targetCollectionReq);
     }
 
 
