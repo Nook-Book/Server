@@ -7,10 +7,7 @@ import com.nookbook.domain.collection.domain.CollectionBook;
 import com.nookbook.domain.collection.domain.CollectionStatus;
 import com.nookbook.domain.collection.domain.repository.CollectionBookRepository;
 import com.nookbook.domain.collection.domain.repository.CollectionRepository;
-import com.nookbook.domain.collection.dto.request.CollectionCreateReq;
-import com.nookbook.domain.collection.dto.request.CollectionOrderReq;
-import com.nookbook.domain.collection.dto.request.DeleteBookReq;
-import com.nookbook.domain.collection.dto.request.UpdateCollectionTitleReq;
+import com.nookbook.domain.collection.dto.request.*;
 import com.nookbook.domain.collection.dto.response.*;
 import com.nookbook.domain.collection.exception.CollectionAccessDeniedException;
 import com.nookbook.domain.user.application.UserService;
@@ -58,12 +55,7 @@ public class CollectionService {
 
         collectionRepository.save(collection);
 
-        ApiResponse response = ApiResponse.builder()
-                .check(true)
-                .information("컬렉션 생성 완료")
-                .build();
-
-        return ResponseEntity.ok(response);
+        return buildOkResponse("컬렉션 생성이 완료되었습니다.", true);
     }
 
     // 컬렉션 리스트 조회
@@ -130,12 +122,7 @@ public class CollectionService {
         Collection collection = findCollectionByUserAndCollectionId(userPrincipal, collectionId);
         collection.updateTitle(updateCollectionTitleReq.getTitle());
 
-        ApiResponse response = ApiResponse.builder()
-                .check(true)
-                .information("컬렉션 제목 수정 완료")
-                .build();
-
-        return ResponseEntity.ok(response);
+        return buildOkResponse("컬렉션 제목 수정이 완료되었습니다.", true);
     }
 
 
@@ -199,58 +186,61 @@ public class CollectionService {
     // 컬렉션에 도서 추가
     @Transactional
     public ResponseEntity<?> addBookToCollection(UserPrincipal userPrincipal, Long collectionId, Long bookId) {
-        Collection collection = findCollectionByUserAndCollectionId(userPrincipal, collectionId);
+        Collection collection = validateUserCollection(userPrincipal, collectionId);
+        Book book = findBookOrThrow(bookId);
 
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("도서를 찾을 수 없습니다."));
-
-        // 만약 collectionBook이 이미 존재한다면 추가하지 않고 메세지 반환
-        CollectionBook collectionBookCheck = collectionBookRepository.findByCollectionAndBook(collection, book);
-        if (collectionBookCheck != null) {
-            ApiResponse response = ApiResponse.builder()
-                    .check(false)
-                    .information("이미 컬렉션에 추가된 도서입니다.")
-                    .build();
-            return ResponseEntity.badRequest().body(response);
+        // 이미 존재하는 경우: 200 OK + check: false
+        if (isBookAlreadyInCollection(collection, book)) {
+            return buildOkResponse("이미 컬렉션에 추가된 도서입니다.", false);
         }
-        else{
-            CollectionBook collectionBook = CollectionBook.builder()
-                    .collection(collection)
-                    .book(book)
-                    .build();
 
-            collectionBookRepository.save(collectionBook);
-
-            ApiResponse response = ApiResponse.builder()
-                    .check(true)
-                    .information("컬렉션에 도서 추가 완료")
-                    .build();
-
-            return ResponseEntity.ok(response);
-        }
+        // 새로 추가
+        addBookToCollection(collection, book);
+        return buildOkResponse("컬렉션에 도서 추가 완료", true);
     }
+
+    private Collection validateUserCollection(UserPrincipal userPrincipal, Long collectionId) {
+        return findCollectionByUserAndCollectionId(userPrincipal, collectionId);
+    }
+
+    private Book findBookOrThrow(Long bookId) {
+        return bookRepository.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("도서를 찾을 수 없습니다."));
+    }
+
+    private boolean isBookAlreadyInCollection(Collection collection, Book book) {
+        return collectionBookRepository.findByCollectionAndBook(collection, book) != null;
+    }
+
+    private void addBookToCollection(Collection collection, Book book) {
+        CollectionBook collectionBook = CollectionBook.builder()
+                .collection(collection)
+                .book(book)
+                .build();
+        collectionBookRepository.save(collectionBook);
+    }
+
+
 
     // 컬렉션에서 도서 삭제
     @Transactional
     public ResponseEntity<?> deleteBookFromCollection(UserPrincipal userPrincipal, Long collectionId, DeleteBookReq deleteBookReq) {
-
-        // 컬렉션 검증
-        Collection collection = findCollectionByUserAndCollectionId(userPrincipal, collectionId);
+        Collection collection = validateUserCollection(userPrincipal, collectionId);
         List<Long> bookIds = deleteBookReq.getBookIds();
 
-        // 컬렉션에 속한 도서 중 삭제 요청된 도서를 찾아 삭제
+        deleteBooksFromCollection(collectionId, bookIds);
+
+        return buildOkResponse("컬렉션 도서 삭제가 완료되었습니다.", true);
+    }
+
+
+    private void deleteBooksFromCollection(Long collectionId, List<Long> bookIds) {
         for (Long bookId : bookIds) {
             CollectionBook collectionBook = collectionBookRepository.findByCollectionIdAndBookId(collectionId, bookId)
                     .orElseThrow(() -> new RuntimeException("컬렉션 도서를 찾을 수 없습니다."));
+
             collectionBookRepository.delete(collectionBook);
         }
-
-        ApiResponse response = ApiResponse.builder()
-                .check(true)
-                .information("컬렉션 도서 삭제 완료")
-                .build();
-
-        return ResponseEntity.ok(response);
     }
 
 
@@ -285,12 +275,7 @@ public class CollectionService {
             }
         }
 
-        ApiResponse response = ApiResponse.builder()
-                .check(true)
-                .information("컬렉션 순서 변경 완료")
-                .build();
-
-        return ResponseEntity.ok(response);
+        return buildOkResponse("컬렉션 순서 변경이 완료되었습니다.", true);
     }
 
 
@@ -365,6 +350,7 @@ public class CollectionService {
 
     }
 
+    // 컬렉션 삭제
     @Transactional
     public ResponseEntity<?> deleteCollection(UserPrincipal userPrincipal, Long collectionId) {
         User user = validateUser(userPrincipal);
@@ -375,13 +361,39 @@ public class CollectionService {
         // 컬렉션 삭제 시 컬렉션들의 orderIndex 재정렬
         Collection.reorderCollectionOrderIdx(collectionRepository.findAllByUser(user));
 
-        ApiResponse response = ApiResponse.builder()
-                .check(true)
-                .information("컬렉션 삭제 완료")
-                .build();
-
-        return ResponseEntity.ok(response);
+        return buildOkResponse("컬렉션 삭제가 완료되었습니다.", true);
     }
+
+    // 컬렉션 내 도서 이동
+    @Transactional
+    public ResponseEntity<?> moveBookToAnotherCollection(UserPrincipal userPrincipal, Long fromCollectionId, Long bookId, TargetCollectionReq targetCollectionReq) {
+
+        Long toCollectionId = targetCollectionReq.getTargetCollectionId();
+
+        // 1. 컬렉션들 검증
+        Collection fromCollection = validateUserCollection(userPrincipal, fromCollectionId);
+        Collection toCollection = validateUserCollection(userPrincipal, toCollectionId);
+
+        // 2. 도서 조회
+        Book book = findBookOrThrow(bookId);
+
+        // 3. 기존 컬렉션에서 삭제
+        CollectionBook existing = collectionBookRepository.findByCollectionAndBook(fromCollection, book);
+        if (existing == null) {
+            return buildBadRequestResponse("원본 컬렉션에 해당 도서가 존재하지 않습니다.");
+        }
+        collectionBookRepository.delete(existing);
+
+        // 4. 대상 컬렉션에 이미 있는지 확인 후 없으면 추가
+        if (collectionBookRepository.findByCollectionAndBook(toCollection, book) != null) {
+            return buildOkResponse("대상 컬렉션에 이미 존재하는 도서입니다.", false);
+        }
+        addBookToCollection(toCollection, book);
+
+        // 5. 응답 반환
+        return buildOkResponse("도서가 해당 도서가 다른 컬렉션으로 이동되었습니다.", true);
+    }
+
 
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
@@ -400,6 +412,24 @@ public class CollectionService {
         if (!collection.getUser().equals(user)) {
             throw new CollectionAccessDeniedException();
         }
+    }
+
+    // 응답 빌더 메서드
+    private ResponseEntity<ApiResponse> buildOkResponse(String message, boolean check) {
+        ApiResponse response = ApiResponse.builder()
+                .check(check)
+                .information(message)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+
+    private ResponseEntity<ApiResponse> buildBadRequestResponse(String message) {
+        ApiResponse response = ApiResponse.builder()
+                .check(false)
+                .information(message)
+                .build();
+        return ResponseEntity.badRequest().body(response);
     }
 
 }
