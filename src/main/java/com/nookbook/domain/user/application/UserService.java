@@ -195,28 +195,12 @@ public class UserService {
         return ResponseEntity.ok(apiResponse);
     }
 
+
     public ResponseEntity<?> checkUserExists(UserPrincipal userPrincipal) {
-        boolean isRegistered;
-        // UserPrincipal이 null이면 회원가입이 안된 상태
-        if (userPrincipal == null) {
-            log.warn("UserPrincipal is null. Returning false.");
-            return ResponseEntity.ok(ApiResponse.builder()
-                    .check(true)
-                    .information(UserExistsRes.builder().isRegistered(false).build())
-                    .build());
-        }
 
-        try {
-            validUserByUserId(userPrincipal.getId());
-            isRegistered = true;
-        } catch (UsernameNotFoundException e) {
-            log.warn("User not found: {}", userPrincipal.getId());
-            isRegistered = false;
-        } catch (Exception e) {  // 다른 예외도 잡도록 추가
-            log.error("Unexpected error during user validation: {}", e.getMessage());
-            isRegistered = false;
-        }
+        boolean isRegistered = checkUserCompleteSignUpSteps(userPrincipal);
 
+        // UserExistsRes 응답 객체 생성
         UserExistsRes userExistsRes = UserExistsRes.builder()
                 .isRegistered(isRegistered)
                 .build();
@@ -227,6 +211,26 @@ public class UserService {
                 .build();
 
         return ResponseEntity.ok(apiResponse);
+    }
+
+    // 사용자가 회원가입을 완료했는지 확인
+    private boolean checkUserCompleteSignUpSteps(UserPrincipal userPrincipal) {
+        // userPrincipal이 null인지 확인
+        if (userPrincipal == null) {
+            return false;
+        }
+        try {
+            // 유효한 사용자인지 확인
+            User user = validUserByUserId(userPrincipal.getId());
+            // 닉네임 ID와 닉네임이 모두 존재하는지 확인
+            return user.getNicknameId() != null && user.getNickname() != null;
+        } catch (UsernameNotFoundException e) { // 사용자가 존재하지 않는 경우
+            log.warn("User not found: {}", userPrincipal.getId());
+            return false;
+        } catch (Exception e) { // 예외 처리
+            log.error("Unexpected error during user validation: {}", e.getMessage());
+            return false;
+        }
     }
 
     //saveExpoPushToken
