@@ -44,7 +44,7 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PutMapping("/nickname-id")
+    @PatchMapping("/nickname-id")
     public ResponseEntity<?> updateNicknameId(
             @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "변경할 아이디 입력값", required = true) @Valid @RequestBody NicknameIdCheckReq nicknameIdCheckReq
@@ -57,7 +57,7 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PutMapping("/nickname")
+    @PatchMapping("/nickname")
     public ResponseEntity<?> updateNickname(
             @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "변경할 닉네임 입력값", required = true) @Valid @RequestBody NicknameCheckReq nicknameCheckReq
@@ -70,7 +70,7 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PutMapping("/image")
+    @PatchMapping("/profile-image")
     public ResponseEntity<?> updateImage(
             @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "변경할 프로필 이미지 파일") @RequestPart MultipartFile image
@@ -83,7 +83,7 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PutMapping("/image/default")
+    @PatchMapping("/profile-image/default")
     public ResponseEntity<?> updateDefaultImage(
             @CurrentUser UserPrincipal userPrincipal
     ) {
@@ -96,7 +96,7 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = MostReadCategoriesRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/report")
+    @GetMapping("/reports")
     public ResponseEntity<?> findMyReadingReport(
             @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "독서 통계의 종류입니다. category: 카테고리별(기본) , year: 연도별", required = true) @RequestParam(defaultValue = "category") String type,
@@ -126,25 +126,12 @@ public class MyPageController {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping("/note")
+    @GetMapping("/books")
     public ResponseEntity<?> findMyAllNotes(
             @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "검색하고자 하는 단어를 입력해주세요. 없다면 입력하지 않습니다.") @RequestParam(required = false) String keyword
     ) {
         return noteService.getUserPageNoteList(userPrincipal, userPrincipal.getId(), keyword);
-    }
-
-    @Operation(summary = "기록 전체보기 상세 조회", description = "마이페이지의 기록 전체보기에서 도서를 선택하여 상세 조회합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
-            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
-    })
-    @GetMapping("/note/book/{bookId}")
-    public ResponseEntity<?> findMyAllNotesDetail(
-            @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "조회하고자 하는 노트의 **도서 id**를 입력해주세요.", required = true) @PathVariable Long bookId
-    ) {
-        return noteService.getUserPageNoteListByBookId(userPrincipal, userPrincipal.getId(), bookId);
     }
 
 }
