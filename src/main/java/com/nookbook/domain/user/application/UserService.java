@@ -4,16 +4,13 @@ import com.nookbook.domain.user.domain.Friend;
 import com.nookbook.domain.user.domain.FriendRequestStatus;
 import com.nookbook.domain.user.domain.repository.FriendRepository;
 import com.nookbook.domain.user.dto.request.ExpoPushTokenReq;
-import com.nookbook.domain.user.dto.response.UserExistsRes;
+import com.nookbook.domain.user.dto.response.*;
 import com.nookbook.infrastructure.s3.S3Uploader;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
 import com.nookbook.domain.user.dto.request.NicknameCheckReq;
 import com.nookbook.domain.user.dto.request.UserInfoReq;
-import com.nookbook.domain.user.dto.response.UserInfoRes;
-import com.nookbook.domain.user.dto.response.NicknameCheckRes;
-import com.nookbook.domain.user.dto.response.NicknameIdCheckRes;
 import com.nookbook.global.DefaultAssert;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
@@ -21,6 +18,9 @@ import com.nookbook.global.payload.Message;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -240,6 +240,25 @@ public class UserService {
                 .information(Message.builder().message("Expo push token 저장 성공").build())
                 .build();
         return ResponseEntity.ok(apiResponse);
+    }
+
+    public ResponseEntity<?> searchUsers(UserPrincipal userPrincipal, String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        User user = validUserByUserId(userPrincipal.getId());
+        Page<SearchUserRes> searchUserRes = getAllUsersByKeyword(user, keyword, pageable);
+        return ResponseEntity.ok(ApiResponse.builder()
+                .check(true)
+                .information(searchUserRes)
+                .build());
+    }
+
+    private Page<SearchUserRes> getAllUsersByKeyword(User user, String keyword, Pageable pageable) {
+        Page<User> findUsers = userRepository.findUsersNotInFriendByKeyword(user, keyword, pageable);
+        return findUsers.map(findUser -> SearchUserRes.builder()
+                .userId(findUser.getUserId())
+                .nickname(findUser.getNickname())
+                .imageUrl(findUser.getImageUrl())
+                .build());
     }
 
     private User validUserByUserId(Long userId) {
