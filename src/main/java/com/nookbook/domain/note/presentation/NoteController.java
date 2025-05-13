@@ -102,7 +102,7 @@ public class NoteController {
             @ApiResponse(responseCode = "200", description = "업로드 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ImageUrlRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "업로드 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
-    @PostMapping("/notes/images")
+    @PostMapping("/notes/image")
     public ResponseEntity<?> uploadNoteImage(
             @Parameter(description = "업로드할 이미지를 입력해주세요.", required = true) @RequestPart MultipartFile image
     ) {
@@ -114,7 +114,7 @@ public class NoteController {
             @ApiResponse(responseCode = "200", description = "삭제 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "삭제 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
-    @DeleteMapping("/notes/images")
+    @DeleteMapping("/notes/image")
     public ResponseEntity<?> deleteNoteImage(
             @Parameter(description = "삭제할 이미지의 URL을 입력해주세요.", required = true) @RequestParam String imageUrl
     ) {
