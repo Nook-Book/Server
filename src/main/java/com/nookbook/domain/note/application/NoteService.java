@@ -42,9 +42,9 @@ public class NoteService {
 
     // 노트 저장
     @Transactional
-    public ResponseEntity<?> saveNewNote(UserPrincipal userPrincipal, CreateNoteReq createNoteReq) {
+    public ResponseEntity<?> saveNewNote(UserPrincipal userPrincipal, Long bookId, CreateNoteReq createNoteReq) {
         User user = validUserById(userPrincipal.getId());
-        Book book = validBookById(createNoteReq.getBookId());
+        Book book = validBookById(bookId);
         UserBook userBook;
         // user_book에 없으면 생성
         Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
@@ -110,36 +110,6 @@ public class NoteService {
                 .information(Message.builder()
                         .message("기록이 삭제되었습니다.")
                         .build())
-                .build();
-        return ResponseEntity.ok(apiResponse);
-    }
-
-    // 책 정보 조회(제목, 이미지) && 노트 목록 조회
-    public ResponseEntity<?> getNoteListByBookId(UserPrincipal userPrincipal, Long bookId) {
-        User user = validUserById(userPrincipal.getId());
-        Book book = validBookById(bookId);
-
-        Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
-        DefaultAssert.isTrue(userBookOptional.isPresent(), "기록이 존재하지 않습니다.");
-        UserBook userBook = userBookOptional.get();
-
-        List<Note> notes =  noteRepository.findByUserBookOrderByCreatedAtDesc(userBook);
-        List<NoteListRes> noteListRes = notes.stream()
-                .map(note -> NoteListRes.builder()
-                        .noteId(note.getNoteId())
-                        .title(note.getTitle())
-                        .createdDate(note.getCreatedAt().toLocalDate().toString())
-                        .build())
-                .toList();
-        NoteRes noteRes = NoteRes.builder()
-                .bookTitle(book.getTitle())
-                .bookImage(book.getImage())
-                .noteCount(notes.size())
-                .noteListRes(noteListRes)
-                .build();
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information(noteRes)
                 .build();
         return ResponseEntity.ok(apiResponse);
     }

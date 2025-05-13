@@ -25,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "Note", description = "Note API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/note")
+@RequestMapping("/api/v1")
 public class NoteController {
 
     private final NoteService noteService;
@@ -35,12 +35,26 @@ public class NoteController {
             @ApiResponse(responseCode = "200", description = "저장 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "저장 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
-    @PostMapping
+    @PostMapping("/books/{bookId}/notes")
     public ResponseEntity<?> createNote(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "도서의 id를 입력해주세요.", required = true) @PathVariable Long bookId,
             @Parameter(description = "Schemas의 CreateNoteReq를 참고해주세요.", required = true) @RequestBody CreateNoteReq createNoteReq
             ) {
-        return noteService.saveNewNote(userPrincipal, createNoteReq);
+        return noteService.saveNewNote(userPrincipal, bookId, createNoteReq);
+    }
+
+    @Operation(summary = "독서 노트 목록 조회", description = "독서 노트가 이미 존재할 경우, 노트의 목록을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = NoteRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @GetMapping("/books/{bookId}/notes")
+    public ResponseEntity<?> findNoteList(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "도서의 id를 입력해주세요.", required = true) @PathVariable Long bookId
+    ) {
+        return noteService.getUserPageNoteListByBookId(userPrincipal, userPrincipal.getId(), bookId);
     }
 
     @Operation(summary = "독서 노트 수정", description = "독서 노트의 제목과 내용, 공개 여부를 수정합니다.")
@@ -48,7 +62,7 @@ public class NoteController {
             @ApiResponse(responseCode = "200", description = "수정 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "수정 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
-    @PutMapping("/{noteId}")
+    @PatchMapping("/notes/{noteId}")
     public ResponseEntity<?> updateNote(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "노트의 id를 입력해주세요.", required = true) @PathVariable Long noteId,
@@ -62,7 +76,7 @@ public class NoteController {
             @ApiResponse(responseCode = "200", description = "삭제 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "삭제 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
-    @DeleteMapping("/{noteId}")
+    @DeleteMapping("/notes/{noteId}")
     public ResponseEntity<?> deleteNote(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "노트의 id를 입력해주세요.", required = true) @PathVariable Long noteId
@@ -75,7 +89,7 @@ public class NoteController {
             @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = NoteDetailRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
-    @GetMapping("/{noteId}")
+    @GetMapping("/notes/{noteId}")
     public ResponseEntity<?> findNoteDetail(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "노트의 id를 입력해주세요.", required = true) @PathVariable Long noteId
@@ -83,25 +97,12 @@ public class NoteController {
         return noteService.getNoteDetail(userPrincipal, noteId);
     }
 
-    @Operation(summary = "독서 노트 목록 조회", description = "독서 노트가 이미 존재할 경우, 노트의 목록을 조회합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = NoteRes.class) ) } ),
-            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
-    } )
-    @GetMapping("/book/{bookId}")
-    public ResponseEntity<?> findNoteList(
-            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "도서의 id를 입력해주세요.", required = true) @PathVariable Long bookId
-    ) {
-        return noteService.getNoteListByBookId(userPrincipal, bookId);
-    }
-
     @Operation(summary = "이미지 업로드", description = "이미지를 업로드하고, URL을 반환합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "업로드 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ImageUrlRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "업로드 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
-    @PostMapping("/image")
+    @PostMapping("/notes/images")
     public ResponseEntity<?> uploadNoteImage(
             @Parameter(description = "업로드할 이미지를 입력해주세요.", required = true) @RequestPart MultipartFile image
     ) {
@@ -113,7 +114,7 @@ public class NoteController {
             @ApiResponse(responseCode = "200", description = "삭제 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
             @ApiResponse(responseCode = "400", description = "삭제 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
-    @DeleteMapping("/image")
+    @DeleteMapping("/notes/images")
     public ResponseEntity<?> deleteNoteImage(
             @Parameter(description = "삭제할 이미지의 URL을 입력해주세요.", required = true) @RequestParam String imageUrl
     ) {
