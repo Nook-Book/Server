@@ -147,7 +147,7 @@ public class NoteService {
     }
 
     public ResponseEntity<?> deleteImage(String imageUrl) {
-        s3Uploader.deleteFile(s3Uploader.extractImageNameFromUrl(imageUrl));
+        s3Uploader.deleteFile(s3Uploader.extractFileName(imageUrl));
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information("이미지가 삭제되었습니다.")
