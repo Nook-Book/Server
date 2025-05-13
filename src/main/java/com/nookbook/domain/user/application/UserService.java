@@ -173,18 +173,18 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseEntity<?> updateImage(UserPrincipal userPrincipal, Boolean isDefaultImage, Optional<MultipartFile> image) {
+    public ResponseEntity<?> updateImage(UserPrincipal userPrincipal, Boolean isDefaultImage, MultipartFile image) {
         User user = validUserByUserId(userPrincipal.getId());
         if (!Objects.equals(user.getImageName(), "default.png")) {
             s3Uploader.deleteFile(user.getImageName());
         }
         String imageName;
         String imageUrl;
-        if (isDefaultImage && image.isEmpty()) {
+        if (isDefaultImage && image==null) {
             imageName = "default.png";
             imageUrl = "https://nookbook-image-bucket.s3.amazonaws.com/default.png";
         } else {
-            imageName = s3Uploader.uploadImage(image.get());
+            imageName = s3Uploader.uploadImage(image);
             imageUrl = s3Uploader.getFullPath(imageName);
         }
         user.updateImage(imageName, imageUrl);

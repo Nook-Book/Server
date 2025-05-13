@@ -73,11 +73,23 @@ public class MyPageController {
     @PutMapping("/image")
     public ResponseEntity<?> updateImage(
             @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "기본 이미지 사용 여부", required = true) @RequestPart Boolean isDefaultImage,
-            @Parameter(description = "변경할 프로필 이미지 파일") @RequestPart Optional<MultipartFile> image
+            @Parameter(description = "변경할 프로필 이미지 파일") @RequestPart MultipartFile image
     ) {
-        return userService.updateImage(userPrincipal, isDefaultImage, image);
+        return userService.updateImage(userPrincipal, false, image);
     }
+
+    @Operation(summary = "사용자 프로필 이미지를 기본으로 변경", description = "사용자의 프로필 이미지를 기본으로 변경합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PutMapping("/image/default")
+    public ResponseEntity<?> updateDefaultImage(
+            @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return userService.updateImage(userPrincipal, true, null);
+    }
+
 
     @Operation(summary = "독서 통계", description = "마이페이지의 독서 통계(카테고리, 연도 및 월별)를 조회합니다.")
     @ApiResponses(value = {
