@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/alarm")
+@RequestMapping("/api/v1/alarms")
 @Tag(name = "Alarm", description = "알림 관련 API입니다.")
 public class AlarmController {
     private final AlarmService alarmService;
@@ -32,7 +32,7 @@ public class AlarmController {
             @ApiResponse(responseCode = "200", description = "알림 목록 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = AlarmListRes.class) ) } ),
             @ApiResponse(responseCode = "400", description = "알림 목록 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @GetMapping()
+    @GetMapping("")
     public ResponseEntity<?> getAllAlarms(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "page의 size입니다. 기본 값은 30입니다.", required = true) @RequestParam(defaultValue = "30") int size,

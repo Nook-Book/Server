@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/challenge")
+@RequestMapping("/api/v1/challenges")
 @Tag(name = "Challenge", description = "챌린지 관련 API입니다.")
 public class ChallengeController {
 
@@ -41,7 +41,7 @@ public class ChallengeController {
             @ApiResponse(responseCode = "200", description = "챌린지 생성 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
             @ApiResponse(responseCode = "400", description = "챌린지 생성 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @PostMapping("")
+    @PostMapping("/new")
     public ResponseEntity<?> createChallenge(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @RequestPart MultipartFile challengeCover,
@@ -56,7 +56,7 @@ public class ChallengeController {
             @ApiResponse(responseCode = "200", description = "챌린지 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ChallengeListRes.class))}),
             @ApiResponse(responseCode = "400", description = "챌린지 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @GetMapping("/list")
+    @GetMapping("")
     public ResponseEntity<?> getChallengeList(
             @Parameter @CurrentUser UserPrincipal userPrincipal
     ) {
@@ -83,7 +83,7 @@ public class ChallengeController {
             @ApiResponse(responseCode = "200", description = "챌린지 참가자 삭제 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
             @ApiResponse(responseCode = "400", description = "챌린지 참가자 삭제 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @DeleteMapping("/{challengeId}/participant/{participantId}")
+    @DeleteMapping("/{challengeId}/participants/{participantId}")
     public ResponseEntity<?> deleteParticipant(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "챌린지 ID") @PathVariable Long challengeId,
@@ -98,7 +98,7 @@ public class ChallengeController {
             @ApiResponse(responseCode = "200", description = "챌린지 참가자 초대 요청 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
             @ApiResponse(responseCode = "400", description = "챌린지 참가자 초대 요청 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @PostMapping("/{challengeId}/participant/{participantId}")
+    @PostMapping("/{challengeId}/participants/{participantId}")
     public ResponseEntity<?> addParticipant(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "챌린지 ID") @PathVariable Long challengeId,
@@ -172,7 +172,7 @@ public class ChallengeController {
             @ApiResponse(responseCode = "200", description = "챌린지 참가자 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ParticipantListRes.class))}),
             @ApiResponse(responseCode = "400", description = "챌린지 참가자 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @GetMapping("/{challengeId}/participant")
+    @GetMapping("/{challengeId}/participants")
     public ResponseEntity<?> getParticipantList(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
@@ -187,7 +187,7 @@ public class ChallengeController {
             @ApiResponse(responseCode = "200", description = "챌린지에 초대할 친구 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(type = "array", implementation = ChallengeInvitationRes.class))}),
             @ApiResponse(responseCode = "400", description = "챌린지에 초대할 친구 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @GetMapping("/{challengeId}/invite")
+    @GetMapping("/{challengeId}/friends")
     public ResponseEntity<?> getInviteFriends(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
@@ -229,7 +229,7 @@ public class ChallengeController {
             @ApiResponse(responseCode = "200", description = "챌린지 나가기 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
             @ApiResponse(responseCode = "400", description = "챌린지 나가기 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @DeleteMapping("/exit/{challengeId}")
+    @DeleteMapping("/{challengeId}/exit")
     public ResponseEntity<?> leaveChallenge(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
@@ -241,7 +241,7 @@ public class ChallengeController {
     // 챌린지 참가자의 독서 기록 정보 조회 API
     // 날짜 형식: 2021-11-01 또는 2021-11
     @Operation(summary = "챌린지 참가자의 날짜별 독서 기록 조회", description = "챌린지 참가자의 날짜별 독서 기록을 조회합니다.")
-    @GetMapping("{participantId}/calendar/{date}")
+    @GetMapping("/participants/{participantId}/calendar/{date}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "독서 캘린더 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = DailyUserBookCalendarRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "독서 캘린더 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
