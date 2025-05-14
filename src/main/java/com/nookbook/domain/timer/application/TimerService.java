@@ -4,7 +4,7 @@ import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.timer.domain.Timer;
 import com.nookbook.domain.timer.domain.repository.TimerRepository;
-import com.nookbook.domain.timer.dto.request.CreateTimerReq;
+import com.nookbook.domain.timer.dto.request.UpdateTimerReq;
 import com.nookbook.domain.timer.dto.response.StartTimerIdRes;
 import com.nookbook.domain.timer.dto.response.TimerRecordRes;
 import com.nookbook.domain.timer.dto.response.TimerRes;
@@ -38,14 +38,13 @@ public class TimerService {
 
     // 타이머 시작
     @Transactional
-    public ResponseEntity<?> updateTimerStatus(UserPrincipal userPrincipal, Long bookId) {
+    public ResponseEntity<?> createTimer(UserPrincipal userPrincipal, Long bookId) {
         User user = validUserById(userPrincipal.getId());
         Book book = validBookById(bookId);
-        Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
-        UserBook userBook = userBookOptional.get();
-        if (timerRepository.countByUserBook(userBook) >= 10) {
-            deleteOldestTimer(userBook);
-        }
+        //if (timerRepository.countByUserBook(userBook) >= 10) {
+        //    deleteOldestTimer(userBook);
+        //}
+        UserBook userBook = getOrCreateUserBook(user, book);
         timerRepository.turnOffReadingTimers(userBook);
         Timer timer = Timer.builder()
                 .userBook(userBook)
@@ -55,24 +54,37 @@ public class TimerService {
         timerRepository.save(timer);
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
-                .information(StartTimerIdRes.builder().timerId(timer.getTimerId()).build())
+                .information(StartTimerIdRes.builder()
+                        .timerId(timer.getTimerId())
+                        .build())
                 .build());
+    }
+
+    private UserBook getOrCreateUserBook(User user, Book book) {
+        return userBookRepository.findByUserAndBook(user, book)
+                .orElseGet(() -> {
+                    UserBook newUserBook = UserBook.builder()
+                            .user(user)
+                            .book(book)
+                            .bookStatus(BookStatus.BEFORE_READ)
+                            .build();
+                    return userBookRepository.save(newUserBook);
+                });
     }
 
     // 타이머 저장
     @Transactional
-    public ResponseEntity<?> saveTimerRecord(UserPrincipal userPrincipal, Long bookId, Long timerId, CreateTimerReq createTimerReq) {
+    public ResponseEntity<?> updateTimer(UserPrincipal userPrincipal, Long timerId, UpdateTimerReq updateTimerReq) {
         User user = validUserById(userPrincipal.getId());
-        Book book = validBookById(bookId);
-        Optional<UserBook> userBookOptional = userBookRepository.findByUserAndBook(user, book);
-        UserBook userBook = userBookOptional.get();
-        plusTotalReadTime(userBook, createTimerReq.getTime());
-        if (timerRepository.countByUserBook(userBook) >= 10) {
-            deleteOldestTimer(userBook);
-        }
         Timer timer = validTimerById(timerId);
+        UserBook userBook = timer.getUserBook();
+        plusTotalReadTime(userBook, updateTimerReq.getTime());
+        long timerCount = timerRepository.countByUserBook(userBook);
+        if (timerCount >= 10) {
+            deleteOldestTimer(userBook, timerCount);
+        }
         DefaultAssert.isTrue(timer.isReading(), "타이머를 시작하지 않았습니다.");
-        timer.updateReadTime(createTimerReq.getTime());
+        timer.updateReadTime(updateTimerReq.getTime());
         timer.updateIsReading(false);
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
@@ -81,9 +93,12 @@ public class TimerService {
         return ResponseEntity.ok(apiResponse);
     }
 
-    private void deleteOldestTimer(UserBook userBook) {
-        Timer oldestTimer = timerRepository.findTop1ByUserBookOrderByCreatedAtAsc(userBook);
-        timerRepository.delete(oldestTimer);
+    private void deleteOldestTimer(UserBook userBook, long timerCount) {
+        while (timerCount > 9) {
+            Timer oldestTimer = timerRepository.findTop1ByUserBookOrderByCreatedAtAsc(userBook);
+            timerRepository.delete(oldestTimer);
+            timerCount--;
+        }
     }
 
     public void plusTotalReadTime(UserBook userBook, BigInteger additionalTime) {

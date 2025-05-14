@@ -1,13 +1,15 @@
 package com.nookbook.domain.user.presentation;
 
+import com.nookbook.domain.book.applicaiton.BookService;
+import com.nookbook.domain.book.dto.response.MostReadCategoriesRes;
+import com.nookbook.domain.note.application.NoteService;
+import com.nookbook.domain.note.dto.response.OtherUserNoteListRes;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.dto.request.ExpoPushTokenReq;
 import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
 import com.nookbook.domain.user.dto.request.NicknameCheckReq;
 import com.nookbook.domain.user.dto.request.UserInfoReq;
-import com.nookbook.domain.user.dto.response.NicknameCheckRes;
-import com.nookbook.domain.user.dto.response.NicknameIdCheckRes;
-import com.nookbook.domain.user.dto.response.UserExistsRes;
+import com.nookbook.domain.user.dto.response.*;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;
@@ -24,13 +26,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.InvalidParameterException;
+import java.util.Objects;
+import java.util.Optional;
+
 @Tag(name = "User", description = "User API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/v1/users")
 public class UserController {
 
     private final UserService userService;
+    private final NoteService noteService;
+    private final BookService bookService;
 
     @Operation(summary = "기존 사용자 여부 확인", description = "기존에 가입된 사용자인지 확인합니다.")
     @ApiResponses(value = {
@@ -100,4 +108,79 @@ public class UserController {
     }
 
 
+    // 친구페이지
+    @Operation(summary = "사용자 검색", description = "친구 추가 페이지에서 사용자 전체를 대상으로 단어를 검색하여 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = SearchUserRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/search")
+    public ResponseEntity<?> searchAllUsers(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "검색하고자 하는 단어를 입력해주세요.") @RequestParam String keyword,
+            @Parameter(description = "페이지의 숫자입니다. 페이지는 0부터 시작합니다.") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 내 요소의 개수입니다.") @RequestParam(defaultValue = "20") int size
+    ) {
+        return userService.searchUsers(userPrincipal, keyword, page, size);
+    }
+
+    @Operation(summary = "독서 통계 조회", description = "친구페이지의 독서 통계(카테고리, 연도 및 월별 선택)를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = MostReadCategoriesRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/{userId}/reports")
+    public ResponseEntity<?> findReadingReport(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "독서 통계를 조회하고자 하는 사용자의 id를 입력해주세요.", required = true) @PathVariable Long userId,
+            @Parameter(description = "독서 통계의 종류입니다. category: 카테고리별(기본) , year: 연도별", required = true) @RequestParam(defaultValue = "category") String type,
+            @Parameter(description = "type이 year인 경우, 독서 통계를 확인하려는 연도를 입력해주세요") @RequestParam(required = false) Optional<Integer> targetYear
+    ) {
+        if (Objects.equals(type, "category")) {
+            return bookService.countReadBooksByCategory(userPrincipal, userId);
+        } else if (Objects.equals(type, "year") && targetYear.isPresent()) {
+            return bookService.countReadBooksByYear(userPrincipal, userId, targetYear);
+        } else throw new InvalidParameterException("유효한 파라미터가 아닙니다.");
+    }
+
+    @Operation(summary = "사용자 정보 조회", description = "친구페이지의 정보(아이디, 닉네임, 프로필 이미지, 친구 수, 친구 요청 상태)를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = UserInfoRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> findUserInformation(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.", required = true) @PathVariable Long userId
+    ) {
+        return userService.getUserInfo(userPrincipal, userId);
+    }
+
+    @Operation(summary = "기록 전체보기 목록 조회 및 검색", description = "친구페이지의 기록 전체보기 목록 조회 또는 검색하여 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/{userId}/books")
+    public ResponseEntity<?> findUserAllNotes(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.", required = true) @PathVariable Long userId,
+            @Parameter(description = "검색하고자 하는 단어를 입력해주세요. 없다면 입력하지 않습니다.") @RequestParam(required = false) String keyword
+    ) {
+        return noteService.getUserPageNoteList(userPrincipal, userId, keyword);
+    }
+
+    @Operation(summary = "기록 전체보기 상세 조회", description = "친구페이지의 기록 전체보기에서 도서를 선택하여 상세 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = OtherUserNoteListRes.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @GetMapping("/{userId}/books/{bookId}/notes")
+    public ResponseEntity<?> findUserAllNotesDetail(
+            @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "조회하고자 하는 사용자의 id를 입력해주세요.", required = true) @PathVariable Long userId,
+            @Parameter(description = "조회하고자 하는 노트의 **도서 id**를 입력해주세요.", required = true) @PathVariable Long bookId
+    ) {
+        return noteService.getUserPageNoteListByBookId(userPrincipal, userId, bookId);
+    }
 }
