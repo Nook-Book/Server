@@ -6,15 +6,14 @@ import com.nookbook.domain.user.domain.FriendRequestStatus;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.FriendRepository;
 import com.nookbook.domain.user.domain.repository.UserRepository;
+import com.nookbook.domain.user.dto.request.FriendRequestDecisionReq;
+import com.nookbook.domain.user.dto.request.FriendRequestReq;
 import com.nookbook.domain.user.dto.response.FriendsRequestRes;
 import com.nookbook.domain.user.dto.response.SearchUserRes;
 import com.nookbook.global.DefaultAssert;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,31 +31,12 @@ public class FriendService {
     private final FriendRepository friendRepository;
     private final AlarmService alarmService;
 
-    public ResponseEntity<?> searchUsers(UserPrincipal userPrincipal, String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        User user = validUserByUserId(userPrincipal.getId());
-        Page<SearchUserRes> searchUserRes = getAllUsersByKeyword(user, keyword, pageable);
-        return ResponseEntity.ok(ApiResponse.builder()
-                .check(true)
-                .information(searchUserRes)
-                .build());
-    }
-
     public ResponseEntity<?> getFriends(UserPrincipal userPrincipal, String keyword) {
         User user = validUserByUserId(userPrincipal.getId());
         List<SearchUserRes> searchUserRes = getFriendsByKeyword(user, keyword);
         return ResponseEntity.ok(ApiResponse.builder()
                 .check(true)
                 .information(searchUserRes)
-                .build());
-    }
-
-    private Page<SearchUserRes> getAllUsersByKeyword(User user, String keyword, Pageable pageable) {
-        Page<User> findUsers = userRepository.findUsersNotInFriendByKeyword(user, keyword, pageable);
-        return findUsers.map(findUser -> SearchUserRes.builder()
-                .userId(findUser.getUserId())
-                .nickname(findUser.getNickname())
-                .imageUrl(findUser.getImageUrl())
                 .build());
     }
 
@@ -72,13 +52,13 @@ public class FriendService {
     }
 
     @Transactional
-    public ResponseEntity<?> sendFriendRequest(UserPrincipal userPrincipal, Long userId) {
+    public ResponseEntity<?> sendFriendRequest(UserPrincipal userPrincipal, FriendRequestReq friendRequestReq) {
         User user = validUserByUserId(userPrincipal.getId());
-        User targetUser = validUserByUserId(userId);
+        User targetUser = validUserByUserId(friendRequestReq.getUserId());
         DefaultAssert.isTrue(targetUser != user, "본인에게 친구 요청을 보낼 수 없습니다.");
 
-        boolean available = !friendRepository.existsBySenderAndReceiver(user, targetUser) || !friendRepository.existsByReceiverAndSender(targetUser, user);
-        DefaultAssert.isTrue(available, "이미 친구 요청을 보내거나 받은 상태입니다.");
+        boolean alreadyExisted  =  friendRepository.existsBySenderAndReceiver(targetUser, user) || friendRepository.existsBySenderAndReceiver(user, targetUser);
+        DefaultAssert.isTrue(!alreadyExisted, "이미 친구이거나 요청이 진행 중입니다.");
 
         Friend friend = Friend.builder()
                 .sender(user)
@@ -145,13 +125,13 @@ public class FriendService {
 
     // 친구 요청 삭제/수락
     @Transactional
-    public ResponseEntity<?> updateFriendRequestStatus(UserPrincipal userPrincipal, Long friendId, boolean isAccept) {
+    public ResponseEntity<?> updateFriendRequestStatus(UserPrincipal userPrincipal, Long friendId, FriendRequestDecisionReq decisionReq) {
         User user = validUserByUserId(userPrincipal.getId());
         Friend friend = validFriendByFriendId(friendId);
         DefaultAssert.isTrue(friend.getReceiver() == user, "내가 받은 친구 요청이 아닙니다.");
 
         String msg;
-        if (isAccept) {
+        if (decisionReq.isAccept()) {
             Optional<Friend> otherFriend = validFriendBySenderAndReceiver(friend.getSender(), user);
             otherFriend.ifPresent(friendRepository::delete);
             // 서로에게 보낸 요청이 있을 경우(=friend가 중복으로 존재할 경우) 한 명이 수락할 시 다른 쪽의 데이터 삭제

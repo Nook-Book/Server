@@ -64,6 +64,9 @@ public class S3Uploader {
         return "https://" + bucket + ".s3.amazonaws.com/" + fileName;
     }
 
+    public String extractFileName(String fullPath) {
+        return fullPath.substring(fullPath.lastIndexOf("/") + 1);
+    }
 
     public void deleteFile(String fileName) {
         try {
@@ -71,10 +74,6 @@ public class S3Uploader {
         } catch (AmazonServiceException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 삭제에 실패했습니다.");
         }
-    }
-
-    public String extractImageNameFromUrl(String imageUrl) {
-        return imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
     }
 
 }

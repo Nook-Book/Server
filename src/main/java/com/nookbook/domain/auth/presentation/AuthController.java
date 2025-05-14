@@ -35,7 +35,7 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "로그인 및 토큰 발급 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class) ) } ),
             @ApiResponse(responseCode = "400", description = "로그인 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
-    @PostMapping("/idTokenLogin")
+    @PostMapping("/login")
     public ResponseEntity<?> idTokenLogin(@RequestBody SignInReq signinReq) {
         String accessToken = signinReq.getAccessToken();
         String email = signinReq.getEmail();

@@ -25,7 +25,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/collection")
+@RequestMapping("/api/v1/collections")
 @Tag(name = "Collection", description = "도서 컬렉션 관련 API입니다.")
 public class CollectionController {
 
@@ -49,7 +49,7 @@ public class CollectionController {
             @ApiResponse(responseCode = "200", description = "컬렉션 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CollectionListRes.class))}),
             @ApiResponse(responseCode = "400", description = "컬렉션 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @GetMapping("/list")
+    @GetMapping("")
     public ResponseEntity<?> getCollectionList(
             @Parameter @CurrentUser UserPrincipal userPrincipal
     ) {
@@ -61,7 +61,7 @@ public class CollectionController {
             @ApiResponse(responseCode = "200", description = "컬렉션 제목 수정 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
             @ApiResponse(responseCode = "400", description = "컬렉션 제목 수정 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @PatchMapping("/{collectionId}")
+    @PatchMapping("/{collectionId}/title")
     public ResponseEntity<?> updateCollectionTitle(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @PathVariable Long collectionId,
@@ -88,7 +88,7 @@ public class CollectionController {
             @ApiResponse(responseCode = "200", description = "컬렉션 도서 삭제 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
             @ApiResponse(responseCode = "400", description = "컬렉션 도서 삭제 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @DeleteMapping("/{collectionId}/books")
+    @PostMapping("/{collectionId}/books/delete")
     public ResponseEntity<?> deleteBookFromCollection(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @PathVariable Long collectionId,
@@ -117,7 +117,7 @@ public class CollectionController {
             @ApiResponse(responseCode = "200", description = "컬렉션 도서 추가 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
             @ApiResponse(responseCode = "400", description = "컬렉션 도서 추가 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @PostMapping("{collectionId}/{bookId}")
+    @PostMapping("{collectionId}/books/{bookId}")
     public ResponseEntity<?> addBookToCollection(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @PathVariable Long collectionId,
@@ -165,8 +165,6 @@ public class CollectionController {
     ) {
         return collectionService.moveBookToAnotherCollection(userPrincipal, collectionId, bookId, targetCollectionReq);
     }
-
-
 
 
 }
