@@ -12,10 +12,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DefaultException.class)
     public ResponseEntity<ErrorResponse> handleDefaultException(DefaultException ex) {
-        ErrorCode errorCode = ex.getErrorCode();
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .code(errorCode).build();
-        return new ResponseEntity<>(errorResponse, HttpStatus.valueOf(errorCode.getStatus()));
+        return ResponseEntity
+                .status(ex.getErrorCode().getStatus())
+                .body(ErrorResponse.of(ex.getErrorCode(), ex.getMessage()));
     }
 
     @ExceptionHandler(NotFoundException.class)

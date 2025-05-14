@@ -25,8 +25,6 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
 
     boolean existsBySenderAndReceiver(User user, User targetUser);
 
-    boolean existsByReceiverAndSender(User targetUser, User user);
-
     @Query("SELECT f FROM Friend f " +
             "WHERE (" +
             "    (f.sender = :user AND (f.receiver.nickname LIKE %:keyword%  OR f.receiver.nicknameId LIKE %:keyword% )) " +
