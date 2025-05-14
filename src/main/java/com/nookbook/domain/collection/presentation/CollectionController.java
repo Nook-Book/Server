@@ -88,7 +88,7 @@ public class CollectionController {
             @ApiResponse(responseCode = "200", description = "컬렉션 도서 삭제 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
             @ApiResponse(responseCode = "400", description = "컬렉션 도서 삭제 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @PostMapping("/{collectionId}/books")
+    @PostMapping("/{collectionId}/books/delete")
     public ResponseEntity<?> deleteBookFromCollection(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @PathVariable Long collectionId,
