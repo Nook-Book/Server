@@ -20,6 +20,7 @@ import com.nookbook.domain.user.exception.UserNotFoundException;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class CollectionService {
 
     private final CollectionRepository collectionRepository;
@@ -382,24 +384,25 @@ public class CollectionService {
         }
     }
 
-    // 개별 도서 이동 처리 메소드
+    // 개별 도서 이동 처리
     private void moveSingleBook(Collection from, Collection to, Long bookId) {
-        // 도서 검증
+        // 1. 도서 조회
         Book book = findBook(bookId);
 
-        // 1. 원본 컬렉션에 존재하는지 확인
+        // 2. 원본 컬렉션에 도서가 포함되어 있는지 확인
         CollectionBook fromEntry = collectionBookRepository.findByCollectionAndBook(from, book);
         if (fromEntry == null) {
             throw new BookNotInCollectionException();
         }
 
-        // 2. 삭제 후 대상 컬렉션 중복 여부 확인
-        collectionBookRepository.delete(fromEntry);
+        // 3. 타겟 컬렉션에 이미 존재하면 아무 작업 없이 건너뜀 (중복 방지)
         if (collectionBookRepository.findByCollectionAndBook(to, book) != null) {
-            throw new BookAlreadyExistsInCollectionException();
+            log.warn("도서가 이미 타겟 컬렉션에 존재하므로, 이동하지 않습니다.");
+            return;
         }
 
-        // 3. 도서 추가
+        // 4. 원본 컬렉션에서 삭제 후 대상 컬렉션에 추가
+        collectionBookRepository.delete(fromEntry);
         addBookToCollection(to, book);
     }
 
