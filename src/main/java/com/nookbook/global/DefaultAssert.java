@@ -1,6 +1,6 @@
 package com.nookbook.global;
 
-import com.nookbook.global.exception.DefaultAuthenticationException;
+import com.nookbook.global.exception.AuthenticationException;
 import com.nookbook.global.exception.DefaultException;
 import com.nookbook.global.payload.ErrorCode;
 import org.springframework.util.Assert;
@@ -42,12 +42,12 @@ public class DefaultAssert extends Assert {
     }
 
     public static void isAuthentication(String message){
-        throw new DefaultAuthenticationException(message);
+        throw new AuthenticationException(message);
     }
 
     public static void isAuthentication(boolean value){
         if(!value){
-            throw new DefaultAuthenticationException(ErrorCode.INVALID_AUTHENTICATION);
+            throw new AuthenticationException(ErrorCode.INVALID_AUTHENTICATION);
         }
     }
 
