@@ -10,25 +10,18 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(DefaultException.class)
-    public ResponseEntity<ErrorResponse> handleDefaultException(DefaultException ex) {
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex) {
+        ErrorCode errorCode = ex.getErrorCode();
         return ResponseEntity
-                .status(ex.getErrorCode().getStatus())
-                .body(ErrorResponse.of(ex.getErrorCode(), ex.getMessage()));
+                .status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode, ex.getMessage()));
     }
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .code(ErrorCode.NOT_FOUND).build();
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(DuplicateException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateException(DuplicateException ex) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .code(ErrorCode.DUPLICATE_ERROR).build();
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpectedException(Exception ex) {
+        // 예상치 못한 에러
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }
-

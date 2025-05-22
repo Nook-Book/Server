@@ -3,23 +3,22 @@ package com.nookbook.global.exception;
 
 import com.nookbook.global.payload.ErrorCode;
 import lombok.Getter;
-import org.springframework.security.core.AuthenticationException;
 
 @Getter
-public class DefaultAuthenticationException extends AuthenticationException {
+public class AuthenticationException extends org.springframework.security.core.AuthenticationException {
 
     private ErrorCode errorCode;
 
-    public DefaultAuthenticationException(String msg, Throwable t) {
+    public AuthenticationException(String msg, Throwable t) {
         super(msg, t);
         this.errorCode = ErrorCode.INVALID_REPRESENTATION;
     }
 
-    public DefaultAuthenticationException(String msg) {
+    public AuthenticationException(String msg) {
         super(msg);
     }
 
-    public DefaultAuthenticationException(ErrorCode errorCode) {
+    public AuthenticationException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
     }

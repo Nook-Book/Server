@@ -8,6 +8,7 @@ import com.nookbook.domain.collection.dto.response.CollectionListRes;
 import com.nookbook.domain.collection.dto.response.MainCollectionListRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
+import com.nookbook.global.payload.CommonApiResponse;
 import com.nookbook.global.payload.ErrorResponse;
 import com.nookbook.global.payload.Message;
 import io.swagger.v3.oas.annotations.Operation;
@@ -153,17 +154,20 @@ public class CollectionController {
 
     @Operation(summary = "컬렉션 내 도서 이동 API", description = "컬렉션 내 도서를 다른 컬렉션으로 이동하는 API입니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "컬렉션 내 도서 이동 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Message.class))}),
-            @ApiResponse(responseCode = "400", description = "컬렉션 내 도서 이동 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+            @ApiResponse(responseCode = "200", description = "컬렉션 내 도서 이동 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = CommonApiResponse.class))),
+            @ApiResponse(responseCode = "400", description = "컬렉션 내 도서 이동 실패",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PatchMapping("/{collectionId}/books/{bookId}")
-    public ResponseEntity<?> moveBookToAnotherCollection(
-            @Parameter @CurrentUser UserPrincipal userPrincipal,
+    @PatchMapping("/{collectionId}/books/{targetCollectionId}")
+    public ResponseEntity<CommonApiResponse<String>> moveBookToAnotherCollection(
+            @Parameter(description = "로그인한 사용자") @CurrentUser UserPrincipal userPrincipal,
             @PathVariable Long collectionId,
-            @PathVariable Long bookId,
-            @RequestBody TargetCollectionReq targetCollectionReq
+            @PathVariable Long targetCollectionId,
+            @RequestBody BookIdListReq bookIdListReq
     ) {
-        return collectionService.moveBookToAnotherCollection(userPrincipal, collectionId, bookId, targetCollectionReq);
+        collectionService.moveBookToAnotherCollection(userPrincipal, collectionId, targetCollectionId, bookIdListReq);
+        return ResponseEntity.ok(CommonApiResponse.success("도서가 컬렉션 간에 성공적으로 이동되었습니다."));
     }
 
 
