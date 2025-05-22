@@ -1,8 +1,10 @@
 package com.nookbook.domain.auth.exception;
 
-public class InvalidTokenException extends RuntimeException {
+import com.nookbook.global.exception.AuthenticationException;
+import com.nookbook.global.payload.ErrorCode;
 
+public class InvalidTokenException extends AuthenticationException {
     public InvalidTokenException() {
-        super("이미 로그아웃 된 유저입니다.");
+        super(ErrorCode.INVALID_TOKEN);
     }
 }
