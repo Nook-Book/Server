@@ -2,6 +2,7 @@ package com.nookbook.domain.collection.application;
 
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
+import com.nookbook.domain.book.exception.BookNotFoundException;
 import com.nookbook.domain.collection.domain.Collection;
 import com.nookbook.domain.collection.domain.CollectionBook;
 import com.nookbook.domain.collection.domain.CollectionStatus;
@@ -9,22 +10,22 @@ import com.nookbook.domain.collection.domain.repository.CollectionBookRepository
 import com.nookbook.domain.collection.domain.repository.CollectionRepository;
 import com.nookbook.domain.collection.dto.request.*;
 import com.nookbook.domain.collection.dto.response.*;
-import com.nookbook.domain.collection.exception.CollectionAccessDeniedException;
+import com.nookbook.domain.collection.exception.BookAlreadyExistsInCollectionException;
+import com.nookbook.domain.collection.exception.BookNotInCollectionException;
+import com.nookbook.domain.collection.exception.CollectionNotAuthorizedException;
+import com.nookbook.domain.collection.exception.CollectionNotFoundException;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.exception.UserNotFoundException;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.annotations.CollectionId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -188,7 +189,7 @@ public class CollectionService {
     @Transactional
     public ResponseEntity<?> addBookToCollection(UserPrincipal userPrincipal, Long collectionId, Long bookId) {
         Collection collection = validateUserCollection(userPrincipal, collectionId);
-        Book book = findBookOrThrow(bookId);
+        Book book = findBook(bookId);
 
         // 이미 존재하는 경우: 200 OK + check: false
         if (isBookAlreadyInCollection(collection, book)) {
@@ -204,9 +205,10 @@ public class CollectionService {
         return findCollectionByUserAndCollectionId(userPrincipal, collectionId);
     }
 
-    private Book findBookOrThrow(Long bookId) {
+    // 도서 조회
+    private Book findBook(Long bookId) {
         return bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("도서를 찾을 수 없습니다."));
+                .orElseThrow(BookNotFoundException::new);
     }
 
     private boolean isBookAlreadyInCollection(Collection collection, Book book) {
@@ -367,33 +369,41 @@ public class CollectionService {
 
     // 컬렉션 내 도서 이동
     @Transactional
-    public ResponseEntity<?> moveBookToAnotherCollection(UserPrincipal userPrincipal, Long fromCollectionId, Long bookId, TargetCollectionReq targetCollectionReq) {
+    public void moveBookToAnotherCollection(UserPrincipal userPrincipal, Long fromCollectionId, Long targetCollectionId, BookIdListReq bookIdListReq) {
+        List<Long> bookIds = bookIdListReq.getBookIds();
 
-        Long toCollectionId = targetCollectionReq.getTargetCollectionId();
-
-        // 1. 컬렉션들 검증
+        // 1. 사용자 소유 컬렉션 검증
         Collection fromCollection = validateUserCollection(userPrincipal, fromCollectionId);
-        Collection toCollection = validateUserCollection(userPrincipal, toCollectionId);
+        Collection toCollection = validateUserCollection(userPrincipal, targetCollectionId);
 
-        // 2. 도서 조회
-        Book book = findBookOrThrow(bookId);
-
-        // 3. 기존 컬렉션에서 삭제
-        CollectionBook existing = collectionBookRepository.findByCollectionAndBook(fromCollection, book);
-        if (existing == null) {
-            return buildBadRequestResponse("원본 컬렉션에 해당 도서가 존재하지 않습니다.");
+        // 2. 각 도서에 대해 이동 처리
+        for (Long bookId : bookIds) {
+            moveSingleBook(fromCollection, toCollection, bookId);
         }
-        collectionBookRepository.delete(existing);
-
-        // 4. 대상 컬렉션에 이미 있는지 확인 후 없으면 추가
-        if (collectionBookRepository.findByCollectionAndBook(toCollection, book) != null) {
-            return buildOkResponse("대상 컬렉션에 이미 존재하는 도서입니다.", false);
-        }
-        addBookToCollection(toCollection, book);
-
-        // 5. 응답 반환
-        return buildOkResponse("도서가 해당 도서가 다른 컬렉션으로 이동되었습니다.", true);
     }
+
+    // 개별 도서 이동 처리 메소드
+    private void moveSingleBook(Collection from, Collection to, Long bookId) {
+        // 도서 검증
+        Book book = findBook(bookId);
+
+        // 1. 원본 컬렉션에 존재하는지 확인
+        CollectionBook fromEntry = collectionBookRepository.findByCollectionAndBook(from, book);
+        if (fromEntry == null) {
+            throw new BookNotInCollectionException();
+        }
+
+        // 2. 삭제 후 대상 컬렉션 중복 여부 확인
+        collectionBookRepository.delete(fromEntry);
+        if (collectionBookRepository.findByCollectionAndBook(to, book) != null) {
+            throw new BookAlreadyExistsInCollectionException();
+        }
+
+        // 3. 도서 추가
+        addBookToCollection(to, book);
+    }
+
+
 
 
     // 사용자 검증 메서드
@@ -405,13 +415,13 @@ public class CollectionService {
     // 컬렉션 검증
     private Collection existCollection(Long collectionId) {
         return collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new RuntimeException("컬렉션을 찾을 수 없습니다."));
+                .orElseThrow(CollectionNotFoundException::new);
     }
 
     // 컬렉션 소유 검증
     private void isCollectionOwner(User user, Collection collection) {
         if (!collection.getUser().equals(user)) {
-            throw new CollectionAccessDeniedException();
+            throw new CollectionNotAuthorizedException();
         }
     }
 
@@ -422,15 +432,6 @@ public class CollectionService {
                 .information(message)
                 .build();
         return ResponseEntity.ok(response);
-    }
-
-
-    private ResponseEntity<ApiResponse> buildBadRequestResponse(String message) {
-        ApiResponse response = ApiResponse.builder()
-                .check(false)
-                .information(message)
-                .build();
-        return ResponseEntity.badRequest().body(response);
     }
 
 }
