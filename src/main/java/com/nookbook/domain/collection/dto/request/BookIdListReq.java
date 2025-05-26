@@ -6,11 +6,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class TargetCollectionReq {
-    @Schema(type = "Long", example = "1", description = "도서를 이동할 타겟 컬렉션 ID")
-    private Long targetCollectionId;
+public class BookIdListReq {
+    @Schema(type = "List<Long>", example = "[1, 2, 3]", description = "이동할 도서의 ID 리스트")
+    private List<Long> bookIds;
 }
