@@ -1,8 +1,7 @@
 package com.nookbook.domain.challenge.application;
 
 import com.nookbook.domain.alarm.application.AlarmService;
-import com.nookbook.domain.alarm.message.AlarmMessageInfo;
-import com.nookbook.domain.book.BookNotFoundException;
+import com.nookbook.domain.book.exception.BookNotFoundException;
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.challenge.domain.*;
@@ -30,11 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 @Slf4j

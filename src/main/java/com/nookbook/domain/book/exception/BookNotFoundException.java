@@ -1,9 +1,10 @@
-package com.nookbook.domain.book;
+package com.nookbook.domain.book.exception;
 
 import com.nookbook.global.exception.NotFoundException;
+import com.nookbook.global.payload.ErrorCode;
 
 public class BookNotFoundException extends NotFoundException {
     public BookNotFoundException() {
-        super("B001", "책을 찾을 수 없습니다.");
+        super(ErrorCode.BOOK_NOT_FOUND);
     }
 }
