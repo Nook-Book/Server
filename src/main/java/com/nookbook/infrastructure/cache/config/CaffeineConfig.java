@@ -18,7 +18,7 @@ public class CaffeineConfig {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager("bestSellers");
         cacheManager.setCaffeine(Caffeine.newBuilder()
                 .expireAfterWrite(25, TimeUnit.HOURS) // 갱신 주기(24시간) 보다 넉넉하게
-                .maximumSize(100)
+                .maximumSize(10000)
         );
         return cacheManager;
     }
