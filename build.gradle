@@ -25,6 +25,8 @@ repositories {
     mavenCentral()
 }
 
+def isMacOS = System.getProperty("os.name") == "Mac OS X"
+def isAppleSilicon = System.getProperty("os.arch") == "aarch64"
 
 
 dependencies {
@@ -61,7 +63,13 @@ dependencies {
     // expo-notification
     implementation 'io.github.jav:expo-server-sdk:1.1.0'
 
+    implementation "io.netty:netty-all:4.1.94.Final"
 
+    if (isMacOS && isAppleSilicon) {
+        runtimeOnly "io.netty:netty-resolver-dns-native-macos:4.1.94.Final:osx-aarch_64"
+    } else if (isMacOS) {
+        runtimeOnly "io.netty:netty-resolver-dns-native-macos:4.1.94.Final:osx-x86_64"
+    }
 
 }
 
