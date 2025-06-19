@@ -1,6 +1,5 @@
 package com.nookbook.domain.challenge.dto.response;
 
-import com.nookbook.domain.challenge.domain.ParticipantStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class ParticipantStatusListRes {
+    @Schema(type = "boolean", example = "true", description = "해당 참여자가 사용자 본인인지에 대한 여부")
+    private boolean isMe;
+
     @Schema(type = "Long", example = "1", description = "참여자 ID")
     private Long participantId;
 
