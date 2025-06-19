@@ -1,6 +1,6 @@
 package com.nookbook.domain.book.presentation;
 
-import com.nookbook.domain.book.applicaiton.BookService;
+import com.nookbook.domain.book.application.BookService;
 import com.nookbook.domain.book.dto.response.*;
 import com.nookbook.domain.user_book.domain.BookStatus;
 import com.nookbook.global.config.security.token.CurrentUser;
