@@ -50,6 +50,6 @@ public class ChallengeDetailRes {
     @Schema(type = "LocalTime", example = "22:00", description = "일일 독서 종료 시간")
     private LocalTime dailyEndTime;
 
-    @Schema(type = "int", description = "참여자 목록")
+    @Schema(type = "List", description = "참여자 목록")
     private List<ParticipantStatusListRes> participants;
 }
