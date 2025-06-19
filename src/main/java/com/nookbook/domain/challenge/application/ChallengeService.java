@@ -193,14 +193,14 @@ public class ChallengeService {
     }
 
     // 챌린지 상세 조회
-    public ResponseEntity<?> getChallengeDetail(UserPrincipal userPrincipal, Long challengeId) {
+    public ChallengeDetailRes getChallengeDetail(UserPrincipal userPrincipal, Long challengeId) {
         // 사용자 검증
         User user = validateUser(userPrincipal);
         // 챌린지 검증
         Challenge challenge = validateChallenge(challengeId);
 
         Boolean isEditable = challenge.getOwner().equals(user);
-        List<ParticipantStatusListRes> participants = getParticipantStatusList(challenge);
+        List<ParticipantStatusListRes> participants = getParticipantStatusList(challenge, user);
 
         // 챌린지 총 시간 계산
         int totalDate  = (int) (challenge.getEndDate().toEpochDay() - challenge.getStartDate().toEpochDay());
@@ -211,7 +211,7 @@ public class ChallengeService {
             totalHour = totalDate * dailyGoal / 60;
         }
 
-        ChallengeDetailRes challengeDetailRes = ChallengeDetailRes.builder()
+        return ChallengeDetailRes.builder()
                 .challengeId(challenge.getChallengeId())
                 .isEditable(isEditable)
                 .title(challenge.getTitle())
@@ -225,34 +225,20 @@ public class ChallengeService {
                 .dailyEndTime(challenge.getEndTime())
                 .participants(participants)
                 .build();
-
-        ApiResponse response = ApiResponse.builder()
-                .check(true)
-                .information(challengeDetailRes)
-                .build();
-
-        return ResponseEntity.ok(response);
     }
 
 
     // 참여자 정보 조회
-    public List<ParticipantStatusListRes> getParticipantStatusList(Challenge challenge) {
+    public List<ParticipantStatusListRes> getParticipantStatusList(Challenge challenge, User user) {
         // 챌린지에 참가하고 있는 참가자 목록
         List<Participant> participants = participantRepository.findAllByChallenge(challenge);
-        log.info("participants: {}", participants);
+
         List<ParticipantStatusListRes> participantStatusListRes = new ArrayList<>();
         // 각 참가자에 대한 오늘 생성된 userBook 기록 조회
         for(Participant participant : participants) {
-
-            User participantUser = participant.getUser();
-            log.info ("participantUser: {}", participantUser.getUserId());
-
-//            List<UserBook> userBooks = userBookRepository.findUserBookListByDate(participantUser, LocalDate.now());
-//            log.info("userBooks: {}", userBooks);
-
-
-            participantStatusListRes.add(getParticipantStatus(participant));
-            log.info("participantStatusListRes: {}", participantStatusListRes);
+            // 참가자가 본인인지 여부 확인 (꺠우기 버튼 disabled 여부를 판단하기 위함)
+            boolean isMe = participant.getUser().equals(user);
+            participantStatusListRes.add(getParticipantStatus(participant, isMe));
 
         }
 
@@ -261,7 +247,7 @@ public class ChallengeService {
     }
 
     // UserBook: 사용자가 오늘 기록한 책
-    private ParticipantStatusListRes getParticipantStatus(Participant participant) {
+    private ParticipantStatusListRes getParticipantStatus(Participant participant, boolean isMe) {
 
         // 해당 참가자의 오늘 타이머 목록 조회
         List<Timer> todayTimers = timerRepository.findByUserAndCreatedAt(participant.getUser(), LocalDate.now());
@@ -269,7 +255,7 @@ public class ChallengeService {
         // 오늘 타이머 기록이 없는 경우
         if(todayTimers.isEmpty()) {
             log.info("오늘 기준의 타이머 기록이 존재하지 않습니다.");
-            return EmptyTodayTimer(participant);
+            return EmptyTodayTimer(participant, isMe);
         }
 
         // 가장 최근의 타이머 조회
@@ -282,6 +268,7 @@ public class ChallengeService {
         String readTime = convertStringToHHMMSS(timerRepository.sumTotalReadTime(todayTimers));
 
         return ParticipantStatusListRes.builder()
+                .isMe(isMe) // 해당 참여자가 사용자 본인인지 여부
                 .participantId(participant.getParticipantId()) // 참가자 ID
                 .nickname(participant.getUser().getNickname()) // 참가자 닉네임
                 .readingBookTitle(recentBook.getTitle()) // 읽고 있는 책 제목
@@ -293,8 +280,9 @@ public class ChallengeService {
     }
 
     // 오늘 타이머 기록이 없는 경우의 응답
-    private ParticipantStatusListRes EmptyTodayTimer(Participant participant) {
+    private ParticipantStatusListRes EmptyTodayTimer(Participant participant, boolean isMe) {
         return ParticipantStatusListRes.builder()
+                .isMe(isMe) // 해당 참여자가 사용자 본인인지 여부
                 .participantId(participant.getParticipantId()) // 참가자 ID
                 .nickname(participant.getUser().getNickname()) // 참가자 닉네임
                 .readingBookTitle("") // 읽고 있는 책 제목
@@ -601,7 +589,7 @@ public class ChallengeService {
 
     // 챌린지 내 참가자 깨우기
     @Transactional
-    public ResponseEntity<?> wakeUpParticipant(UserPrincipal userPrincipal, Long challengeId, Long participantId) {
+    public void wakeUpParticipant(UserPrincipal userPrincipal, Long challengeId, Long participantId) {
 
         Challenge challenge = validateChallenge(challengeId);
         // sender 정보
@@ -613,14 +601,12 @@ public class ChallengeService {
         validateParticipant(sender, challenge);
         User receiver = participant.getUser();
 
+        if (sender.equals(receiver)) { // 본인이 본인을 깨우는 경우 예외 던짐
+            throw new SelfWakeUpNotAllowedException();
+        }
+
         alarmService.sendChallengeParticipantWakeUpAlarm(sender, receiver, challenge);
 
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information("챌린지 참가자 깨우기 알림이 전송되었습니다.")
-                .build();
-
-        return ResponseEntity.ok(apiResponse);
     }
 
     // 챌린지 나가기 시 방장 여부 조회
