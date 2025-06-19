@@ -11,6 +11,7 @@ import com.nookbook.domain.user_book.application.UserBookService;
 import com.nookbook.domain.user_book.dto.response.DailyUserBookCalendarRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
+import com.nookbook.global.payload.CommonApiResponse;
 import com.nookbook.global.payload.ErrorResponse;
 import com.nookbook.global.payload.Message;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,7 +75,8 @@ public class ChallengeController {
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "챌린지 ID") @PathVariable Long challengeId
     ) {
-        return challengeService.getChallengeDetail(userPrincipal, challengeId);
+        ChallengeDetailRes detail = challengeService.getChallengeDetail(userPrincipal, challengeId);
+        return ResponseEntity.ok(CommonApiResponse.success(detail));
     }
 
     // 챌린지 참가자 삭제 API
@@ -266,7 +268,9 @@ public class ChallengeController {
             @Parameter(description = "챌린지 ID") @PathVariable Long challengeId,
             @Parameter(description = "참가자 ID") @PathVariable Long participantId
     ) {
-        return challengeService.wakeUpParticipant(userPrincipal, challengeId, participantId);
+
+        challengeService.wakeUpParticipant(userPrincipal, challengeId, participantId);
+        return ResponseEntity.ok(CommonApiResponse.success("챌린지 참가자 깨우기 알림이 전송되었습니다."));
     }
 
 

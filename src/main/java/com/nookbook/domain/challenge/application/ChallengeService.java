@@ -193,7 +193,7 @@ public class ChallengeService {
     }
 
     // 챌린지 상세 조회
-    public ResponseEntity<?> getChallengeDetail(UserPrincipal userPrincipal, Long challengeId) {
+    public ChallengeDetailRes getChallengeDetail(UserPrincipal userPrincipal, Long challengeId) {
         // 사용자 검증
         User user = validateUser(userPrincipal);
         // 챌린지 검증
@@ -211,7 +211,7 @@ public class ChallengeService {
             totalHour = totalDate * dailyGoal / 60;
         }
 
-        ChallengeDetailRes challengeDetailRes = ChallengeDetailRes.builder()
+        return ChallengeDetailRes.builder()
                 .challengeId(challenge.getChallengeId())
                 .isEditable(isEditable)
                 .title(challenge.getTitle())
@@ -225,13 +225,6 @@ public class ChallengeService {
                 .dailyEndTime(challenge.getEndTime())
                 .participants(participants)
                 .build();
-
-        ApiResponse response = ApiResponse.builder()
-                .check(true)
-                .information(challengeDetailRes)
-                .build();
-
-        return ResponseEntity.ok(response);
     }
 
 
@@ -596,7 +589,7 @@ public class ChallengeService {
 
     // 챌린지 내 참가자 깨우기
     @Transactional
-    public ResponseEntity<?> wakeUpParticipant(UserPrincipal userPrincipal, Long challengeId, Long participantId) {
+    public void wakeUpParticipant(UserPrincipal userPrincipal, Long challengeId, Long participantId) {
 
         Challenge challenge = validateChallenge(challengeId);
         // sender 정보
@@ -614,12 +607,6 @@ public class ChallengeService {
 
         alarmService.sendChallengeParticipantWakeUpAlarm(sender, receiver, challenge);
 
-        ApiResponse apiResponse = ApiResponse.builder()
-                .check(true)
-                .information("챌린지 참가자 깨우기 알림이 전송되었습니다.")
-                .build();
-
-        return ResponseEntity.ok(apiResponse);
     }
 
     // 챌린지 나가기 시 방장 여부 조회
