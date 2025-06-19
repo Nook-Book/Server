@@ -1,10 +1,11 @@
-package com.nookbook.domain.book.applicaiton;
+package com.nookbook.domain.book.application;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.book.domain.repository.BookRepository;
 import com.nookbook.domain.book.dto.response.*;
+import com.nookbook.domain.book.infrastructure.aladin.AladinService;
 import com.nookbook.domain.collection.domain.CollectionBook;
 import com.nookbook.domain.collection.domain.repository.CollectionBookRepository;
 import com.nookbook.domain.keyword.application.KeywordService;
@@ -39,7 +40,7 @@ public class BookService {
     private final CollectionBookRepository collectionBookRepository;
 
     private final AladinService aladinService;
-    private final BestSellerCacheService bestSellerCacheService;
+    private final BestSellerService bestSellerService;
     private final KeywordService keywordService;
 
     // 검색
@@ -57,7 +58,7 @@ public class BookService {
     // 베스트셀러 + 카테고리
     // 종합(0), 소설(1), 경제/경영(170), 자기계발(336), 시(50940), 에세이(55889), 인문/교양(656), 취미/실용(55890), 매거진(2913)
     public ResponseEntity<?> getBestSellerByCategory(int page, int category, int size) {
-        BestSellerRes bestSellerRes = bestSellerCacheService.getBestSellerFromCache(page, category, size);
+        BestSellerRes bestSellerRes = bestSellerService.getBestSellerFromCache(page, category, size);
         return ResponseEntity.ok(bestSellerRes);
     }
 
