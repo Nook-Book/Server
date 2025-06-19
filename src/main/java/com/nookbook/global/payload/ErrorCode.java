@@ -28,6 +28,7 @@ public enum ErrorCode {
     CHALLENGE_OWNER_CANT_LEAVE(403, "CHL003", "챌린지 소유자는 나갈 수 없습니다."),
     PARTICIPANT_NOT_FOUND(404, "CHL004", "해당 챌린지 참여자를 찾을 수 없습니다."),
     PARTICIPANT_NOT_IN_CHALLENGE(403, "CHL003", "참가자가 챌린지에 속해있지 않습니다."),
+    SELF_WAKE_UP_NOT_ALLOWED(403, "CHL005", "자기 자신에게는 깨우기 알림을 보낼 수 없습니다."),
 
     // Collection (COL)
     COLLECTION_NOT_AUTHORIZED(403, "COL005", "컬렉션에 대한 권한이 없습니다."),

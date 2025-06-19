@@ -608,6 +608,10 @@ public class ChallengeService {
         validateParticipant(sender, challenge);
         User receiver = participant.getUser();
 
+        if (sender.equals(receiver)) { // 본인이 본인을 깨우는 경우 예외 던짐
+            throw new SelfWakeUpNotAllowedException();
+        }
+
         alarmService.sendChallengeParticipantWakeUpAlarm(sender, receiver, challenge);
 
         ApiResponse apiResponse = ApiResponse.builder()
