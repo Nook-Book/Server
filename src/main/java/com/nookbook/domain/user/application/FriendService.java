@@ -31,7 +31,7 @@ public class FriendService {
     private final FriendRepository friendRepository;
     private final AlarmService alarmService;
 
-    public ResponseEntity<?> getFriends(UserPrincipal userPrincipal, String keyword) {
+    public ResponseEntity<?> getFriends(UserPrincipal userPrincipal, Optional<String> keyword) {
         User user = validUserByUserId(userPrincipal.getId());
         List<SearchUserRes> searchUserRes = getFriendsByKeyword(user, keyword);
         return ResponseEntity.ok(ApiResponse.builder()
@@ -40,9 +40,9 @@ public class FriendService {
                 .build());
     }
 
-    private List<SearchUserRes> getFriendsByKeyword(User user, String keyword) {
-        List<Friend> findFriends = (keyword != null)
-                ? friendRepository.findBySenderOrReceiverAndStatusAndNicknameLikeKeyword(user, keyword, FriendRequestStatus.FRIEND_ACCEPT)
+    private List<SearchUserRes> getFriendsByKeyword(User user, Optional<String> keyword) {
+        List<Friend> findFriends = (keyword.isPresent())
+                ? friendRepository.findBySenderOrReceiverAndStatusAndNicknameLikeKeyword(user, keyword.get(), FriendRequestStatus.FRIEND_ACCEPT)
                 : friendRepository.findBySenderOrReceiverAndStatus(user, FriendRequestStatus.FRIEND_ACCEPT);
         return buildSearchUserRes(findFriends, user);
     }

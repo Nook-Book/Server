@@ -1,6 +1,6 @@
 package com.nookbook.domain.user.presentation;
 
-import com.nookbook.domain.book.applicaiton.BookService;
+import com.nookbook.domain.book.application.BookService;
 import com.nookbook.domain.book.dto.response.MostReadCategoriesRes;
 import com.nookbook.domain.note.application.NoteService;
 import com.nookbook.domain.note.dto.response.OtherUserNoteListRes;
