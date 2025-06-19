@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @Tag(name = "Friend", description = "Friend API")
 @RestController
 @RequiredArgsConstructor
@@ -35,7 +37,7 @@ public class FriendController {
     @GetMapping("")
     public ResponseEntity<?> getFriends(
             @CurrentUser UserPrincipal userPrincipal,
-            @Parameter(description = "검색하고자 하는 단어를 입력해주세요.") @RequestParam String keyword
+            @Parameter(description = "검색하고자 하는 단어를 입력해주세요.") @RequestParam(required = false) Optional<String> keyword
     ) {
         return friendService.getFriends(userPrincipal, keyword);
     }
