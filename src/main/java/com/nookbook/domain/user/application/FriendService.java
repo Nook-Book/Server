@@ -132,8 +132,8 @@ public class FriendService {
 
         String msg;
         if (decisionReq.isAccept()) {
-            Optional<Friend> otherFriend = validFriendBySenderAndReceiver(friend.getSender(), user);
-            otherFriend.ifPresent(friendRepository::delete);
+            Optional<Friend> otherFriendRequest = validFriendBySenderAndReceiver(user, friend.getSender());
+            otherFriendRequest.ifPresent(friendRepository::delete);
             // 서로에게 보낸 요청이 있을 경우(=friend가 중복으로 존재할 경우) 한 명이 수락할 시 다른 쪽의 데이터 삭제
             friend.updateFriendRequestStatus(FriendRequestStatus.FRIEND_ACCEPT);
             // 친구 수락 알림 생성
