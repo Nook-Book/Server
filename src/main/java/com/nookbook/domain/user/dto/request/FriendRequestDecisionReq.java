@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 public class FriendRequestDecisionReq {
 
     @Schema(type = "boolean", description = "요청 수락 여부로, true: 수락 / false: 거절", example = "true")
-    private boolean isAccept;
+    private boolean accept;
 }
