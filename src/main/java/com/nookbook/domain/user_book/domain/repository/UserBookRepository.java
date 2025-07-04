@@ -26,16 +26,9 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
             "AND FUNCTION('YEAR', ub.updatedAt) = :year")
     List<UserBook> findUserBooksByStatusAndYear(User user, BookStatus bookStatus, int year);
 
-    //가장 최근에 수정된 UserBook
-    UserBook findFirstByUserOrderByUpdatedAtDesc(User user);
-
     List<UserBook> findByUser(User user);
 
     @Query("SELECT ub FROM UserBook ub JOIN ub.book b WHERE ub.user = :user AND b.title LIKE %:keyword%")
     List<UserBook> findByUserAndBookTitleLike(@Param("user") User user, @Param("keyword") String keyword);
 
-    Optional<UserBook> findByUserAndCreatedAtAfter(User user, LocalDateTime localDateTime);
-
-    @Query("SELECT ub FROM UserBook ub WHERE ub.user = :user AND FUNCTION('DATE', ub.createdAt) = :localDate")
-    List<UserBook> findUserBookListByDate(User user, LocalDate localDate);
 }
