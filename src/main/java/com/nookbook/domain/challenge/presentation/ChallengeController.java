@@ -242,12 +242,14 @@ public class ChallengeController {
 
     // 챌린지 참가자의 독서 기록 정보 조회 API
     // 날짜 형식: 2021-11-01 또는 2021-11
+    // 삭제된 API
     @Operation(summary = "챌린지 참가자의 날짜별 독서 기록 조회", description = "챌린지 참가자의 날짜별 독서 기록을 조회합니다.")
     @GetMapping("/participants/{participantId}/calendar/{date}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "독서 캘린더 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = DailyUserBookCalendarRes.class)) } ),
             @ApiResponse(responseCode = "400", description = "독서 캘린더 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     } )
+    @Deprecated
     public ResponseEntity<?> getUserBookCalendar(
             @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
             @Parameter(description = "참가자 ID를 입력해주세요.", required = true) @PathVariable Long participantId,
