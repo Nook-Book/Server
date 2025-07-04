@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class ParticipantRes {
+    @Schema(type = "Long", example = "1", description = "사용자 ID")
+    private Long userId;
 
     @Schema(type = "Long", example = "1", description = "참여자 ID")
     private Long participantId;
