@@ -1,5 +1,6 @@
 package com.nookbook.domain.user_book.application;
 
+import com.nookbook.domain.book.domain.Book;
 import com.nookbook.domain.challenge.application.ParticipantService;
 import com.nookbook.domain.challenge.domain.Participant;
 import com.nookbook.domain.timer.application.TimerService;
@@ -27,6 +28,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -118,7 +120,7 @@ public class UserBookService {
                 .totalReadTime(totalReadTime)
                 .startTime(getStartReadTime(timers))
                 .endTime(getEndReadTime(timers))
-                .bookList(getBookListByDate(user, date))
+                .bookList(getBookListByDate(user, date)) // 타이머 기록에 따른 책 목록
                 .build();
 
     }
@@ -128,14 +130,21 @@ public class UserBookService {
     }
 
     private List<Map<String, String>> getBookListByDate(User user, String date) {
-        List<UserBook> userBooks = userBookRepository.findUserBookListByDate(user, convertStringToLocalDate(date));
-        List<Map<String, String>> bookList = new ArrayList<>();
+        LocalDate localDate = convertStringToLocalDate(date);
 
-        log.info("책 리스트 수 : " + userBooks.size());
-        for (UserBook userBook : userBooks) {
+        // 타이머 + 날짜 기준으로 기록 조회
+        List<Timer> timers = timerService.getTimerListByDate(user, localDate);
+
+        // 중복된 책 정보 제거
+        Set<Book> readBooks = timers.stream()
+                .map(timer -> timer.getUserBook().getBook())
+                .collect(Collectors.toSet());
+
+        List<Map<String, String>> bookList = new ArrayList<>();
+        for (Book book : readBooks) {
             Map<String, String> bookInfo = Map.of(
-                    "title", userBook.getBook().getTitle(),
-                    "image", userBook.getBook().getImage()
+                    "title", book.getTitle(),
+                    "image", book.getImage()
             );
             bookList.add(bookInfo);
         }
