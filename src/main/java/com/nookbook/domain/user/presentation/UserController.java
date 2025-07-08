@@ -10,6 +10,8 @@ import com.nookbook.domain.user.dto.request.NicknameIdCheckReq;
 import com.nookbook.domain.user.dto.request.NicknameCheckReq;
 import com.nookbook.domain.user.dto.request.UserInfoReq;
 import com.nookbook.domain.user.dto.response.*;
+import com.nookbook.domain.user_book.application.UserBookService;
+import com.nookbook.domain.user_book.dto.response.DailyUserBookCalendarRes;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.payload.ErrorResponse;
@@ -39,6 +41,7 @@ public class UserController {
     private final UserService userService;
     private final NoteService noteService;
     private final BookService bookService;
+    private final UserBookService userBookService;
 
     @Operation(summary = "기존 사용자 여부 확인", description = "기존에 가입된 사용자인지 확인합니다.")
     @ApiResponses(value = {
@@ -182,5 +185,23 @@ public class UserController {
             @Parameter(description = "조회하고자 하는 노트의 **도서 id**를 입력해주세요.", required = true) @PathVariable Long bookId
     ) {
         return noteService.getUserPageNoteListByBookId(userPrincipal, userId, bookId);
+    }
+
+
+    // 특정 유저의 독서 기록 정보 조회 API
+    // 날짜 형식: 2021-11-01 또는 2021-11
+    @Operation(summary = "특정 유저의 날짜별 독서 기록 조회", description = "특정 유저의 날짜별 독서 기록을 조회합니다.")
+    @GetMapping("/{userId}/calendar/{date}")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "독서 캘린더 조회 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = DailyUserBookCalendarRes.class)) } ),
+            @ApiResponse(responseCode = "400", description = "독서 캘린더 조회 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    } )
+    @Deprecated
+    public ResponseEntity<?> getUserBookCalendar(
+            @Parameter(description = "Accesstoken을 입력해주세요.", required = true) @CurrentUser UserPrincipal userPrincipal,
+            @Parameter(description = "사용자 ID를 입력해주세요.", required = true) @PathVariable Long userId,
+            @Parameter(description = "조회할 날짜를 입력해주세요.", example = "2021-11-01", required = true) @PathVariable String date
+    ) {
+        return userBookService.getUserBookCalendar(userPrincipal, userId, date);
     }
 }

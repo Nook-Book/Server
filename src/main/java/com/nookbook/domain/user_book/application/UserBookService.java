@@ -54,14 +54,13 @@ public class UserBookService {
 
     }
 
-    // 특정 챌린지 참가자의 독서 기록(캘린더) 조회
-    public ResponseEntity<?> getUserBookCalendar(UserPrincipal userPrincipal,Long participantId, String date) {
+    // 특정 유저의 독서 기록(캘린더) 조회
+    public ResponseEntity<?> getUserBookCalendar(UserPrincipal userPrincipal,Long userId, String date) {
         validateUser(userPrincipal);
-        Participant participant = participantService.getParticipant(participantId);
-        User participantUser = participant.getUser();
+        User user = getUser(userId);
         // 날짜 형식 판단 메소드
         // YYYY-MM-DD 형식 / YYYY-MM 형식
-        return distinctDateFormat(participantUser, date);
+        return distinctDateFormat(user, date);
 
     }
 
@@ -199,6 +198,12 @@ public class UserBookService {
     // 사용자 검증 메서드
     private User validateUser(UserPrincipal userPrincipal) {
         return userService.findByEmail(userPrincipal.getEmail())
+                .orElseThrow(UserNotFoundException::new);
+    }
+
+    // getUser
+    private User getUser(Long userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
     }
 }
