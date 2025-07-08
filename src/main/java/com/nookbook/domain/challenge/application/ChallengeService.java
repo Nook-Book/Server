@@ -447,6 +447,7 @@ public class ChallengeService {
 
         List<ParticipantRes> participantResList = participants.stream()
                 .map(participant -> ParticipantRes.builder()
+                        .userId(participant.getUser().getUserId()) // 참가자 User ID
                         .participantId(participant.getParticipantId()) // 참가자 ID
                         .participantNickname((participant.getUser().getNickname())) // 참가자 닉네임
                         .participantImage(participant.getUser().getImageUrl()) // 참가자 프로필 이미지

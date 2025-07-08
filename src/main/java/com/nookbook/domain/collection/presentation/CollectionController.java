@@ -45,7 +45,7 @@ public class CollectionController {
         return collectionService.createCollection(userPrincipal, collectionCreateReq);
     }
 
-    @Operation(summary = "컬렉션 목록 조회 API", description = "유저의 컬렉션 목록을 조회하는 API입니다.")
+    @Operation(summary = "사용자의 컬렉션 목록 조회 API", description = "유저의 컬렉션 목록을 조회하는 API입니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "컬렉션 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CollectionListRes.class))}),
             @ApiResponse(responseCode = "400", description = "컬렉션 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
@@ -83,6 +83,8 @@ public class CollectionController {
     ) {
         return collectionService.getCollectionBooks(userPrincipal, collectionId);
     }
+
+
 
     @Operation(summary = "컬렉션 도서 삭제 API", description = "컬렉션에 등록된 도서를 삭제하는 API입니다.")
     @ApiResponses(value = {
@@ -169,6 +171,8 @@ public class CollectionController {
         collectionService.moveBookToAnotherCollection(userPrincipal, collectionId, targetCollectionId, bookIdListReq);
         return ResponseEntity.ok(CommonApiResponse.success("도서가 컬렉션 간에 성공적으로 이동되었습니다."));
     }
+
+
 
 
 }
