@@ -149,6 +149,20 @@ public class FriendService {
                 .build());
     }
 
+
+    // 테스트용 친구 요청 알림 전송
+    public ResponseEntity<?> testSendFriendRequest(UserPrincipal userPrincipal) {
+        User user = validUserByUserId(userPrincipal.getId());
+
+        // 친구 요청 알림 생성
+        alarmService.testSendFriendRequestAlarm(user, user);
+
+        return ResponseEntity.ok(ApiResponse.builder()
+                .check(true)
+                .information("친구 신청이 완료되었습니다.")
+                .build());
+    }
+
     // 친구 목록 조회
     public List<Friend> getFriends(User user) {
         // User user = validUserByUserId(userPrincipal.getId());
@@ -171,4 +185,5 @@ public class FriendService {
         Optional<Friend> friendOptional = friendRepository.findBySenderAndReceiver(sender, receiver);
         return friendOptional;
     }
+
 }

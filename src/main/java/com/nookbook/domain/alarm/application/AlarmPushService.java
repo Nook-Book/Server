@@ -38,8 +38,8 @@ public class AlarmPushService {
                     body,
                     Map.of(
                             "alarmId", alarm.getAlarmId(),
-                            "type", alarm.getAlarmType().name(),
-                            "targetId", String.valueOf(alarm.getTargetId())
+                            "type", alarm.getAlarmType().name(), // 알림 타입 (FRIEND, CHALLENGE)
+                            "targetId", String.valueOf(alarm.getTargetId()) // 챌린지 ID 또는 사용자 ID
                     )
             );
         } catch (Exception e) {

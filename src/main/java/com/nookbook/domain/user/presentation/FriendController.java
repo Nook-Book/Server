@@ -107,4 +107,17 @@ public class FriendController {
         return friendService.deleteFriendRequest(userPrincipal, friendId, true);
     }
 
+    @Operation(summary = "[TEST] 친구 요청", description = "친구를 요청하는 테스트용 API입니다. 알림 대상은 테스트자 본인이며, 실제 서비스에서는 사용하지 않습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = String.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "저장 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PostMapping("/test/requests")
+    public ResponseEntity<?> testSendFriendRequest(
+            @CurrentUser UserPrincipal userPrincipal
+    ) {
+        return friendService.testSendFriendRequest(userPrincipal);
+    }
+
+
 }
