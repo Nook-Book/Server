@@ -86,6 +86,25 @@ public class AlarmService {
         alarmPushService.send(receiver, alarm);
     }
 
+
+    // 테스트용 친구 요청 알림 전송
+    @Transactional
+    public void testSendFriendRequestAlarm(User sender, User receiver) {
+        AlarmMessageInfo info = alarmMessageFactory.createFriendRequest(sender.getUserId());
+        // 알림 생성/저장
+        Alarm alarm = Alarm.create(
+                receiver,
+                sender.getUserId(),
+                AlarmType.FRIEND,
+                info.template(),
+                info.args(),
+                sender.getUserId() // targetId: sender를 클릭 시 이동하도록
+        );
+        alarmRepository.save(alarm);
+        alarmPushService.send(receiver, alarm);
+    }
+
+
     // 친구 수락 알림 전송/저장
     @Transactional
     public void sendFriendAcceptedAlarm(User sender, User receiver) {
