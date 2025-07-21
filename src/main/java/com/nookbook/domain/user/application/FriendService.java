@@ -151,6 +151,7 @@ public class FriendService {
 
 
     // 테스트용 친구 요청 알림 전송
+    @Transactional
     public ResponseEntity<?> testSendFriendRequest(UserPrincipal userPrincipal) {
         User user = validUserByUserId(userPrincipal.getId());
 
