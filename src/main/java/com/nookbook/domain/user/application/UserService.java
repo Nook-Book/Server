@@ -215,10 +215,6 @@ public class UserService {
 
     // 사용자가 회원가입을 완료했는지 확인
     private boolean checkUserCompleteSignUpSteps(UserPrincipal userPrincipal) {
-        // userPrincipal이 null인지 확인
-        if (userPrincipal == null) {
-            return false;
-        }
         try {
             // 유효한 사용자인지 확인
             User user = validUserByUserId(userPrincipal.getId());
