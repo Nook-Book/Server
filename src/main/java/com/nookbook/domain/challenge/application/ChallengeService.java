@@ -270,6 +270,7 @@ public class ChallengeService {
         return ParticipantStatusListRes.builder()
                 .isMe(isMe) // 해당 참여자가 사용자 본인인지 여부
                 .participantId(participant.getParticipantId()) // 참가자 ID
+                .userId(participant.getUser().getUserId()) // 참가자 User ID
                 .nickname(participant.getUser().getNickname()) // 참가자 닉네임
                 .readingBookTitle(recentBook.getTitle()) // 읽고 있는 책 제목
                 .readingBookImage(recentBook.getImage()) // 읽고 있는 책 이미지
