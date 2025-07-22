@@ -17,6 +17,9 @@ public class ParticipantStatusListRes {
     @Schema(type = "Long", example = "1", description = "참여자 ID")
     private Long participantId;
 
+    @Schema(type = "Long", example = "1", description = "사용자 ID")
+    private Long userId;
+
     @Schema(type = "String", example = "밍쥬피쉬", description = "참여자 닉네임")
     private String nickname;
 
