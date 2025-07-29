@@ -28,5 +28,4 @@ public interface UserRepository extends JpaRepository<User, Long>{
             "AND (u.nicknameId LIKE %:keyword% OR u.nickname LIKE %:keyword%)")
     Page<User> findUsersNotInFriendByKeyword(@Param("user") User user, @Param("keyword") String keyword, Pageable pageable);
 
-    Boolean existsByEmail(String email);
 }
