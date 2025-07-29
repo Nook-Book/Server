@@ -65,7 +65,7 @@ public class CollectionController {
             @ApiResponse(responseCode = "200", description = "친구의 컬렉션 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CollectionListRes.class))}),
             @ApiResponse(responseCode = "400", description = "친구의 컬렉션 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
     })
-    @GetMapping("{userId}")
+    @GetMapping("/{userId}")
     public ResponseEntity<?> getFriendCollectionList(
             @Parameter @CurrentUser UserPrincipal userPrincipal,
             @PathVariable Long userId
