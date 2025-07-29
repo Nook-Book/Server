@@ -115,18 +115,19 @@ public class CollectionService {
     // 컬렉션 제목 수정
     @Transactional
     public ResponseEntity<?> updateCollectionTitle(UserPrincipal userPrincipal, Long collectionId, UpdateCollectionTitleReq updateCollectionTitleReq) {
-
+        User user = validateUser(userPrincipal);
         // findCollectionByUserAndCollectionId
-        Collection collection = findCollectionByUserAndCollectionId(userPrincipal, collectionId);
+        Collection collection = findCollectionByUserAndCollectionId(user, collectionId);
         collection.updateTitle(updateCollectionTitleReq.getTitle());
 
         return buildOkResponse("컬렉션 제목 수정이 완료되었습니다.", true);
     }
 
 
-    // 컬렉션 내의 도서 목록 조회
+    // 사용자의 컬렉션 내 도서 목록 조회
     public ResponseEntity<?> getCollectionBooks(UserPrincipal userPrincipal, Long collectionId) {
-        Collection collection = findCollectionByUserAndCollectionId(userPrincipal, collectionId);
+        User user = validateUser(userPrincipal);
+        Collection collection = findCollectionByUserAndCollectionId(user, collectionId);
 
         // 컬렉션 내의 도서 목록 조회
         CollectionBooksListRes collectionBooksListRes = getCollectionBooksListDetailRes(collection);
@@ -138,6 +139,16 @@ public class CollectionService {
 
         return ResponseEntity.ok(response);
     }
+
+    // 친구의 컬렉션 내 도서 목록 조회
+    public CollectionBooksListRes getFriendCollectionBooks(UserPrincipal userPrincipal, Long userId, Long collectionId) {
+        validateUser(userPrincipal);
+        User friend = userService.findUserByUserId(userId);
+        Collection collection = findCollectionByUserAndCollectionId(friend, collectionId);
+        // 친구의 컬렉션 내의 도서 목록 조회
+        return getCollectionBooksListDetailRes(collection);
+    }
+
 
     // 컬렉션 내의 도서 목록 조회 매소드 분리
     public CollectionBooksListRes getCollectionBooksListDetailRes(Collection collection) {
@@ -168,8 +179,7 @@ public class CollectionService {
 
 
     // 컬렉션 소유자 검증
-    public Collection findCollectionByUserAndCollectionId(UserPrincipal userPrincipal, Long collectionId) {
-        User user = validateUser(userPrincipal);
+    public Collection findCollectionByUserAndCollectionId(User user, Long collectionId) {
 
         Collection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new RuntimeException("컬렉션을 찾을 수 없습니다."));
@@ -199,7 +209,8 @@ public class CollectionService {
     }
 
     private Collection validateUserCollection(UserPrincipal userPrincipal, Long collectionId) {
-        return findCollectionByUserAndCollectionId(userPrincipal, collectionId);
+        User user = validateUser(userPrincipal);
+        return findCollectionByUserAndCollectionId(user, collectionId);
     }
 
     // 도서 조회
