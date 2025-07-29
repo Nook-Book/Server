@@ -267,8 +267,8 @@ public class UserService {
         return user.get();
     }
 
-    public User findById(long l) {
-        return userRepository.findById(l).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    public User findUserByUserId(long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
     }
 
 }

@@ -487,8 +487,8 @@ public class ChallengeService {
             Long friendUserId = friend.getFriendUserId(user);  // 친구의 userId 가져오기
             return ChallengeInvitationRes.builder()
                     .userId(friendUserId)
-                    .nickname(userService.findById(friendUserId).getNickname())  // userId로 닉네임 조회
-                    .profileImage(userService.findById(friendUserId).getImageUrl())  // userId로 이미지 조회
+                    .nickname(userService.findUserByUserId(friendUserId).getNickname())  // userId로 닉네임 조회
+                    .profileImage(userService.findUserByUserId(friendUserId).getImageUrl())  // userId로 이미지 조회
                     .isInvitable(invitations.stream()
                             .noneMatch(invitation -> invitation.getUser().getUserId().equals(friendUserId)))
                     .build();
