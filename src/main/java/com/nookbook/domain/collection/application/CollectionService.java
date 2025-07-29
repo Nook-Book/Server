@@ -26,6 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,54 +63,47 @@ public class CollectionService {
         return buildOkResponse("컬렉션 생성이 완료되었습니다.", true);
     }
 
-    // 컬렉션 리스트 조회
-    // CollectionListRes -> CollectionListDetailRes (컬렉션ID, 제목, 커버 리스트) -> CollectionCoverRes(커버 리스트)
-    public ResponseEntity<?> getCollectionList(UserPrincipal userPrincipal) {
+    public CollectionListRes getCollectionList(UserPrincipal userPrincipal) {
         User user = validateUser(userPrincipal);
-        List<Collection> collections = collectionRepository.findAllByUser(user);
+        return buildCollectionListRes(user);
+    }
 
-        if(collections.isEmpty()){
-            ApiResponse response = ApiResponse.builder()
-                    .check(true)
-                    .information(CollectionListRes.builder()
-                            .totalCollections(0L)
-                            .collectionListDetailRes(new ArrayList<>())
-                            .build())
+    public CollectionListRes getFriendCollectionList(UserPrincipal userPrincipal, Long userId) {
+        validateUser(userPrincipal);
+        User friend = userService.findUserByUserId(userId);
+        return buildCollectionListRes(friend);
+    }
+
+    private CollectionListRes buildCollectionListRes(User targetUser) {
+        List<Collection> collections = collectionRepository.findAllByUser(targetUser);
+
+        if (collections.isEmpty()) {
+            return CollectionListRes.builder()
+                    .totalCollections(0L)
+                    .collectionListDetailRes(Collections.emptyList())
                     .build();
-            return ResponseEntity.ok(response);
         }
 
         List<CollectionListDetailRes> collectionListDetailRes = collections.stream()
                 .map(collection -> {
-                    // 컬렉션에 속한 도서 중 최근 추가된 4권의 표지 이미지 리스트
                     List<String> coverImages = getTop4BookImagesByCollectionId(collection.getCollectionId());
 
-                    // 컬렉션 각각의 정보
                     return CollectionListDetailRes.builder()
                             .order(collection.getOrderIndex())
                             .collectionStatus(collection.getCollectionStatus())
                             .collectionId(collection.getCollectionId())
                             .collectionTitle(collection.getTitle())
-                            .totalBooks(collection.getCollectionBooks().size()) // 컬렉션 내 도서 수
+                            .totalBooks(collection.getCollectionBooks().size())
                             .collectionBooksCoverList(coverImages)
                             .build();
                 })
-                .toList();
+                .sorted(Comparator.comparingLong(CollectionListDetailRes::getOrder))
+                .collect(Collectors.toList());
 
-        // 컬렉션 정보를 담은 CollectionListRes 객체 생성
-        // 순서 orderIndex 필드값에 따라 오름차순으로 정렬
-        CollectionListRes collectionListRes = CollectionListRes.builder()
+        return CollectionListRes.builder()
                 .totalCollections((long) collectionListDetailRes.size())
-                .collectionListDetailRes(collectionListDetailRes.stream()
-                        .sorted((a, b) -> (int) (a.getOrder() - b.getOrder()))
-                        .collect(Collectors.toList()))
+                .collectionListDetailRes(collectionListDetailRes)
                 .build();
-
-        ApiResponse response = ApiResponse.builder()
-                .check(true)
-                .information(collectionListRes)
-                .build();
-        return ResponseEntity.ok(response);
     }
 
 
