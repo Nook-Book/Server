@@ -102,6 +102,21 @@ public class CollectionController {
         return collectionService.getCollectionBooks(userPrincipal, collectionId);
     }
 
+    // 친구 컬렉션 등록 도서 목록 조회 API
+    @Operation(summary = "친구 컬렉션 등록 도서 목록 조회 API", description = "친구의 컬렉션에 등록된 도서 목록을 조회하는 API입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "친구의 컬렉션 등록 도서 목록 조회 성공", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = CollectionBooksListRes.class))}),
+            @ApiResponse(responseCode = "400", description = "친구의 컬렉션 등록 도서 목록 조회 실패", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))}),
+    })
+    @GetMapping("/{userId}/{collectionId}/books")
+    public ResponseEntity<?> getFriendCollectionBooks(
+            @Parameter @CurrentUser UserPrincipal userPrincipal,
+            @PathVariable Long userId,
+            @PathVariable Long collectionId
+    ) {
+        CollectionBooksListRes result = collectionService.getFriendCollectionBooks(userPrincipal, userId, collectionId);
+        return ResponseEntity.ok(CommonApiResponse.success(result));
+    }
 
 
     @Operation(summary = "컬렉션 도서 삭제 API", description = "컬렉션에 등록된 도서를 삭제하는 API입니다.")
