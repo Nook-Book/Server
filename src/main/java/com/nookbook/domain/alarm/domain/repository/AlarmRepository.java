@@ -18,4 +18,6 @@ public interface AlarmRepository extends JpaRepository<Alarm, Long> {
     Page<Alarm> findByUserAndCreatedAtAfter(User user, LocalDateTime weekAgo, Pageable pageable);
 
     List<Alarm> findByUserAndAlarmTypeAndSenderId(User receiver, AlarmType alarmType, Long userId);
+
+    List<Alarm> findTopByUserAndSenderIdAndAlarmTypeOrderByCreatedAtDesc(User target, Long userId, AlarmType alarmType);
 }

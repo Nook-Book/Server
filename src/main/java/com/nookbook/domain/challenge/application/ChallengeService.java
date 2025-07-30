@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -238,7 +239,9 @@ public class ChallengeService {
         for(Participant participant : participants) {
             // 참가자가 본인인지 여부 확인 (꺠우기 버튼 disabled 여부를 판단하기 위함)
             boolean isMe = participant.getUser().equals(user);
-            participantStatusListRes.add(getParticipantStatus(participant, isMe));
+            // 각 참가자에 대한 가장 최근 깨우기 시간 조회
+            LocalDateTime lastWakeUpTime = alarmService.getLastWakeUpAlarmTime(user, participant.getUser());
+            participantStatusListRes.add(getParticipantStatus(participant, isMe, lastWakeUpTime));
 
         }
 
@@ -247,7 +250,7 @@ public class ChallengeService {
     }
 
     // UserBook: 사용자가 오늘 기록한 책
-    private ParticipantStatusListRes getParticipantStatus(Participant participant, boolean isMe) {
+    private ParticipantStatusListRes getParticipantStatus(Participant participant, boolean isMe, LocalDateTime lastWakeUpTime) {
 
         // 해당 참가자의 오늘 타이머 목록 조회
         List<Timer> todayTimers = timerRepository.findByUserAndCreatedAt(participant.getUser(), LocalDate.now());
@@ -277,6 +280,7 @@ public class ChallengeService {
                 .participantImage(participant.getUser().getImageUrl()) // 참가자 이미지
                 .isReading(isReading) // 실시간 독서 진행 여부
                 .dailyReadingTime(readTime) // 가장 최근의 독서 시간
+                .lastWakeUpTime(lastWakeUpTime) // 가장 최근의 깨우기 시간
                 .build();
     }
 
