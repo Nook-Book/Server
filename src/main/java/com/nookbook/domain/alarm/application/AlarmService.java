@@ -4,6 +4,7 @@ import com.nookbook.domain.alarm.domain.Alarm;
 import com.nookbook.domain.alarm.domain.AlarmType;
 import com.nookbook.domain.alarm.domain.repository.AlarmRepository;
 import com.nookbook.domain.alarm.dto.response.AlarmRes;
+import com.nookbook.domain.alarm.exception.WakeUpRequestTooSoonException;
 import com.nookbook.domain.alarm.message.AlarmMessageFactory;
 import com.nookbook.domain.alarm.message.AlarmMessageInfo;
 import com.nookbook.domain.alarm.message.AlarmRenderer;
@@ -125,6 +126,9 @@ public class AlarmService {
     // 챌린지 참가자 깨우기 알림 전송/저장
     @Transactional
     public void sendChallengeParticipantWakeUpAlarm(User sender, User receiver, Challenge challenge) {
+        // 깨우기 요청이 너무 빠르게 연속으로 오지 않도록 검증
+        validateWakeUpRequest(sender, receiver);
+        // 알림 메시지 생성
         AlarmMessageInfo info = alarmMessageFactory.createWakeUp(sender.getUserId(), challenge.getChallengeId());
 
         Alarm alarm = Alarm.create(
@@ -201,6 +205,14 @@ public class AlarmService {
         }
 
         return alarms.get(0).getCreatedAt(); // 가장 최근 알림의 생성 시간 반환
+    }
+
+    // 가장 최근 깨우기 알림 시간이 3시간 이내이면 예외 처리
+    public void validateWakeUpRequest(User sender, User receiver) {
+        LocalDateTime lastWakeUpTime = getLastWakeUpAlarmTime(sender, receiver);
+        if (lastWakeUpTime != null && lastWakeUpTime.isAfter(LocalDateTime.now().minusHours(3))) {
+            throw new WakeUpRequestTooSoonException();
+        }
     }
 
 }
