@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -37,4 +39,9 @@ public class ParticipantStatusListRes {
 
     @Schema(type = "hh:mm:ss", example = "02:34:10", description = "참여자 일일 독서 시간 (타이머 기반)")
     private String dailyReadingTime;
+
+    // 가장 최근의 깨우기 시간
+    @Schema(type = "LocalDateTime", example = "2023-10-01T12:00:00", description = "참여자가 마지막으로 깨운 시간")
+    private LocalDateTime lastWakeUpTime;
+
 }

@@ -4,6 +4,7 @@ import com.nookbook.domain.alarm.domain.Alarm;
 import com.nookbook.domain.alarm.domain.AlarmType;
 import com.nookbook.domain.alarm.domain.repository.AlarmRepository;
 import com.nookbook.domain.alarm.dto.response.AlarmRes;
+import com.nookbook.domain.alarm.exception.WakeUpRequestTooSoonException;
 import com.nookbook.domain.alarm.message.AlarmMessageFactory;
 import com.nookbook.domain.alarm.message.AlarmMessageInfo;
 import com.nookbook.domain.alarm.message.AlarmRenderer;
@@ -125,12 +126,15 @@ public class AlarmService {
     // 챌린지 참가자 깨우기 알림 전송/저장
     @Transactional
     public void sendChallengeParticipantWakeUpAlarm(User sender, User receiver, Challenge challenge) {
+        // 깨우기 요청이 너무 빠르게 연속으로 오지 않도록 검증
+        validateWakeUpRequest(sender, receiver);
+        // 알림 메시지 생성
         AlarmMessageInfo info = alarmMessageFactory.createWakeUp(sender.getUserId(), challenge.getChallengeId());
 
         Alarm alarm = Alarm.create(
                 receiver,
                 sender.getUserId(),
-                AlarmType.CHALLENGE,
+                AlarmType.WAKE_UP,
                 info.template(),
                 info.args(),
                 challenge.getChallengeId()
@@ -186,4 +190,29 @@ public class AlarmService {
         DefaultAssert.isTrue(!alarms.isEmpty(), "삭제할 알림이 없습니다.");
         alarmRepository.deleteAll(alarms);
     }
+
+
+    // 해당 사용자가 보낸 타겟 사용자의 알림 목록 중 가장 최근의 깨우기 알림 생성 시간을 가져오는 메서드
+    // 이 메서드는 알림 목록이 비어있을 경우 null을 반환합니다.
+    // alarmType = WAKE_UP인 알림만 조회합니다.
+    public LocalDateTime getLastWakeUpAlarmTime(User sender, User target) {
+        List<Alarm> alarms = alarmRepository.findTopByUserAndSenderIdAndAlarmTypeOrderByCreatedAtDesc(
+                target, sender.getUserId(), AlarmType.WAKE_UP
+        );
+
+        if (alarms.isEmpty()) {
+            return null; // 알림이 없을 경우 null 반환
+        }
+
+        return alarms.get(0).getCreatedAt(); // 가장 최근 알림의 생성 시간 반환
+    }
+
+    // 가장 최근 깨우기 알림 시간이 3시간 이내이면 예외 처리
+    public void validateWakeUpRequest(User sender, User receiver) {
+        LocalDateTime lastWakeUpTime = getLastWakeUpAlarmTime(sender, receiver);
+        if (lastWakeUpTime != null && lastWakeUpTime.isAfter(LocalDateTime.now().minusHours(3))) {
+            throw new WakeUpRequestTooSoonException();
+        }
+    }
+
 }

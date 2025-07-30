@@ -43,7 +43,8 @@ public enum ErrorCode {
 
     // Alarm (ALM)
     ALARM_PUSH_SEND_FAILED(500, "ALM001", "푸시 알림 전송에 실패했습니다."),
-    EXPO_TOKEN_NOT_FOUND(404, "ALM002", "해당 사용자의 Expo 토큰을 찾을 수 없습니다.");
+    EXPO_TOKEN_NOT_FOUND(404, "ALM002", "해당 사용자의 Expo 토큰을 찾을 수 없습니다."),
+    WAKE_UP_REQUEST_TOO_SOON(400, "ALM003", "깨우기 요청은 3시간에 한 번만 가능합니다."),;
 
     private final String code;
     private final String message;
