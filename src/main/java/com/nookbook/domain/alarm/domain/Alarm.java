@@ -45,6 +45,9 @@ public class Alarm extends BaseEntity {
     @Column(name = "target_id")
     private Long targetId; // 챌린지 ID 또는 사용자 ID
 
+    @Column(name = "is_read", nullable = false)
+    private boolean isRead = false; // 읽음 여부
+
     // argsJson → Map<String, String>
 
     @Transient
@@ -72,5 +75,10 @@ public class Alarm extends BaseEntity {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("알림 파라미터 직렬화 실패", e);
         }
+    }
+
+    // 알림 읽음
+    public void markAsRead() {
+        this.isRead = true;
     }
 }

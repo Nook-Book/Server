@@ -46,8 +46,10 @@ public class AlarmService {
     // 알림 목록 조회
     public ResponseEntity<?> getAllAlarms(UserPrincipal userPrincipal, int page, int size) {
         User user = getUser(userPrincipal);
+        // 일괄 읽음처리
+        markAllAsRead(user);
+        // 일주일 이내의 알림만 조회
         LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);
-
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Alarm> alarmsPage = alarmRepository.findByUserAndCreatedAtAfter(user, weekAgo, pageable);
 
@@ -69,6 +71,22 @@ public class AlarmService {
     }
 
 
+    // 사용자의 알림들을 일괄적으로 읽음 처리하는 메소드
+    @Transactional
+    public void markAllAsRead(User user) {
+        // 사용자의 읽지 않은 알림 목록을 조회
+        List<Alarm> alarms = getUnreadAlarms(user);
+        alarms.forEach(Alarm::markAsRead);
+        alarmRepository.saveAll(alarms);
+    }
+
+    // 읽지 않은 알림 목록 조회
+    public List<Alarm> getUnreadAlarms(User user) {
+        // 사용자의 읽지 않은 알림 목록을 조회
+        return user.getAlarms().stream()
+                .filter(alarm -> !alarm.isRead()) // 읽지 않은 알림만 필터링
+                .toList();
+    }
 
     // 친구 요청 알림 전송/저장
     @Transactional
@@ -86,6 +104,7 @@ public class AlarmService {
         alarmRepository.save(alarm);
         alarmPushService.send(receiver, alarm);
     }
+
 
 
     // 테스트용 친구 요청 알림 전송
