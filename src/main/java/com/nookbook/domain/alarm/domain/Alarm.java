@@ -76,4 +76,9 @@ public class Alarm extends BaseEntity {
             throw new RuntimeException("알림 파라미터 직렬화 실패", e);
         }
     }
+
+    // 알림 읽음
+    public void markAsRead() {
+        this.isRead = true;
+    }
 }
