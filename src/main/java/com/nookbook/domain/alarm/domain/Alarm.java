@@ -45,6 +45,9 @@ public class Alarm extends BaseEntity {
     @Column(name = "target_id")
     private Long targetId; // 챌린지 ID 또는 사용자 ID
 
+    @Column(name = "is_read", nullable = false)
+    private boolean isRead = false; // 읽음 여부
+
     // argsJson → Map<String, String>
 
     @Transient
