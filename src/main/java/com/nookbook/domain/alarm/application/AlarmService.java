@@ -74,18 +74,7 @@ public class AlarmService {
     // 사용자의 알림들을 일괄적으로 읽음 처리하는 메소드
     @Transactional
     public void markAllAsRead(User user) {
-        // 사용자의 읽지 않은 알림 목록을 조회
-        List<Alarm> alarms = getUnreadAlarms(user);
-        alarms.forEach(Alarm::markAsRead);
-        alarmRepository.saveAll(alarms);
-    }
-
-    // 읽지 않은 알림 목록 조회
-    public List<Alarm> getUnreadAlarms(User user) {
-        // 사용자의 읽지 않은 알림 목록을 조회
-        return user.getAlarms().stream()
-                .filter(alarm -> !alarm.isRead()) // 읽지 않은 알림만 필터링
-                .toList();
+        alarmRepository.markAllAsRead(user);
     }
 
     // 친구 요청 알림 전송/저장
@@ -104,8 +93,6 @@ public class AlarmService {
         alarmRepository.save(alarm);
         alarmPushService.send(receiver, alarm);
     }
-
-
 
     // 테스트용 친구 요청 알림 전송
     @Transactional

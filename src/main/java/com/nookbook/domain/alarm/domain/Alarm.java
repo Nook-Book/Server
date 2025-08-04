@@ -77,8 +77,4 @@ public class Alarm extends BaseEntity {
         }
     }
 
-    // 알림 읽음
-    public void markAsRead() {
-        this.isRead = true;
-    }
 }
