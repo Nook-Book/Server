@@ -46,7 +46,7 @@ public class AlarmController {
             @ApiResponse(responseCode = "400", description = "알림 일괄 읽음 처리 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
     })
     @PatchMapping("")
-    public ResponseEntity<?> markAllAsRead(
+    public ResponseEntity<Message> markAllAsRead(
             @Parameter @CurrentUser UserPrincipal userPrincipal
     ) {
         alarmService.markAllAsRead(userPrincipal);
