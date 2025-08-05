@@ -46,8 +46,6 @@ public class AlarmService {
     // 알림 목록 조회
     public ResponseEntity<?> getAllAlarms(UserPrincipal userPrincipal, int page, int size) {
         User user = getUser(userPrincipal);
-        // 일괄 읽음처리
-        markAllAsRead(user);
         // 일주일 이내의 알림만 조회
         LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -73,7 +71,8 @@ public class AlarmService {
 
     // 사용자의 알림들을 일괄적으로 읽음 처리하는 메소드
     @Transactional
-    public void markAllAsRead(User user) {
+    public void markAllAsRead(UserPrincipal userPrincipal) {
+        User user = getUser(userPrincipal);
         alarmRepository.markAllAsRead(user);
     }
 

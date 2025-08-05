@@ -22,6 +22,9 @@ public class AlarmRes {
     @Schema(type = "Long", example = "1", description = "알람의 ID 값입니다.")
     private Long alarmId;
 
+    @Schema(type = "boolean", example = "false", description = "알람이 읽음 상태인지 여부입니다.")
+    private boolean isRead;
+
     @Schema(type = "String", example = "기무라타쿠야님이 회원님의 친구 요청을 수락하였습니다.", description = "알람 내용입니다.")
     private String message;
 
@@ -49,6 +52,7 @@ public class AlarmRes {
 
         return AlarmRes.builder()
                 .alarmId(entity.getAlarmId())
+                .isRead(entity.isRead())
                 .message(renderer.render(entity))
                 .alarmType(entity.getAlarmType())
                 .targetId(entity.getTargetId())
