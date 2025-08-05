@@ -258,7 +258,7 @@ public class ChallengeService {
         // 오늘 타이머 기록이 없는 경우
         if(todayTimers.isEmpty()) {
             log.info("오늘 기준의 타이머 기록이 존재하지 않습니다.");
-            return EmptyTodayTimer(participant, isMe);
+            return EmptyTodayTimer(participant, isMe, lastWakeUpTime);
         }
 
         // 가장 최근의 타이머 조회
@@ -285,16 +285,18 @@ public class ChallengeService {
     }
 
     // 오늘 타이머 기록이 없는 경우의 응답
-    private ParticipantStatusListRes EmptyTodayTimer(Participant participant, boolean isMe) {
+    private ParticipantStatusListRes EmptyTodayTimer(Participant participant, boolean isMe, LocalDateTime lastWakeUpTime) {
         return ParticipantStatusListRes.builder()
                 .isMe(isMe) // 해당 참여자가 사용자 본인인지 여부
                 .participantId(participant.getParticipantId()) // 참가자 ID
+                .userId(participant.getUser().getUserId()) // 참가자 User ID
                 .nickname(participant.getUser().getNickname()) // 참가자 닉네임
                 .readingBookTitle("") // 읽고 있는 책 제목
                 .readingBookImage("") // 읽고 있는 책 이미지
                 .participantImage(participant.getUser().getImageUrl()) // 참가자 이미지
                 .isReading(false) // 실시간 독서 진행 여부
                 .dailyReadingTime("00:00:00") // 가장 최근의 독서 시간
+                .lastWakeUpTime(lastWakeUpTime) // 가장 최근의 깨우기 시간
                 .build();
     }
 
