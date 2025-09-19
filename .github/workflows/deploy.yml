@@ -9,9 +9,9 @@ on:
 # 환경 변수 설정
 env:
   AWS_REGION: ap-northeast-2
-  S3_BUCKET_NAME: nookbook-deploy-bucket
+  S3_BUCKET_NAME: nookbook-github-actions-s3-bucket 
   CODE_DEPLOY_APPLICATION_NAME: nookbook-codedeploy-app
-  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: nookbook-deployment-group
+  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: nookbook-codedeploy-deployment-gruop
 
 permissions:
   contents: read
