@@ -5,9 +5,11 @@ import com.nookbook.domain.auth.domain.repository.TokenRepository;
 import com.nookbook.domain.auth.dto.response.LoginResponse;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.Provider;
+import com.nookbook.domain.user.domain.Role;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
 import com.nookbook.domain.user.exception.UserNotFoundException;
+import com.nookbook.global.DefaultAssert;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.config.security.util.JwtTokenUtil;
 import com.nookbook.global.payload.ApiResponse;
@@ -15,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +35,7 @@ public class AuthService {
     private final IdTokenVerifier idTokenVerifier;
     private final UserDetailsService userDetailsService;
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
 
     public String verifyIdTokenAndExtractUsername(String idToken, String email) {
@@ -126,6 +130,76 @@ public class AuthService {
         ApiResponse apiResponse = ApiResponse.builder()
                 .check(true)
                 .information("회원 탈퇴 성공")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Transactional
+    public ResponseEntity<?> signUp(String email, String password, String nickname) {
+        // 이메일 중복 체크
+        Optional<User> existingUser = userRepository.findByEmail(email);
+        DefaultAssert.isTrue(existingUser.isEmpty(), "이미 사용 중인 이메일입니다.");
+
+        // 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(password);
+
+        // 사용자 생성
+        User user = User.builder()
+                .email(email)
+                .password(encodedPassword)
+                .nickname(nickname)
+                .provider(Provider.local)
+                .providerId(email)
+                .role(Role.USER)
+                .build();
+
+        userRepository.save(user);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information("회원가입이 완료되었습니다.")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Transactional
+    public ResponseEntity<?> localLogin(String email, String password) {
+        // 사용자 조회
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다."));
+
+        // Provider 검증 (local 계정인지 확인)
+        DefaultAssert.isTrue(user.getProvider() == Provider.local, "소셜 로그인 계정입니다. 소셜 로그인을 이용해주세요.");
+
+        // 비밀번호 검증
+        DefaultAssert.isTrue(passwordEncoder.matches(password, user.getPassword()), "이메일 또는 비밀번호가 올바르지 않습니다.");
+
+        // JWT 토큰 생성
+        String accessToken = jwtTokenUtil.generateToken(new HashMap<>(), email);
+        String refreshToken = jwtTokenUtil.generateRefreshToken(new HashMap<>(), email);
+
+        // Refresh token DB에 저장 (기존 토큰이 있으면 업데이트)
+        Token existingToken = tokenRepository.findByEmail(email);
+        if (existingToken != null) {
+            tokenRepository.delete(existingToken);
+        }
+
+        Token tokenEntity = Token.builder()
+                .email(email)
+                .refreshToken(refreshToken)
+                .build();
+        tokenRepository.save(tokenEntity);
+
+        LoginResponse loginResponse = LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(loginResponse)
                 .build();
 
         return ResponseEntity.ok(apiResponse);
