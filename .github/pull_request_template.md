@@ -1,5 +1,5 @@
 ## 👑 Summary
-> 어떤 내용의 PR인가요?
+> 어떤 내용의 PR인가요? 
 -
 
 ## 🫧 To be noted
