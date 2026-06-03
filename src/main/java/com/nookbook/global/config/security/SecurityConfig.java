@@ -80,7 +80,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/swagger", "/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs/**", "/v3/api-docs/**")
                         .permitAll()
-                        .requestMatchers("/auth/login", "/api/v1/users/exists")
+                        .requestMatchers("/auth/login", "/auth/signup", "/auth/login/local", "/auth/find-nickname-id", "/auth/reset-password", "/api/v1/users/exists", "/api/v1/verification/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
