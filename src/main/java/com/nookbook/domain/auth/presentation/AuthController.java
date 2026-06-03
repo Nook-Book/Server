@@ -1,7 +1,11 @@
 package com.nookbook.domain.auth.presentation;
 
 import com.nookbook.domain.auth.application.AuthService;
+import com.nookbook.domain.auth.dto.request.FindNicknameIdReq;
+import com.nookbook.domain.auth.dto.request.LocalSignInReq;
+import com.nookbook.domain.auth.dto.request.ResetPasswordReq;
 import com.nookbook.domain.auth.dto.request.SignInReq;
+import com.nookbook.domain.auth.dto.request.SignUpReq;
 import com.nookbook.domain.auth.dto.response.LoginResponse;
 import com.nookbook.global.config.security.token.CurrentUser;
 import com.nookbook.global.config.security.token.UserPrincipal;
@@ -15,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -57,6 +62,58 @@ public class AuthController {
             ErrorResponse errorResponse = ErrorResponse.of(errorCode, e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
         }
+    }
+
+    @Operation(summary = "자체 회원가입 API", description = "이메일과 비밀번호로 회원가입합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "회원가입 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "회원가입 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PostMapping("/signup")
+    public ResponseEntity<?> signUp(@Valid @RequestBody SignUpReq signUpReq) {
+        try {
+            return authService.signUp(signUpReq.getEmail(), signUpReq.getPassword(), signUpReq.getNickname());
+        } catch (Exception e) {
+            ErrorCode errorCode = ErrorCode.INVALID_PARAMETER;
+            ErrorResponse errorResponse = ErrorResponse.of(errorCode, e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    @Operation(summary = "자체 로그인 API", description = "이메일과 비밀번호로 로그인합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "로그인 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "로그인 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PostMapping("/login/local")
+    public ResponseEntity<?> localLogin(@Valid @RequestBody LocalSignInReq localSignInReq) {
+        try {
+            return authService.localLogin(localSignInReq.getEmail(), localSignInReq.getPassword());
+        } catch (Exception e) {
+            ErrorCode errorCode = ErrorCode.INVALID_PARAMETER;
+            ErrorResponse errorResponse = ErrorResponse.of(errorCode, e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    @Operation(summary = "닉네임 아이디 찾기 API", description = "이메일 인증 완료 후 해당 이메일에 연결된 닉네임 아이디(nicknameId)를 반환합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "닉네임 아이디 찾기 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "닉네임 아이디 찾기 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PostMapping("/find-nickname-id")
+    public ResponseEntity<?> findNicknameId(@Valid @RequestBody FindNicknameIdReq findNicknameIdReq) {
+        return authService.findNicknameId(findNicknameIdReq);
+    }
+
+    @Operation(summary = "비밀번호 변경 API", description = "이메일 인증 완료 후 새 비밀번호로 변경합니다. (자체 로그인 계정만 가능)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "비밀번호 변경 성공", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = Message.class) ) } ),
+            @ApiResponse(responseCode = "400", description = "비밀번호 변경 실패", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class) ) } ),
+    })
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordReq resetPasswordReq) {
+        return authService.resetPassword(resetPasswordReq);
     }
 
     @Operation(summary = "로그아웃 API", description = "로그아웃 API입니다.")
