@@ -69,6 +69,11 @@ jobs:
           touch ./oauth2/application-oauth2.yml 
           echo "${{ secrets.APPLICATION_OAUTH2_YML }}" | base64 --decode > ./oauth2/application-oauth2.yml
 
+          # mail 디렉토리 및 파일 생성
+          mkdir -p ./mail
+          touch ./mail/application-mail.yml
+          echo "${{ secrets.APPLICATION_MAIL_YML }}" | base64 --decode > ./mail/application-mail.yml  
+
           # webclient 디렉토리 및 파일 생성
           mkdir -p ./webclient
           touch ./webclient/application-webclient.yml 
