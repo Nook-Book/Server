@@ -141,4 +141,8 @@ public class User extends BaseEntity {
         this.expoPushToken = expoPushToken;
     }
 
+    public void updatePassword(String password) {
+        this.password = password;
+    }
+
 }

@@ -49,7 +49,11 @@ public enum ErrorCode {
     // Verification (VRF)
     VERIFICATION_CODE_EXPIRED(400, "VRF001", "인증 코드가 만료되었거나 존재하지 않습니다."),
     VERIFICATION_CODE_MISMATCH(400, "VRF002", "인증 코드가 일치하지 않습니다."),
-    EMAIL_SEND_FAILED(500, "VRF003", "이메일 전송에 실패했습니다."),;
+    EMAIL_SEND_FAILED(500, "VRF003", "이메일 전송에 실패했습니다."),
+    VERIFICATION_NOT_COMPLETED(400, "VRF004", "이메일 인증이 완료되지 않았습니다."),
+
+    // User (USR) - additional
+    OAUTH_USER_PASSWORD_RESET(400, "USR003", "소셜 로그인 계정은 비밀번호를 변경할 수 없습니다."),;
 
     private final String code;
     private final String message;

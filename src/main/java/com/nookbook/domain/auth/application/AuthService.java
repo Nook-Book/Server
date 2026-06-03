@@ -2,13 +2,18 @@ package com.nookbook.domain.auth.application;
 
 import com.nookbook.domain.auth.domain.Token;
 import com.nookbook.domain.auth.domain.repository.TokenRepository;
+import com.nookbook.domain.auth.dto.request.FindNicknameIdReq;
+import com.nookbook.domain.auth.dto.request.ResetPasswordReq;
 import com.nookbook.domain.auth.dto.response.LoginResponse;
 import com.nookbook.domain.user.application.UserService;
 import com.nookbook.domain.user.domain.Provider;
 import com.nookbook.domain.user.domain.Role;
 import com.nookbook.domain.user.domain.User;
 import com.nookbook.domain.user.domain.repository.UserRepository;
+import com.nookbook.domain.user.exception.OAuthUserPasswordResetException;
 import com.nookbook.domain.user.exception.UserNotFoundException;
+import com.nookbook.domain.verification.application.VerificationService;
+import com.nookbook.domain.verification.exception.VerificationNotCompletedException;
 import com.nookbook.global.DefaultAssert;
 import com.nookbook.global.config.security.token.UserPrincipal;
 import com.nookbook.global.config.security.util.JwtTokenUtil;
@@ -36,6 +41,7 @@ public class AuthService {
     private final UserDetailsService userDetailsService;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final VerificationService verificationService;
 
 
     public String verifyIdTokenAndExtractUsername(String idToken, String email) {
@@ -212,6 +218,54 @@ public class AuthService {
         if (token != null) {
             tokenRepository.delete(token);
         }
+    }
+
+    public ResponseEntity<?> findNicknameId(FindNicknameIdReq findNicknameIdReq) {
+        String email = findNicknameIdReq.getEmail();
+
+        if (!verificationService.isVerified(email)) {
+            throw new VerificationNotCompletedException();
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(UserNotFoundException::new);
+
+        verificationService.removeVerified(email);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information(user.getNicknameId())
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Transactional
+    public ResponseEntity<?> resetPassword(ResetPasswordReq resetPasswordReq) {
+        String email = resetPasswordReq.getEmail();
+
+        if (!verificationService.isVerified(email)) {
+            throw new VerificationNotCompletedException();
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (user.getProvider() != Provider.local) {
+            throw new OAuthUserPasswordResetException();
+        }
+
+        String encodedPassword = passwordEncoder.encode(resetPasswordReq.getNewPassword());
+        user.updatePassword(encodedPassword);
+
+        verificationService.removeVerified(email);
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .check(true)
+                .information("비밀번호가 성공적으로 변경되었습니다.")
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
     }
 
     // 사용자 검증 메서드
